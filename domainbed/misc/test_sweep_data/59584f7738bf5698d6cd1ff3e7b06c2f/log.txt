@@ -1,0 +1,32 @@
+Args:
+	algorithm: ERM
+	checkpoint_freq: None
+	data_dir: /checkpoint/dlp/data
+	dataset: VLCS
+	holdout_fraction: 0.2
+	hparams: None
+	hparams_seed: 0
+	output_dir: /checkpoint/igul/domain_generalization/facebook_launcher_test_sweep/59584f7738bf5698d6cd1ff3e7b06c2f
+	seed: 845862410
+	steps: 1001
+	test_envs: [0, 1]
+	trial_seed: 1
+HParams:
+	batch_size: 32
+	groupdro_eta: 0.01
+	irm_lambda: 100.0
+	irm_penalty_anneal_iters: 500
+	lr: 5e-05
+	mixup_alpha: 0.2
+	mldg_beta: 1.0
+	mlp_depth: 3
+	mlp_dropout: 0.0
+	mlp_width: 256
+	mmd_gamma: 1.0
+	resnet_dropout: 0.0
+	weight_decay: 0.0
+env0_in_acc   env0_out_acc  env1_in_acc   env1_out_acc  env2_in_acc   env2_out_acc  env3_in_acc   env3_out_acc  epoch         loss          step          step_time    
+0.6139575972  0.6183745583  0.4672941176  0.4613935970  0.3762376238  0.4176829268  0.4557571270  0.4074074074  0.0000000000  1.5937983990  0             1.4114053249 
+0.9116607774  0.8975265018  0.6621176471  0.6647834275  0.8735719726  0.8109756098  0.8859681599  0.8044444444  300.00000000  0.4124412917  300           0.2200391388 
+0.9708480565  0.9681978799  0.6578823529  0.6647834275  0.9246001523  0.8094512195  0.9355794150  0.8444444444  600.00000000  0.2354204605  600           0.2213660979 
+0.9699646643  0.9717314488  0.6061176471  0.5875706215  0.9558263519  0.8064024390  0.9751943725  0.8251851852  900.00000000  0.1468118371  900           0.2206017796 
