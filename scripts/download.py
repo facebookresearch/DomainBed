@@ -3,7 +3,6 @@
 from torchvision.datasets import MNIST
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile
-import urllib.request
 import argparse
 import tarfile
 import shutil
@@ -25,7 +24,7 @@ def stage_path(data_dir, name):
 
 
 def download_and_extract(url, dst, remove=True):
-    urllib.request.urlretrieve(url, dst)
+    gdown.download(url, dst, quiet=False)
 
     if dst.endswith(".tar.gz"):
         tar = tarfile.open(dst, "r:gz")
@@ -55,14 +54,14 @@ def download_vlcs(data_dir):
     if not os.path.exists(tmp_path):
         os.makedirs(tmp_path)
 
-    with open("misc/vlcs_files.txt", "r") as f:
+    with open("../misc/vlcs_files.txt", "r") as f:
         lines = f.readlines()
         files = [line.strip().split() for line in lines]
 
     download_and_extract("http://pjreddie.com/media/files/VOCtrainval_06-Nov-2007.tar",
                          os.path.join(tmp_path, "voc2007_trainval.tar"))
     
-    download_and_extract("http://www.vision.caltech.edu/Image_Datasets/Caltech101/101_ObjectCategories.tar.gz",
+    download_and_extract("https://drive.google.com/uc?id=1I8ydxaAQunz9R_qFFdBFtw6rFTUW9goz",
                          os.path.join(tmp_path, "caltech101.tar.gz"))
     
     download_and_extract("http://groups.csail.mit.edu/vision/Hcontext/data/sun09_hcontext.tar",
@@ -142,7 +141,7 @@ def download_domain_net(data_dir):
     for url in urls:
         download_and_extract(url, os.path.join(full_path, url.split("/")[-1]))
    
-    with open("misc/domain_net_duplicates.txt", "r") as f:
+    with open("../misc/domain_net_duplicates.txt", "r") as f:
         for line in f.readlines():
             try:
                 os.remove(os.path.join(full_path, line.strip()))
@@ -240,5 +239,5 @@ if __name__ == "__main__":
     download_pacs(args.data_dir)
     download_office_home(args.data_dir)
     download_domain_net(args.data_dir)
-    download_terra_incognita(args.data_dir)
     download_vlcs(args.data_dir)
+    download_terra_incognita(args.data_dir)
