@@ -54,7 +54,7 @@ def download_vlcs(data_dir):
     if not os.path.exists(tmp_path):
         os.makedirs(tmp_path)
 
-    with open("../misc/vlcs_files.txt", "r") as f:
+    with open("domainbed/misc/vlcs_files.txt", "r") as f:
         lines = f.readlines()
         files = [line.strip().split() for line in lines]
 
@@ -141,7 +141,7 @@ def download_domain_net(data_dir):
     for url in urls:
         download_and_extract(url, os.path.join(full_path, url.split("/")[-1]))
    
-    with open("../misc/domain_net_duplicates.txt", "r") as f:
+    with open("domainbed/misc/domain_net_duplicates.txt", "r") as f:
         for line in f.readlines():
             try:
                 os.remove(os.path.join(full_path, line.strip()))
