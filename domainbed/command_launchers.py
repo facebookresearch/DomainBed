@@ -25,7 +25,7 @@ REGISTRY = {
 }
 
 try:
-    import facebook
+    from domainbed import facebook
     facebook.register_command_launchers(REGISTRY)
 except ImportError:
     pass

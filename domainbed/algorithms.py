@@ -473,7 +473,7 @@ class AbstractMMD(ERM):
 
     def update(self, minibatches):
         objective = 0
-        penalty = 0
+        penalty = 0 
         nmb = len(minibatches)
 
         features = [self.featurizer(xi) for xi, _ in minibatches]
@@ -493,7 +493,10 @@ class AbstractMMD(ERM):
         (objective + (self.hparams['mmd_gamma']*penalty)).backward()
         self.optimizer.step()
 
-        return {'loss': objective.item(), 'penalty': penalty.item()}
+        if torch.is_tensor(penalty):
+            penalty = penalty.item()
+
+        return {'loss': objective.item(), 'penalty': penalty}
 
 
 class MMD(AbstractMMD):

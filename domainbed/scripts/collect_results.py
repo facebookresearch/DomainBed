@@ -69,7 +69,7 @@ def print_table(table, header_text, row_labels, col_labels, colwidth=10,
         print("\\end{center}")
 
 ALGORITHM_PRINT_ORDER = ['ERM', 'IRM', 'GroupDRO', 'Mixup', 'MLDG',
-    'CORAL', 'GaussianMMD', 'DANN', 'CDANN']
+    'CORAL', 'MMD', 'DANN', 'CDANN']
 
 def get_grouped_records(records):
     """Group records by (trial_seed, dataset, algorithm, test_env). Because
@@ -164,6 +164,8 @@ if __name__ == "__main__":
     parser.add_argument('--input_dir', type=str, default="")
     parser.add_argument('--latex', action='store_true')
     args = parser.parse_args()
+
+    sys.stdout = misc.Tee(os.path.join(args.input_dir, 'results.txt'), "w")
 
     records = load_records(args.input_dir)
    

@@ -45,7 +45,7 @@ ALGORITHMS = [
     'CDANN',
     'GroupDRO',
     'Mixup',
-    'GaussianMMD',
+    'MMD',
     'CORAL',
     'MLDG',
 ]
