@@ -473,7 +473,7 @@ class AbstractMMD(ERM):
 
     def update(self, minibatches):
         objective = 0
-        penalty = 0
+        penalty = torch.zeros(1)
         nmb = len(minibatches)
 
         features = [self.featurizer(xi) for xi, _ in minibatches]

@@ -69,7 +69,7 @@ def print_table(table, header_text, row_labels, col_labels, colwidth=10,
         print("\\end{center}")
 
 ALGORITHM_PRINT_ORDER = ['ERM', 'IRM', 'GroupDRO', 'Mixup', 'MLDG',
-    'CORAL', 'GaussianMMD', 'DANN', 'CDANN']
+    'CORAL', 'MMD', 'DANN', 'CDANN']
 
 def get_grouped_records(records):
     """Group records by (trial_seed, dataset, algorithm, test_env). Because
