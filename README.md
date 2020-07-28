@@ -1,49 +1,73 @@
-DomainBed
-=====================================
+# Welcome to DomainBed
 
-A PyTorch suite of benchmark dataset and algorithm implementations for domain generalization, as introduced in ["In Search of Lost Domain Generalization"](https://arxiv.org/abs/2007.01434).
+DomainBed is a PyTorch suite containing benchmark datasets and algorithms for domain generalization, as introduced in [In Search of Lost Domain Generalization](https://arxiv.org/abs/2007.01434).
 
 ## Quick start
 
-First, download the datasets:
+Download the datasets:
 
-``python -m domainbed.scripts.download --data_dir=/my/datasets/path``
+```sh
+python -m domainbed.scripts.download \
+       --data_dir=/my/datasets/path
+```
 
-To train a model:
+Train a model:
 
-``python -m domainbed.scripts.train --data_dir=/my/datasets/path --algorithm ERM --dataset RotatedMNIST``
+```sh
+python -m domainbed.scripts.train\
+       --data_dir=/my/datasets/path\
+       --algorithm ERM\
+       --dataset RotatedMNIST
+```
 
-To launch a sweep, write a wrapper for your cluster's job queue in ``command_launchers.py``, and then:
+Launch a sweep:
 
-``python -m domainbed.scripts.sweep launch --data_dir=/my/datasets/path --output_dir=/my/sweep/output/path --command_launcher MyLauncher``
+```sh
+python -m domainbed.scripts.sweep launch\
+       --data_dir=/my/datasets/path\
+       --output_dir=/my/sweep/output/path\
+       --command_launcher MyLauncher
+```
 
-By default this runs a sweep consisting of (all algorithms) x (all datasets) x (3 independent trials) x (20 hparam choices), which at the time of writing is about 50K models in total.
-This is excessive for most purposes, so you can pass arguments to make the sweep smaller. For example:
+Here, `MyLauncher` is your cluster's command launcher, as implemented in `command_launchers.py`. At the time of writing, the entire sweep trains 50,000 models (all algorithms x all datasets x 3 independent trials x 20 random hyper-parameter choices). You can pass arguments to make the sweep smaller:
 
-``python -m domainbed.scripts.sweep launch --data_dir=/my/datasets/path --output_dir=/my/sweep/output/path --command_launcher MyLauncher --algorithms ERM DANN --datasets RotatedMNIST VLCS --n_hparams 5 --n_trials 1``
+```sh
+python -m domainbed.scripts.sweep launch\
+       --data_dir=/my/datasets/path\
+       --output_dir=/my/sweep/output/path\
+       --command_launcher MyLauncher\
+       --algorithms ERM DANN\
+       --datasets RotatedMNIST VLCS\
+       --n_hparams 5\
+       --n_trials 1
+```
 
-Some jobs might fail, e.g. if your cluster preempts them. After all the jobs have either succeeded or failed, you can delete the data from jobs which didn't succeed with ``python -m domainbed.scripts.sweep delete_incomplete`` and then re-launch them by running ``python -m domainbed.scripts.sweep launch`` again.
-In both commands, make sure to specify exactly the same command-line args as you did the first time; this is how the sweep script knows which jobs were launched originally.
+After all jobs have either succeeded or failed, you can delete the data from failed jobs with ``python -m domainbed.scripts.sweep delete_incomplete`` and then re-launch them by running ``python -m domainbed.scripts.sweep launch`` again. Specify the same command-line arguments in all calls to `sweep` as you did the first time; this is how the sweep script knows which jobs were launched originally.
 
-Once the sweep is finished, to view the results:
+To view the results of your sweep:
 
-``python -m domainbed.scripts.collect_results --input_dir=/my/sweep/output/path``
+````sh
+python -m domainbed.scripts.collect_results\
+       --input_dir=/my/sweep/output/path
+````
 
 ## Implementing new algorithms and datasets
 
-Algorithms are in ``algorithms.py``; datasets are in ``datasets.py``.
-Pull requests welcome.
+Check [``domainbed/algorithms.py``](domainbed/algorithms.py) and [``domainbed/datasets.py``](domainbed/datasets.py). Pull requests welcome.
 
 ## Running tests
 
-DomainBed includes some unit tests and end-to-end tests. They're not exhaustive, but they're a good sanity-check for your configuration and code.
-To run the tests:
+DomainBed includes some unit tests and end-to-end tests. While not exhaustive, but they are a good sanity-check. To run the tests:
 
-``python -m unittest discover``
+```sh
+python -m unittest discover
+```
 
 By default, this only runs tests which don't depend on a dataset directory. To run those tests as well:
 
-``DATA_DIR=/my/datasets/path python -m unittest discover``
+```sh
+DATA_DIR=/my/datasets/path python -m unittest discover
+```
 
 ## License
 
