@@ -88,6 +88,13 @@ def download_vlcs(data_dir):
 
     shutil.rmtree(tmp_path)
 
+# VLCS gdrive ########################################################################
+
+def download_vlcs_gdrive(data_dir):
+    # Original URL: 
+    download_and_extract("https://drive.google.com/uc?id=13qTR2jJqCQgfdbI3E_a6dLU7rEWpF37T",
+                         os.path.join(data_dir, "vlcs.tar.gz"))
+
 
 # MNIST #######################################################################
 
@@ -239,5 +246,5 @@ if __name__ == "__main__":
     download_pacs(args.data_dir)
     download_office_home(args.data_dir)
     download_domain_net(args.data_dir)
-    download_vlcs(args.data_dir)
+    download_vlcs_gdrive(args.data_dir) #download_vlcs(args.data_dir)
     download_terra_incognita(args.data_dir)
