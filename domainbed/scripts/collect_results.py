@@ -165,6 +165,8 @@ if __name__ == "__main__":
     parser.add_argument('--latex', action='store_true')
     args = parser.parse_args()
 
+    sys.stdout = misc.Tee(os.path.join(args.input_dir, 'results.txt'), "w")
+
     records = load_records(args.input_dir)
    
     if args.latex:

@@ -48,7 +48,8 @@ if __name__ == "__main__":
     algorithm_dict = None
 
     os.makedirs(args.output_dir, exist_ok=True)
-    sys.stdout = misc.Tee(os.path.join(args.output_dir, 'log.txt'))
+    sys.stdout = misc.Tee(os.path.join(args.output_dir, 'out.txt'))
+    sys.stderr = misc.Tee(os.path.join(args.output_dir, 'err.txt'))
 
     print('Args:')
     for k, v in sorted(vars(args).items()):
