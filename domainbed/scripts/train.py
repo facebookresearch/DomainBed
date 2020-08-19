@@ -17,7 +17,7 @@ from domainbed import datasets
 from domainbed import hparams_registry
 from domainbed import algorithms
 from domainbed.lib import misc
-from domainbed.lib.fast_data_loader import FastDataLoader
+from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Domain generalization')
@@ -100,21 +100,18 @@ if __name__ == "__main__":
         in_splits.append((in_, in_weights))
         out_splits.append((out, out_weights))
 
-    train_loaders = [FastDataLoader(
+    train_loaders = [InfiniteDataLoader(
         dataset=env,
         weights=env_weights,
         batch_size=hparams['batch_size'],
-        num_workers=dataset.N_WORKERS,
-        length=FastDataLoader.INFINITE)
+        num_workers=dataset.N_WORKERS)
         for i, (env, env_weights) in enumerate(in_splits)
         if i not in args.test_envs]
 
     eval_loaders = [FastDataLoader(
         dataset=env,
-        weights=None,
         batch_size=64,
-        num_workers=dataset.N_WORKERS,
-        length=FastDataLoader.EPOCH)
+        num_workers=dataset.N_WORKERS)
         for env, _ in (in_splits + out_splits)]
     eval_weights = [None for _, weights in (in_splits + out_splits)]
     eval_loader_names = ['env{}_in'.format(i)
@@ -134,7 +131,8 @@ if __name__ == "__main__":
     train_minibatches_iterator = zip(*train_loaders)
     checkpoint_vals = collections.defaultdict(lambda: [])
 
-    steps_per_epoch = min([l.underlying_length for l in train_loaders])
+    steps_per_epoch = min([len(env)/hparams['batch_size'] for env,_ in in_splits])
+
     n_steps = args.steps or dataset.N_STEPS
     checkpoint_freq = args.checkpoint_freq or dataset.CHECKPOINT_FREQ
 
