@@ -19,9 +19,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 DATASETS = [
     # Debug
-    "Debug2048",
     "Debug28",
-    "Debug32",
     "Debug224",
     # Small images
     "RotatedMNIST",
@@ -37,9 +35,7 @@ DATASETS = [
 NUM_ENVIRONMENTS = {
     # Debug
     "Debug28": 3,
-    "Debug32": 3,
     "Debug224": 3,
-    "Debug2048": 3,
     # Small images
     "RotatedMNIST": 6,
     "ColoredMNIST": 3,
@@ -59,7 +55,7 @@ def get_dataset_class(dataset_name):
     return globals()[dataset_name]
 
 class MultipleDomainDataset:
-    N_STEPS = 10*1000
+    N_STEPS = 5001 
     CHECKPOINT_FREQ = 100
     N_WORKERS = 8
 
@@ -89,20 +85,12 @@ class Debug28(Debug):
     INPUT_SHAPE = (3, 28, 28)
     ENVIRONMENT_NAMES = ['0', '1', '2']
 
-class Debug32(Debug):
-    INPUT_SHAPE = (3, 32, 32)
-
 class Debug224(Debug):
     INPUT_SHAPE = (3, 224, 224)
-
-class Debug2048(Debug):
-    INPUT_SHAPE = (2048,)
-
+    ENVIRONMENT_NAMES = ['0', '1', '2']
 
 
 class MultipleEnvironmentMNIST(MultipleDomainDataset):
-    N_WORKERS = 1
-
     def __init__(self, root, environments, dataset_transform, input_shape,
                  num_classes):
         super().__init__()
@@ -251,41 +239,36 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
         return len(self.datasets)
 
 class VLCS(MultipleEnvironmentImageFolder):
-    N_STEPS = 4000
     CHECKPOINT_FREQ = 300
     ENVIRONMENT_NAMES = ["C", "L", "S", "V"]
     def __init__(self, root, test_envs, hparams):
         self.dir = os.path.join(root, "VLCS/")
-        super().__init__(self.dir, test_envs, True, hparams)
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
 
 class PACS(MultipleEnvironmentImageFolder):
-    N_STEPS = 4000
     CHECKPOINT_FREQ = 300
     ENVIRONMENT_NAMES = ["A", "C", "P", "S"]
     def __init__(self, root, test_envs, hparams):
         self.dir = os.path.join(root, "PACS/")
-        super().__init__(self.dir, test_envs, True, hparams)
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
 
 class DomainNet(MultipleEnvironmentImageFolder):
-    N_STEPS = 5001
     CHECKPOINT_FREQ = 1000
     ENVIRONMENT_NAMES = ["clip", "info", "paint", "quick", "real", "sketch"]
     def __init__(self, root, test_envs, hparams):
         self.dir = os.path.join(root, "domain_net/")
-        super().__init__(self.dir, test_envs, True, hparams)
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
 
 class OfficeHome(MultipleEnvironmentImageFolder):
-    N_STEPS = 4000
     CHECKPOINT_FREQ = 300
     ENVIRONMENT_NAMES = ["A", "C", "P", "R"]
     def __init__(self, root, test_envs, hparams):
         self.dir = os.path.join(root, "office_home/")
-        super().__init__(self.dir, test_envs, True, hparams)
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
 
 class TerraIncognita(MultipleEnvironmentImageFolder):
-    N_STEPS = 4000
     CHECKPOINT_FREQ = 300
     ENVIRONMENT_NAMES = ["L100", "L38", "L43", "L46"]
     def __init__(self, root, test_envs, hparams):
         self.dir = os.path.join(root, "terra_incognita/")
-        super().__init__(self.dir, test_envs, True, hparams)
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)

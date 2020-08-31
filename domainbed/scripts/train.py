@@ -40,6 +40,7 @@ if __name__ == "__main__":
     parser.add_argument('--test_envs', type=int, nargs='+', default=[0])
     parser.add_argument('--output_dir', type=str, default="train_output")
     parser.add_argument('--holdout_fraction', type=float, default=0.2)
+    parser.add_argument('--skip_model_save', action='store_true')
     args = parser.parse_args()
 
     # If we ever want to implement checkpointing, just persist these values
@@ -180,6 +181,18 @@ if __name__ == "__main__":
             algorithm_dict = algorithm.state_dict()
             start_step = step + 1
             checkpoint_vals = collections.defaultdict(lambda: [])
+
+    if not args.skip_model_save:
+        save_dict = {
+            "args": vars(args),
+            "model_input_shape": dataset.input_shape,
+            "model_num_classes": dataset.num_classes,
+            "model_num_domains": len(dataset) - len(args.test_envs),
+            "model_hparams": hparams,
+            "model_dict": algorithm.cpu().state_dict()
+        }
+
+        torch.save(save_dict, os.path.join(args.output_dir, "model.pkl"))
 
     with open(os.path.join(args.output_dir, 'done'), 'w') as f:
         f.write('done')

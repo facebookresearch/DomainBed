@@ -62,7 +62,7 @@ class wide_basic(nn.Module):
 
 class Wide_ResNet(nn.Module):
     """Wide Resnet with the softmax layer chopped off"""
-    def __init__(self, depth, widen_factor, dropout_rate):
+    def __init__(self, input_shape, depth, widen_factor, dropout_rate):
         super(Wide_ResNet, self).__init__()
         self.in_planes = 16
 
@@ -73,7 +73,7 @@ class Wide_ResNet(nn.Module):
         # print('| Wide-Resnet %dx%d' % (depth, k))
         nStages = [16, 16 * k, 32 * k, 64 * k]
 
-        self.conv1 = conv3x3(3, nStages[0])
+        self.conv1 = conv3x3(input_shape[0], nStages[0])
         self.layer1 = self._wide_layer(
             wide_basic, nStages[1], n, dropout_rate, stride=1)
         self.layer2 = self._wide_layer(
