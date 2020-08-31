@@ -13,14 +13,17 @@ from domainbed.lib.misc import random_pairs_of_minibatches
 
 ALGORITHMS = [
     'ERM',
-    'DANN',
-    'CDANN',
     'IRM',
-    'Mixup',
     'GroupDRO',
+    'Mixup',
     'MLDG',
+    'CORAL',
     'MMD',
-    'CORAL'
+    'DANN', 
+    'CDANN', 
+    'MTL', 
+    'SagNet',
+    'ARM',
 ]
 
 def get_algorithm_class(algorithm_name):
@@ -80,6 +83,31 @@ class ERM(Algorithm):
         return {'loss': loss.item()}
 
     def predict(self, x):
+        return self.network(x)
+
+
+class ARM(ERM):
+    """ Adaptive Risk Minimization (ARM) """
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        original_input_shape = input_shape
+        input_shape = (1 + original_input_shape[0],) + original_input_shape[1:]
+        super(ARM, self).__init__(input_shape, num_classes, num_domains,
+                                  hparams)
+        self.context_net = networks.ContextNet(original_input_shape)
+        self.support_size = hparams['batch_size']
+
+    def predict(self, x):
+        batch_size, c, h, w = x.shape
+        if batch_size % self.support_size == 0:
+            meta_batch_size = batch_size // self.support_size
+            support_size = self.support_size
+        else:
+            meta_batch_size, support_size = 1, batch_size
+        context = self.context_net(x)
+        context = context.reshape((meta_batch_size, support_size, 1, h, w))
+        context = context.mean(dim=1)
+        context = torch.repeat_interleave(context, repeats=support_size, dim=0)
+        x = torch.cat([x, context], dim=1)
         return self.network(x)
 
 
@@ -517,3 +545,124 @@ class CORAL(AbstractMMD):
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(CORAL, self).__init__(input_shape, num_classes,
                                          num_domains, hparams, gaussian=False)
+
+
+class MTL(Algorithm):
+    """
+    A neural network version of
+    Domain Generalization by Marginal Transfer Learning
+    (https://arxiv.org/abs/1711.07910)
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(MTL, self).__init__(input_shape, num_classes, num_domains,
+                                  hparams)
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = nn.Linear(self.featurizer.n_outputs * 2, num_classes)
+        self.optimizer = torch.optim.Adam(
+            list(self.featurizer.parameters()) +\
+            list(self.classifier.parameters()),
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams['weight_decay']
+        )
+
+        self.register_buffer('embeddings',
+                             torch.zeros(num_domains,
+                                         self.featurizer.n_outputs))
+
+        self.ema = self.hparams['mtl_ema']
+
+    def update(self, minibatches):
+        loss = 0
+        for env, (x, y) in enumerate(minibatches):
+            loss += F.cross_entropy(self.predict(x, env), y)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return {'loss': loss.item()}
+
+    def update_embeddings_(self, features, env=None):
+        return_embedding = features.mean(0)
+
+        if env is not None:
+            return_embedding = self.ema * return_embedding +\
+                               (1 - self.ema) * self.embeddings[env]
+
+            self.embeddings[env] = return_embedding.clone().detach()
+
+        return return_embedding.view(1, -1).repeat(len(features), 1)
+
+    def predict(self, x, env=None):
+        features = self.featurizer(x)
+        embedding = self.update_embeddings_(features, env).normal_()
+        return self.classifier(torch.cat((features, embedding), 1))
+
+class SagNet(Algorithm):
+    """
+    Style Agnostic Network
+    Algorithm 1 from: https://arxiv.org/abs/1910.11645 
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(SagNet, self).__init__(input_shape, num_classes, num_domains,
+                                  hparams)
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.content_net = nn.Linear(self.featurizer.n_outputs, num_classes)
+        self.style_net = nn.Linear(self.featurizer.n_outputs, num_classes)
+
+        self.optimizer = torch.optim.Adam(
+                self.parameters(),
+                lr=hparams["lr"],
+                weight_decay=hparams["weight_decay"])
+
+        self.weight_adversary = hparams["sag_w_adv"]
+    
+    def randomize(self, x, what="style", eps=1e-5):
+        sizes = x.size()
+        alpha = torch.rand(sizes[0], 1).cuda()
+
+        if len(sizes) == 4:
+            x = x.view(sizes[0], sizes[1], -1)
+            alpha = alpha.unsqueeze(-1) 
+
+        mean = x.mean(-1, keepdim=True)
+        var = x.var(-1, keepdim=True)
+        
+        x = (x - mean) / (var + eps).sqrt()
+        
+        idx_swap = torch.randperm(sizes[0])
+        if what == "style":
+            mean = alpha * mean + (1 - alpha) * mean[idx_swap]
+            var = alpha * var + (1 - alpha) * var[idx_swap]
+        else:
+            x = x[idx_swap].detach()
+
+        x = x * (var + eps).sqrt() + mean
+        return x.view(*sizes)
+
+    def update(self, minibatches):
+        all_x = torch.cat([x for x, y in minibatches])
+        all_y = torch.cat([y for x, y in minibatches])
+        all_f = self.featurizer(all_x)
+
+        preds_content = self.randomize(all_f, "style")
+        loss_content = F.cross_entropy(preds_content, all_y)
+
+        preds_style = self.randomize(all_f, "content")
+        loss_style = F.cross_entropy(preds_style, all_y)
+
+        loss_adversary = -F.log_softmax(preds_style, dim=1).mean(1).mean()
+        loss_adversary = loss_adversary * self.weight_adversary
+
+        self.optimizer.zero_grad()
+        (loss_adversary + loss_style + loss_content).backward()
+        self.optimizer.step()
+
+        return {'loss_content': loss_content.item(),
+                'loss_style': loss_style.item(),
+                'loss_adversary': loss_adversary.item()}
+
+    def predict(self, x):
+        return self.content_net(self.featurizer(x))

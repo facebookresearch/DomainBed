@@ -35,7 +35,6 @@ def format_mean(data, latex):
     else:
         return "{:.1f} +/- {:.1f}".format(mean, err)
 
-
 def print_table(table, header_text, row_labels, col_labels, colwidth=10,
     latex=True):
     """Pretty-print a 2D array of data, optionally with row/col labels"""
@@ -68,9 +67,6 @@ def print_table(table, header_text, row_labels, col_labels, colwidth=10,
         print("\\end{tabular}")
         print("\\end{center}")
 
-ALGORITHM_PRINT_ORDER = ['ERM', 'IRM', 'GroupDRO', 'Mixup', 'MLDG',
-    'CORAL', 'MMD', 'DANN', 'CDANN']
-
 def get_grouped_records(records):
     """Group records by (trial_seed, dataset, algorithm, test_env). Because
     records can have multiple test envs, a given record may appear in more than
@@ -94,8 +90,8 @@ def print_results_tables(records, selection_method, latex):
 
     # read algorithm names and sort (predefined order)
     alg_names = Q(records).select('args.algorithm').unique()
-    alg_names = ([n for n in ALGORITHM_PRINT_ORDER if n in alg_names] +
-        [n for n in alg_names if n not in ALGORITHM_PRINT_ORDER])
+    alg_names = ([n for n in algorithms.ALGORITHMS if n in alg_names] +
+        [n for n in alg_names if n not in algorithms.ALGORITHMS])
 
     # read dataset names and sort (lexicographic order)
     dataset_names = Q(records).select('args.dataset').unique().sorted()
