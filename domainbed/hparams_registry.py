@@ -52,7 +52,10 @@ def _hparams(algorithm, dataset, random_state):
         hparams['grad_penalty'] = (0., 10**random_state.uniform(-2, 1))
         hparams['beta1'] = (0.5, random_state.choice([0., 0.5]))
 
-    hparams['resnet_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
+    if algorithm == "SagNet":
+        hparams['resnet_dropout'] = (.5, random_state.choice([0., 0.1, 0.5]))
+    else:
+        hparams['resnet_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
 
     # TODO clean this up
     hparams.update({a:(b,c) for a,b,c in [
@@ -71,7 +74,14 @@ def _hparams(algorithm, dataset, random_state):
         ('mlp_dropout', 0., random_state.choice([0., 0.1, 0.5])),
         # MLDG
         ('mldg_beta', 1., 10**random_state.uniform(-1, 1)),
-        ('mtl_ema', .99, random_state.choice([0.5, 0.9, 0.99, 1.]))
+        ('mtl_ema', .99, random_state.choice([0.5, 0.9, 0.99, 1.])),
+        # SagNets
+        ('sag_style_stage', 3, int(random_state.choice([1, 2, 3, 4]))),
+        ('sag_scheduler', 'cosine', random_state.choice(['cosine', 'step'])),
+        ('sag_gamma', 0.1, 10**random_state.uniform(-2, 1)),
+        ('sag_w_adv', 0.1, 10**random_state.uniform(-2, 1)),
+        ('sag_clip_adv', 0.1, 10**random_state.uniform(-2, 1)),
+        ('sag_momentum', 0.9, random_state.choice([0., 0.5, 0.9, 0.99]))
     ]})
     return hparams
 

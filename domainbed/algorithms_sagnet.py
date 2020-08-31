@@ -1,28 +1,16 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-
 # Adapted from: https://github.com/hyeonseobnam/style-agnostic-networks/
 
-from collections import OrderedDict
-from torchvision import transforms
-import argparse
-import copy
-import json 
-import numpy as np
-import os
-import sys
-import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.model_zoo as model_zoo
 
+from domainbed import hparams_registry
 
 model_urls = {
     'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
-    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
-    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
+    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth'
 }
 
 
@@ -297,10 +285,8 @@ def sag_resnet(depth, pretrained=False, **kwargs):
         model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
     elif depth == 50:
         model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
-    elif depth == 101:
-        model = ResNet(Bottleneck, [3, 4, 23, 3], **kwargs)
-    elif depth == 152:
-        model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
+    else:
+        raise NotImplementedError
 
     if pretrained:
         model_url = model_urls['resnet' + str(depth)]
@@ -325,65 +311,29 @@ def sag_resnet(depth, pretrained=False, **kwargs):
 class SagNet(torch.nn.Module):
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(SagNet, self).__init__()
+        # persistent args
+        self.sag_args_w_adv = hparams['sag_w_adv']
+        self.sag_args_clip_adv = hparams['sag_clip_adv']
+        self.sag_args_sagnet = True # always True
 
-        # Training settings
-        parser = argparse.ArgumentParser(description='PyTorch SagNet')
-
-        # model
-        parser.add_argument('--arch', type=str, default='sag_resnet',
-                            help='network archiecture')
-        parser.add_argument('--depth', type=str, default='50',
-                            help='depth of network')
-        parser.add_argument('--drop', type=float, default=0.5,
-                            help='dropout ratio')
-
-        parser.add_argument('--style-stage', type=int, default=3,
-                            help='stage to extract style features {1, 2, 3, 4}')
-        parser.add_argument('--w-adv', type=float, default=0.1,
-                            help='weight for adversarial loss')
-
-        # training policy
-        parser.add_argument('--from-sketch', action='store_true', default=False,
-                            help='training from scratch')
-        parser.add_argument('--lr', type=float, default=0.004,
-                            help='initial learning rate')
-        parser.add_argument('--weight-decay', type=float, default=1e-4,
-                            help='weight decay')
-        parser.add_argument('--iterations', type=int, default=2000,
-                            help='number of training iterations')
-        parser.add_argument('--scheduler', type=str, default='cosine',
-                            help='learning rate scheduler {step, cosine}')
-        parser.add_argument('--milestones', type=int, nargs='+', default=[1000, 1500],
-                            help='milestones to decay learning rate (for step scheduler)')
-        parser.add_argument('--gamma', type=float, default=0.1,
-                            help='gamma to decay learning rate')
-        parser.add_argument('--momentum', type=float, default=0.9,
-                            help='SGD momentum')
-        parser.add_argument('--clip-adv', type=float, default=0.1,
-                            help='grad clipping for adversarial loss')
-
-        self.args = parser.parse_args([])
-        self.args.num_classes = num_classes
-        self.args.sagnet = True 
-
-        self.model = sag_resnet(depth=int(self.args.depth),
+        self.model = sag_resnet(depth=18 if hparams['resnet18'] else 50,
                         pretrained=True,
-                        num_classes=self.args.num_classes,
-                        drop=self.args.drop,
-                        sagnet=self.args.sagnet,
-                        style_stage=self.args.style_stage)
+                        num_classes=num_classes,
+                        drop=hparams['resnet_dropout'],
+                        sagnet=self.sag_args_sagnet,
+                        style_stage=hparams['sag_style_stage'])
 
         # Set hyperparams
-        optim_hyperparams = {'lr': self.args.lr, 
-                             'weight_decay': self.args.weight_decay,
-                             'momentum': self.args.momentum}
-        if self.args.scheduler == 'step':
+        optim_hyperparams = {'lr': hparams['lr'], 
+                             'weight_decay': hparams['weight_decay'],
+                             'momentum': hparams['sag_momentum']}
+        if hparams['sag_scheduler'] == 'step':
             Scheduler = optim.lr_scheduler.MultiStepLR
-            sch_hyperparams = {'milestones': self.args.milestones,
-                               'gamma': self.args.gamma}
-        elif self.args.scheduler == 'cosine':
+            sch_hyperparams = {'milestones': [1000, 2000, 3000, 4000],
+                               'gamma': hparams['sag_gamma']}
+        elif hparams['sag_scheduler'] == 'cosine':
             Scheduler = optim.lr_scheduler.CosineAnnealingLR
-            sch_hyperparams = {'T_max': self.args.iterations}
+            sch_hyperparams = {'T_max': 5001}
         
         # Main learning
         params = self.model.parameters()
@@ -391,7 +341,7 @@ class SagNet(torch.nn.Module):
         self.scheduler = Scheduler(self.optimizer, **sch_hyperparams)
         self.criterion = torch.nn.CrossEntropyLoss()
         
-        if self.args.sagnet:
+        if self.sag_args_sagnet:
             # Style learning
             params_style = self.model.style_params()
             self.optimizer_style = optim.SGD(params_style, **optim_hyperparams)
@@ -414,18 +364,19 @@ class SagNet(torch.nn.Module):
         # forward
         y, y_style = self.model(data)
 
-        if self.args.sagnet:
+        if self.sag_args_sagnet:
             # learn style
             loss_style = self.criterion(y_style, label)
             self.optimizer_style.zero_grad()
             loss_style.backward(retain_graph=True)
         
             # learn style_adv
-            loss_adv = self.args.w_adv * self.criterion_adv(y_style)
+            loss_adv = self.sag_args_w_adv * self.criterion_adv(y_style)
             self.optimizer_adv.zero_grad()
             loss_adv.backward(retain_graph=True)
-            if self.args.clip_adv is not None:
-                torch.nn.utils.clip_grad_norm_(self.model.adv_params(), self.args.clip_adv)
+            if self.sag_args_clip_adv is not None:
+                torch.nn.utils.clip_grad_norm_(self.model.adv_params(),
+                                               self.sag_args_clip_adv)
 
         # learn content
         loss = self.criterion(y, label)
@@ -437,7 +388,7 @@ class SagNet(torch.nn.Module):
         self.optimizer.step()
         
         self.scheduler.step()
-        if self.args.sagnet:
+        if self.sag_args_sagnet:
             self.scheduler_style.step()
             self.scheduler_adv.step()
 
@@ -452,8 +403,15 @@ class SagNet(torch.nn.Module):
 if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     bs = 16
+        
+    hparams = hparams_registry.default_hparams("SagNets", "PACS")
+    # hparams = hparams_registry.random_hparams("SagNets", "PACS", 0)
 
-    net = SagNet((3, 224, 224), 7, 4, None)
+    print('HParams:')
+    for k, v in sorted(hparams.items()):
+        print('\t{}: {}'.format(k, v))
+
+    net = SagNet((3, 224, 224), 7, 4, hparams)
     net.to(device)
 
     minibatches = [
