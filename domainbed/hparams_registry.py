@@ -21,6 +21,9 @@ def _hparams(algorithm, dataset, random_state):
             hparams['batch_size'] = (32, int(2**random_state.uniform(3, 5)))
         else:
             hparams['batch_size'] = (32, int(2**random_state.uniform(3, 5.5)))
+        # SagNet cannot do more 
+        if algorithm == "SagNet":
+            hparams['batch_size'] = (12, 12)
     else:
         hparams['lr'] = (1e-3, 10**random_state.uniform(-4.5, -2.5))
         hparams['batch_size'] = (64, int(2**random_state.uniform(3, 9)))

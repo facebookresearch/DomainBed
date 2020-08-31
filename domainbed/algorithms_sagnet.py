@@ -398,27 +398,3 @@ class SagNet(torch.nn.Module):
 
     def predict(self, x):
         return self.model(x)[0]
-
-
-if __name__ == "__main__":
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    bs = 16
-        
-    hparams = hparams_registry.default_hparams("SagNets", "PACS")
-    # hparams = hparams_registry.random_hparams("SagNets", "PACS", 0)
-
-    print('HParams:')
-    for k, v in sorted(hparams.items()):
-        print('\t{}: {}'.format(k, v))
-
-    net = SagNet((3, 224, 224), 7, 4, hparams)
-    net.to(device)
-
-    minibatches = [
-        (torch.randn(bs, 3, 224, 224).to(device), torch.randn(bs).random_(0, 7).long().to(device)),
-        (torch.randn(bs, 3, 224, 224).to(device), torch.randn(bs).random_(0, 7).long().to(device)),
-        (torch.randn(bs, 3, 224, 224).to(device), torch.randn(bs).random_(0, 7).long().to(device))
-    ]
-
-    print(net.predict(minibatches[0][0]).shape)
-    print(net.update(minibatches))
