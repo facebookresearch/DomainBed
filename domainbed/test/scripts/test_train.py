@@ -36,7 +36,7 @@ class TestTrain(unittest.TestCase):
             last_epoch = json.loads(lines[-1])
             self.assertEqual(last_epoch['step'], 500)
             # Conservative values; anything lower and something's likely wrong.
-            self.assertGreater(last_epoch['env0_in_acc'], 0.88)
+            self.assertGreater(last_epoch['env0_in_acc'], 0.87)
             self.assertGreater(last_epoch['env1_in_acc'], 0.95)
             self.assertGreater(last_epoch['env2_in_acc'], 0.95)
             self.assertGreater(last_epoch['env3_in_acc'], 0.95)

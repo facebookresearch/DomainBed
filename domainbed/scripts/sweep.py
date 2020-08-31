@@ -27,31 +27,6 @@ from domainbed import command_launchers
 import tqdm
 import shlex
 
-# These constants determine the parameters of the default sweep; you can
-# override them with command-line args.
-DATASETS = [
-    'RotatedMNIST',
-    'ColoredMNIST',
-    'DomainNet',
-    'VLCS',
-    'PACS',
-    'OfficeHome',
-    'TerraIncognita',
-]
-ALGORITHMS = [
-    'ERM',
-    'IRM',
-    'DANN',
-    'CDANN',
-    'GroupDRO',
-    'Mixup',
-    'MMD',
-    'CORAL',
-    'MLDG',
-]
-N_TRIALS = 3
-N_HPARAMS = 20
-
 class Job:
     NOT_LAUNCHED = 'Not launched'
     INCOMPLETE = 'Incomplete'
@@ -153,13 +128,13 @@ def ask_for_confirmation():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run a sweep')
     parser.add_argument('command', choices=['launch', 'delete_incomplete'])
-    parser.add_argument('--datasets', nargs='+', type=str, default=DATASETS)
-    parser.add_argument('--algorithms', nargs='+', type=str, default=ALGORITHMS)
-    parser.add_argument('--n_hparams', type=int, default=N_HPARAMS)
+    parser.add_argument('--datasets', nargs='+', type=str, default=datasets.DATASETS)
+    parser.add_argument('--algorithms', nargs='+', type=str, default=algorithms.ALGORITHMS)
+    parser.add_argument('--n_hparams', type=int, default=20)
     parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--data_dir', type=str, required=True)
     parser.add_argument('--seed', type=int, default=0)
-    parser.add_argument('--n_trials', type=int, default=N_TRIALS)
+    parser.add_argument('--n_trials', type=int, default=3)
     parser.add_argument('--command_launcher', type=str, required=True)
     parser.add_argument('--steps', type=int, default=None)
     parser.add_argument('--hparams', type=str, default=None)

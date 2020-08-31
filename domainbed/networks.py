@@ -32,14 +32,16 @@ class MLP(nn.Module):
         x = self.output(x)
         return x
 
-class ResNet50(torch.nn.Module):
-    """ResNet50 with the softmax chopped off and the batchnorm frozen"""
-    n_outputs = 2048
-
+class ResNet(torch.nn.Module):
+    """ResNet with the softmax chopped off and the batchnorm frozen"""
     def __init__(self, hparams):
-        super(ResNet50, self).__init__()
-        # self.network = torchvision.models.resnet18(pretrained=True)
-        self.network = torchvision.models.resnet50(pretrained=True)
+        super(ResNet, self).__init__()
+        if hparams['resnet18']:
+            self.network = torchvision.models.resnet18(pretrained=True)
+            self.n_outputs = 512
+        else:
+            self.network = torchvision.models.resnet50(pretrained=True)
+            self.n_outputs = 2048
         self.freeze_bn()
         self.hparams = hparams
         self.dropout = nn.Dropout(hparams['resnet_dropout'])
@@ -121,4 +123,4 @@ def Featurizer(input_shape, hparams):
     elif input_shape == (3, 32, 32):
         return wide_resnet.Wide_ResNet(16, 2, 0.)
     elif input_shape == (3, 224, 224):
-        return ResNet50(hparams)
+        return ResNet(hparams)

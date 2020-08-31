@@ -8,12 +8,14 @@ def _hparams(algorithm, dataset, random_state):
     Global registry of hyperparams. Each entry is a (default, random) tuple.
     New algorithms / networks / etc. should add entries here.
     """
-    RESNET_DATASETS = ['VLCS', 'PACS', 'OfficeHome', 'TerraIncognita',
-        'DomainNet']
+    SMALL_IMAGES = ['Debug28', 'RotatedMNIST', 'ColoredMNIST']
 
     hparams = {}
+    
+    hparams['data_augmentation'] = (True, True)
+    hparams['resnet18'] = (False, False)
 
-    if dataset in RESNET_DATASETS:
+    if dataset not in SMALL_IMAGES:
         hparams['lr'] = (5e-5, 10**random_state.uniform(-5, -3.5))
         if dataset == 'DomainNet':
             hparams['batch_size'] = (32, int(2**random_state.uniform(3, 5)))
@@ -23,7 +25,7 @@ def _hparams(algorithm, dataset, random_state):
         hparams['lr'] = (1e-3, 10**random_state.uniform(-4.5, -2.5))
         hparams['batch_size'] = (64, int(2**random_state.uniform(3, 9)))
 
-    if dataset in ['ColoredMNIST', 'RotatedMNIST']:
+    if 'MNIST' in dataset:
         hparams['weight_decay'] = (0., 0.)
     else:
         hparams['weight_decay'] = (0., 10**random_state.uniform(-6, -2))
@@ -32,14 +34,14 @@ def _hparams(algorithm, dataset, random_state):
 
     if algorithm in ['DANN', 'CDANN']:
 
-        if dataset in RESNET_DATASETS:
+        if dataset not in SMALL_IMAGES:
             hparams['lr_g'] = (5e-5, 10**random_state.uniform(-5, -3.5))
             hparams['lr_d'] = (5e-5, 10**random_state.uniform(-5, -3.5))
         else:
             hparams['lr_g'] = (1e-3, 10**random_state.uniform(-4.5, -2.5))
             hparams['lr_d'] = (1e-3, 10**random_state.uniform(-4.5, -2.5))
 
-        if dataset in ['ColoredMNIST', 'RotatedMNIST']:
+        if 'MNIST' in dataset:
             hparams['weight_decay_g'] = (0., 0.)
         else:
             hparams['weight_decay_g'] = (0., 10**random_state.uniform(-6, -2))
@@ -50,7 +52,7 @@ def _hparams(algorithm, dataset, random_state):
         hparams['grad_penalty'] = (0., 10**random_state.uniform(-2, 1))
         hparams['beta1'] = (0.5, random_state.choice([0., 0.5]))
 
-    hparams['resnet_dropout'] = (0., float(random_state.choice([0., 0.1, 0.5])))
+    hparams['resnet_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
 
     # TODO clean this up
     hparams.update({a:(b,c) for a,b,c in [
@@ -66,9 +68,10 @@ def _hparams(algorithm, dataset, random_state):
         # MLP
         ('mlp_width', 256, int(2**random_state.uniform(6, 10))),
         ('mlp_depth', 3, int(random_state.choice([3,4,5])) ),
-        ('mlp_dropout', 0., float(random_state.choice([0., 0.1, 0.5])) ),
+        ('mlp_dropout', 0., random_state.choice([0., 0.1, 0.5])),
         # MLDG
-        ('mldg_beta', 1., 10**random_state.uniform(-1, 1))
+        ('mldg_beta', 1., 10**random_state.uniform(-1, 1)),
+        ('mtl_ema', .99, random_state.choice([0.5, 0.9, 0.99, 1.]))
     ]})
     return hparams
 

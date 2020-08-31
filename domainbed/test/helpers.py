@@ -2,7 +2,7 @@
 
 import torch
 
-DEBUG_DATASETS = ['Debug2048', 'Debug28', 'Debug32', 'Debug224']
+DEBUG_DATASETS = ['Debug28', 'Debug224']
 
 def make_minibatches(dataset, batch_size):
     """Test helper to make a minibatches array like train.py"""
