@@ -114,6 +114,27 @@ class MNIST_CNN(nn.Module):
         x = x.mean(dim=(2,3))
         return x
 
+class ContextNet(nn.Module):
+
+    def __init__(self, input_shape):
+        super(ContextNet, self).__init__()
+
+        # Keep same dimensions
+        padding = (5 - 1) // 2
+        self.context_net = nn.Sequential(
+            nn.Conv2d(input_shape[0], 64, 5, padding=padding),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, 5, padding=padding),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.Conv2d(64, 1, 5, padding=padding),
+        )
+
+    def forward(self, x):
+        return self.context_net(x)
+
+
 def Featurizer(input_shape, hparams):
     """Auto-select an appropriate featurizer for the given input shape."""
     if input_shape == (2048,):
