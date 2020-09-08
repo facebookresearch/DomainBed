@@ -35,7 +35,6 @@ def _hparams(algorithm, dataset, random_state):
     hparams['class_balanced'] = (False, False)
 
     if algorithm in ['DANN', 'CDANN']:
-
         if dataset not in SMALL_IMAGES:
             hparams['lr_g'] = (5e-5, 10**random_state.uniform(-5, -3.5))
             hparams['lr_d'] = (5e-5, 10**random_state.uniform(-5, -3.5))
@@ -54,10 +53,7 @@ def _hparams(algorithm, dataset, random_state):
         hparams['grad_penalty'] = (0., 10**random_state.uniform(-2, 1))
         hparams['beta1'] = (0.5, random_state.choice([0., 0.5]))
 
-    if algorithm == "SagNet":
-        hparams['resnet_dropout'] = (.5, random_state.choice([0., 0.1, 0.5]))
-    else:
-        hparams['resnet_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
+    hparams['resnet_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
 
     # TODO clean this up
     hparams.update({a:(b,c) for a,b,c in [

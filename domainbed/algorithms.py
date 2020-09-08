@@ -608,16 +608,56 @@ class SagNet(Algorithm):
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(SagNet, self).__init__(input_shape, num_classes, num_domains,
                                   hparams)
-        self.featurizer = networks.Featurizer(input_shape, self.hparams)
-        self.content_net = nn.Linear(self.featurizer.n_outputs, num_classes)
-        self.style_net = nn.Linear(self.featurizer.n_outputs, num_classes)
+        # featurizer network
+        self.network_f = networks.Featurizer(input_shape, self.hparams)
+        # content network
+        self.network_c = nn.Linear(self.network_f.n_outputs, num_classes)
+        # style network
+        self.network_s = nn.Linear(self.network_f.n_outputs, num_classes)
 
-        self.optimizer = torch.optim.Adam(
-                self.parameters(),
-                lr=hparams["lr"],
-                weight_decay=hparams["weight_decay"])
+        # # This commented block of code implements something closer to the
+        # # original paper, but is specific to ResNet and puts in disadvantage
+        # # the other algorithms.
+        # resnet_c = networks.Featurizer(input_shape, self.hparams)
+        # resnet_s = networks.Featurizer(input_shape, self.hparams)
+        # # featurizer network
+        # self.network_f = torch.nn.Sequential(
+        #         resnet_c.network.conv1,
+        #         resnet_c.network.bn1,
+        #         resnet_c.network.relu,
+        #         resnet_c.network.maxpool,
+        #         resnet_c.network.layer1,
+        #         resnet_c.network.layer2,
+        #         resnet_c.network.layer3)
+        # # content network
+        # self.network_c = torch.nn.Sequential(
+        #         resnet_c.network.layer4,
+        #         resnet_c.network.avgpool,
+        #         networks.Flatten(),
+        #         resnet_c.network.fc)
+        # # style network
+        # self.network_s = torch.nn.Sequential(
+        #         resnet_s.network.layer4,
+        #         resnet_s.network.avgpool,
+        #         networks.Flatten(),
+        #         resnet_s.network.fc)
 
-        self.weight_adversary = hparams["sag_w_adv"]
+        def opt(p):
+            return torch.optim.Adam(p, lr=hparams["lr"],
+                    weight_decay=hparams["weight_decay"])
+
+        self.optimizer_f = opt(self.network_f.parameters())
+        self.optimizer_c = opt(self.network_c.parameters())
+        self.optimizer_s = opt(self.network_s.parameters())
+        self.weight_adv = hparams["sag_w_adv"]
+
+    def forward_c(self, x):
+        # learning content network on randomized style
+        return self.network_c(self.randomize(self.network_f(x), "style"))
+
+    def forward_s(self, x):
+        # learning style network on randomized content
+        return self.network_s(self.randomize(self.network_f(x), "content"))
     
     def randomize(self, x, what="style", eps=1e-5):
         sizes = x.size()
@@ -645,24 +685,30 @@ class SagNet(Algorithm):
     def update(self, minibatches):
         all_x = torch.cat([x for x, y in minibatches])
         all_y = torch.cat([y for x, y in minibatches])
-        all_f = self.featurizer(all_x)
 
-        preds_content = self.randomize(all_f, "style")
-        loss_content = F.cross_entropy(preds_content, all_y)
+        # learn content
+        self.optimizer_f.zero_grad()
+        self.optimizer_c.zero_grad()
+        loss_c = F.cross_entropy(self.forward_c(all_x), all_y)
+        loss_c.backward()
+        self.optimizer_f.step()
+        self.optimizer_c.step()
 
-        preds_style = self.randomize(all_f, "content")
-        loss_style = F.cross_entropy(preds_style, all_y)
+        # learn style 
+        self.optimizer_s.zero_grad()
+        loss_s = F.cross_entropy(self.forward_s(all_x), all_y)
+        loss_s.backward()
+        self.optimizer_s.step()
+       
+        # learn adversary
+        self.optimizer_f.zero_grad()
+        loss_adv = -F.log_softmax(self.forward_s(all_x), dim=1).mean(1).mean()
+        loss_adv = loss_adv * self.weight_adv
+        loss_adv.backward()
+        self.optimizer_f.step()
 
-        loss_adversary = -F.log_softmax(preds_style, dim=1).mean(1).mean()
-        loss_adversary = loss_adversary * self.weight_adversary
-
-        self.optimizer.zero_grad()
-        (loss_adversary + loss_style + loss_content).backward()
-        self.optimizer.step()
-
-        return {'loss_content': loss_content.item(),
-                'loss_style': loss_style.item(),
-                'loss_adversary': loss_adversary.item()}
+        return {'loss_c': loss_c.item(), 'loss_s': loss_s.item(),
+                'loss_adv': loss_adv.item()}
 
     def predict(self, x):
-        return self.content_net(self.featurizer(x))
+        return self.network_c(self.network_f(x))
