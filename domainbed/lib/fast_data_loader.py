@@ -15,13 +15,20 @@ class _InfiniteSampler(torch.utils.data.Sampler):
 class InfiniteDataLoader:
     def __init__(self, dataset, weights, batch_size, num_workers):
         super().__init__()
+
+        if weights:
+            sampler = torch.utils.data.WeightedRandomSampler(weights,
+                replacement=True,
+                num_samples=batch_size)
+        else:
+            sampler = torch.utils.data.RandomSampler(dataset,
+                replacement=True)
+
         if weights == None:
             weights = torch.ones(len(dataset))
 
         batch_sampler = torch.utils.data.BatchSampler(
-            torch.utils.data.WeightedRandomSampler(weights,
-                replacement=True,
-                num_samples=batch_size),
+            sampler,
             batch_size=batch_size,
             drop_last=True)
 
@@ -45,7 +52,7 @@ class FastDataLoader:
         super().__init__()
 
         batch_sampler = torch.utils.data.BatchSampler(
-            torch.utils.data.SequentialSampler(dataset),
+            torch.utils.data.RandomSampler(dataset, replacement=False),
             batch_size=batch_size,
             drop_last=False
         )
