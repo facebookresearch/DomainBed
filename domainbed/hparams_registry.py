@@ -55,26 +55,28 @@ def _hparams(algorithm, dataset, random_state):
 
     hparams['resnet_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
 
+    if algorithm == "SagNet":
+        hparams['sag_w_adv'] = (0.1, 10 ** random_state.uniform(-2, 1))
+    elif algorithm == "IRM":
+        hparams['irm_lambda'] = (1e2, 10 ** random_state.uniform(-1, 5))
+        hparams['irm_penalty_anneal_iters'] = (500, int(10 ** random_state.uniform(0, 4)))
+    elif algorithm == "Mixup":
+        hparams['mixup_alpha'] = (0.2, 10 ** random_state.uniform(-1, -1))
+    elif algorithm == "GroupDRO":
+        hparams['groupdro_eta'] = (1e-2, 10 ** random_state.uniform(-3, -1))
+    elif algorithm == "MMD":
+        hparams['mmd_gamma'] = (1., 10 ** random_state.uniform(-1, 1))
+    elif algorithm == "MLDG":
+        hparams['mldg_beta'] = (1., 10 ** random_state.uniform(-1, 1))
+    elif algorithm == "MTL":
+        hparams['mtl_ema'] = (.99, random_state.choice([0.5, 0.9, 0.99, 1.]))
+
     # TODO clean this up
     hparams.update({a:(b,c) for a,b,c in [
-        # IRM
-        ('irm_lambda', 1e2, 10**random_state.uniform(-1, 5)),
-        ('irm_penalty_anneal_iters', 500, int(10**random_state.uniform(0, 4))),
-        # Mixup
-        ('mixup_alpha', 0.2, 10**random_state.uniform(-1, -1)),
-        # GroupDRO
-        ('groupdro_eta', 1e-2, 10**random_state.uniform(-3, -1)),
-        # MMD
-        ('mmd_gamma', 1., 10**random_state.uniform(-1, 1)),
         # MLP
         ('mlp_width', 256, int(2**random_state.uniform(6, 10))),
         ('mlp_depth', 3, int(random_state.choice([3,4,5])) ),
         ('mlp_dropout', 0., random_state.choice([0., 0.1, 0.5])),
-        # MLDG
-        ('mldg_beta', 1., 10**random_state.uniform(-1, 1)),
-        ('mtl_ema', .99, random_state.choice([0.5, 0.9, 0.99, 1.])),
-        # SagNets
-        ('sag_w_adv', 0.1, 10**random_state.uniform(-2, 1)),
     ]})
     return hparams
 
