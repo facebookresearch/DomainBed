@@ -9,6 +9,15 @@ from domainbed.lib import misc
 from domainbed.lib import wide_resnet
 
 
+class Identity(nn.Module):
+    """An identity layer"""
+    def __init__(self):
+        super(Identity, self).__init__()
+
+    def forward(self, x):
+        return x
+
+
 class MLP(nn.Module):
     """Just  an MLP"""
     def __init__(self, n_inputs, n_outputs, hparams):
@@ -55,24 +64,17 @@ class ResNet(torch.nn.Module):
             for i in range(nc):
                 self.network.conv1.weight.data[:, i, :, :] = tmp[:, i % 3, :, :]
 
+        # save memory
+        del self.network.fc
+        self.network.fc = Identity()
+
         self.freeze_bn()
         self.hparams = hparams
         self.dropout = nn.Dropout(hparams['resnet_dropout'])
 
     def forward(self, x):
         """Encode x into a feature vector of size n_outputs."""
-        x = self.network.conv1(x)
-        x = self.network.bn1(x)
-        x = self.network.relu(x)
-        x = self.network.maxpool(x)
-        x = self.network.layer1(x)
-        x = self.network.layer2(x)
-        x = self.network.layer3(x)
-        x = self.network.layer4(x)
-        x = self.network.avgpool(x)
-        x = torch.flatten(x, 1)
-        x = self.dropout(x)
-        return x
+        return self.dropout(self.network(x))
 
     def train(self, mode=True):
         """

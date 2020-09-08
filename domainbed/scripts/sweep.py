@@ -125,10 +125,12 @@ def ask_for_confirmation():
         print('Nevermind!')
         exit(0)
 
+DATASETS = [d for d in datasets.DATASETS if "Debug" not in d]
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run a sweep')
     parser.add_argument('command', choices=['launch', 'delete_incomplete'])
-    parser.add_argument('--datasets', nargs='+', type=str, default=datasets.DATASETS)
+    parser.add_argument('--datasets', nargs='+', type=str, default=DATASETS)
     parser.add_argument('--algorithms', nargs='+', type=str, default=algorithms.ALGORITHMS)
     parser.add_argument('--n_hparams', type=int, default=20)
     parser.add_argument('--output_dir', type=str, required=True)
