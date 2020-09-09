@@ -60,6 +60,9 @@ def _hparams(algorithm, dataset, random_state):
         # IRM
         ('irm_lambda', 1e2, 10**random_state.uniform(-1, 5)),
         ('irm_penalty_anneal_iters', 500, int(10**random_state.uniform(0, 4))),
+        # VREx
+        ('vrex_lambda', 1e1, 10**random_state.uniform(-1, 5)),
+        ('vrex_penalty_anneal_iters', 500, int(10**random_state.uniform(0, 4))),
         # Mixup
         ('mixup_alpha', 0.2, 10**random_state.uniform(-1, -1)),
         # GroupDRO
