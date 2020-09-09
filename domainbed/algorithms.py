@@ -266,7 +266,9 @@ class IRM(ERM):
 
     
 class VREx(ERM):
-    """V-REx, http://arxiv.org/abs/2003.00688"""
+    """V-REx algorithm from Out-of-Distribution Generalization via Risk Extrapolation (REx), David Krueger et al.
+       http://arxiv.org/abs/2003.00688
+    """
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(VREx, self).__init__(input_shape, num_classes, num_domains,
                                   hparams)
