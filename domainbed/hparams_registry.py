@@ -55,21 +55,27 @@ def _hparams(algorithm, dataset, random_state):
 
     hparams['resnet_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
 
-    if algorithm == "SagNet":
-        hparams['sag_w_adv'] = (0.1, 10 ** random_state.uniform(-2, 1))
+    if algorithm == "RSC":
+        hparams['rsc_f_drop_factor'] = (1/3, random_state.uniform(0,0.5)) # Feature drop factor
+        hparams['rsc_b_drop_factor'] = (1/3, random_state.uniform(0, 0.5)) # Batch drop factor
+        hparams['resnet_dropout'] = (0, 0)
+    elif algorithm == "SagNet":
+        hparams['resnet_dropout'] = (.5, random_state.choice([0., 0.1, 0.5]))
+        hparams['sag_w_adv'] = (0.1, 10**random_state.uniform(-2, 1))
     elif algorithm == "IRM":
-        hparams['irm_lambda'] = (1e2, 10 ** random_state.uniform(-1, 5))
-        hparams['irm_penalty_anneal_iters'] = (500, int(10 ** random_state.uniform(0, 4)))
+        hparams['irm_lambda'] = (1e2, 10**random_state.uniform(-1, 5))
+        hparams['irm_penalty_anneal_iters'] = (500, int(10**random_state.uniform(0, 4)))
     elif algorithm == "Mixup":
-        hparams['mixup_alpha'] = (0.2, 10 ** random_state.uniform(-1, -1))
+        hparams['mixup_alpha'] = (0.2, 10**random_state.uniform(-1, -1))
     elif algorithm == "GroupDRO":
-        hparams['groupdro_eta'] = (1e-2, 10 ** random_state.uniform(-3, -1))
+        hparams['groupdro_eta'] = (1e-2, 10**random_state.uniform(-3, -1))
     elif algorithm == "MMD":
-        hparams['mmd_gamma'] = (1., 10 ** random_state.uniform(-1, 1))
+        hparams['mmd_gamma'] = (1., 10**random_state.uniform(-1, 1))
     elif algorithm == "MLDG":
-        hparams['mldg_beta'] = (1., 10 ** random_state.uniform(-1, 1))
+        hparams['mldg_beta'] = (1., 10**random_state.uniform(-1, 1))
     elif algorithm == "MTL":
         hparams['mtl_ema'] = (.99, random_state.choice([0.5, 0.9, 0.99, 1.]))
+
 
     # TODO clean this up
     hparams.update({a:(b,c) for a,b,c in [
