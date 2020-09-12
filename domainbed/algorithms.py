@@ -714,7 +714,7 @@ class SagNet(Algorithm):
                 'loss_adv': loss_adv.item()}
 
     def predict(self, x):
-        return self.content_net(self.featurizer(x))
+        return self.network_c(self.network_f(x))
 
 class RSC(ERM):
     """
