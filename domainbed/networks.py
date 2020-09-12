@@ -53,7 +53,7 @@ class MLP(nn.Module):
             x = hidden(x)
             x = self.dropout(x)
             x = F.relu(x)
-            x = self.output(x)
+        x = self.output(x)
         return x
 
 class ResNet(torch.nn.Module):
@@ -89,8 +89,7 @@ class ResNet(torch.nn.Module):
 
     def forward(self, x):
         """Encode x into a feature vector of size n_outputs."""
-        x = self.dropout(self.network(x))
-        return x
+        return self.dropout(self.network(x))
 
     def train(self, mode=True):
         """
