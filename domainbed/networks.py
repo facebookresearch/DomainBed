@@ -44,7 +44,6 @@ class MLP(nn.Module):
             for _ in range(hparams['mlp_depth']-2)])
         self.output = nn.Linear(hparams['mlp_width'], n_outputs)
         self.n_outputs = n_outputs
-        self.name = "MLP"
 
     def forward(self, x):
         x = self.input(x)

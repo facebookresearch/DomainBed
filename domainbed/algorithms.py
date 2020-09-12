@@ -77,8 +77,6 @@ class ERM(Algorithm):
     def update(self, minibatches):
         all_x = torch.cat([x for x,y in minibatches])
         all_y = torch.cat([y for x,y in minibatches])
-        print(all_x.shape)
-        print(all_y.shape)
         loss = F.cross_entropy(self.predict(all_x), all_y)
 
         self.optimizer.zero_grad()
@@ -743,7 +741,7 @@ class RSC(ERM):
             Delete the Average Pooling and use features after bn3
             SqueezeLastTwo is accessible as a Layer so we can delete it and replace it through Identity, serves as our flatten operation later
 
-           Disclaimer: Apparently this algorithm doesn't work very well for the MNIST datasets with the current architecture
+           Disclaimer: Apparently this algorithm doesn't work very well for the MNIST datasets with the current architecture, probably would require more fine-tuning
         """
 
         if self.featurizer_name == "ResNet":
