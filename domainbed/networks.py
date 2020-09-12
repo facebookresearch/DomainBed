@@ -5,6 +5,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models
 
+from torch.utils import model_zoo
+from torchvision.models.resnet import BasicBlock, model_urls, Bottleneck
+from torch.autograd import Variable
+import numpy.random as npr
+import numpy as np
+import random
+
 from domainbed.lib import misc
 from domainbed.lib import wide_resnet
 
@@ -16,6 +23,14 @@ class Identity(nn.Module):
 
     def forward(self, x):
         return x
+
+class SqueezeLastTwo(nn.Module):
+    """A module which squeezes the last two dimensions, ordinary squeeze can be a problem for batch size 1"""
+    def __init__(self):
+        super(SqueezeLastTwo, self).__init__()
+
+    def forward(self, x):
+        return x.view(x.shape[0], x.shape[1])
 
 
 class MLP(nn.Module):
@@ -29,6 +44,7 @@ class MLP(nn.Module):
             for _ in range(hparams['mlp_depth']-2)])
         self.output = nn.Linear(hparams['mlp_width'], n_outputs)
         self.n_outputs = n_outputs
+        self.name = "MLP"
 
     def forward(self, x):
         x = self.input(x)
@@ -38,7 +54,7 @@ class MLP(nn.Module):
             x = hidden(x)
             x = self.dropout(x)
             x = F.relu(x)
-        x = self.output(x)
+            x = self.output(x)
         return x
 
 class ResNet(torch.nn.Module):
@@ -74,7 +90,8 @@ class ResNet(torch.nn.Module):
 
     def forward(self, x):
         """Encode x into a feature vector of size n_outputs."""
-        return self.dropout(self.network(x))
+        x = self.dropout(self.network(x))
+        return x
 
     def train(self, mode=True):
         """
@@ -109,6 +126,9 @@ class MNIST_CNN(nn.Module):
         self.bn2 = nn.GroupNorm(8, 128)
         self.bn3 = nn.GroupNorm(8, 128)
 
+        self.avgpool = nn.AdaptiveAvgPool2d((1,1))
+        self.squeezeLastTwo = SqueezeLastTwo()
+
     def forward(self, x):
         x = self.conv1(x)
         x = F.relu(x)
@@ -126,7 +146,8 @@ class MNIST_CNN(nn.Module):
         x = F.relu(x)
         x = self.bn3(x)
 
-        x = x.mean(dim=(2,3))
+        x = self.avgpool(x)
+        x = self.squeezeLastTwo(x)
         return x
 
 class ContextNet(nn.Module):
