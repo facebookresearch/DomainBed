@@ -3,7 +3,6 @@
 import copy
 
 import numpy as np
-import numpy.random as npr
 import torch
 import torch.autograd as autograd
 import torch.nn as nn

@@ -5,13 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models
 
-from torch.utils import model_zoo
-from torchvision.models.resnet import BasicBlock, model_urls, Bottleneck
-from torch.autograd import Variable
-import numpy.random as npr
-import numpy as np
-import random
-
 from domainbed.lib import misc
 from domainbed.lib import wide_resnet
 
