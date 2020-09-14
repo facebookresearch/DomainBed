@@ -14,6 +14,8 @@ def _hparams(algorithm, dataset, random_state):
     
     hparams['data_augmentation'] = (True, True)
     hparams['resnet18'] = (False, False)
+    hparams['resnet_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
+    hparams['class_balanced'] = (False, False)
 
     if dataset not in SMALL_IMAGES:
         hparams['lr'] = (5e-5, 10**random_state.uniform(-5, -3.5))
@@ -32,7 +34,6 @@ def _hparams(algorithm, dataset, random_state):
     else:
         hparams['weight_decay'] = (0., 10**random_state.uniform(-6, -2))
 
-    hparams['class_balanced'] = (False, False)
 
     if algorithm in ['DANN', 'CDANN']:
         if dataset not in SMALL_IMAGES:
@@ -52,10 +53,10 @@ def _hparams(algorithm, dataset, random_state):
         hparams['d_steps_per_g_step'] = (1, int(2**random_state.uniform(0, 3)))
         hparams['grad_penalty'] = (0., 10**random_state.uniform(-2, 1))
         hparams['beta1'] = (0.5, random_state.choice([0., 0.5]))
-
-    hparams['resnet_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
-
-    if algorithm == "RSC":
+        hparams['mlp_width'] = (256, int(2 ** random_state.uniform(6, 10)))
+        hparams['mlp_depth'] = (3, int(random_state.choice([3, 4, 5])))
+        hparams['mlp_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
+    elif algorithm == "RSC":
         hparams['rsc_f_drop_factor'] = (1/3, random_state.uniform(0,0.5)) # Feature drop factor
         hparams['rsc_b_drop_factor'] = (1/3, random_state.uniform(0, 0.5)) # Batch drop factor
         hparams['resnet_dropout'] = (0, 0)
@@ -76,14 +77,6 @@ def _hparams(algorithm, dataset, random_state):
     elif algorithm == "MTL":
         hparams['mtl_ema'] = (.99, random_state.choice([0.5, 0.9, 0.99, 1.]))
 
-
-    # TODO clean this up
-    hparams.update({a:(b,c) for a,b,c in [
-        # MLP
-        ('mlp_width', 256, int(2**random_state.uniform(6, 10))),
-        ('mlp_depth', 3, int(random_state.choice([3,4,5])) ),
-        ('mlp_dropout', 0., random_state.choice([0., 0.1, 0.5])),
-    ]})
     return hparams
 
 def default_hparams(algorithm, dataset):
