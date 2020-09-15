@@ -17,6 +17,14 @@ class Identity(nn.Module):
     def forward(self, x):
         return x
 
+class SqueezeLastTwo(nn.Module):
+    """A module which squeezes the last two dimensions, ordinary squeeze can be a problem for batch size 1"""
+    def __init__(self):
+        super(SqueezeLastTwo, self).__init__()
+
+    def forward(self, x):
+        return x.view(x.shape[0], x.shape[1])
+
 
 class MLP(nn.Module):
     """Just  an MLP"""
@@ -109,6 +117,9 @@ class MNIST_CNN(nn.Module):
         self.bn2 = nn.GroupNorm(8, 128)
         self.bn3 = nn.GroupNorm(8, 128)
 
+        self.avgpool = nn.AdaptiveAvgPool2d((1,1))
+        self.squeezeLastTwo = SqueezeLastTwo()
+
     def forward(self, x):
         x = self.conv1(x)
         x = F.relu(x)
@@ -126,7 +137,8 @@ class MNIST_CNN(nn.Module):
         x = F.relu(x)
         x = self.bn3(x)
 
-        x = x.mean(dim=(2,3))
+        x = self.avgpool(x)
+        x = self.squeezeLastTwo(x)
         return x
 
 class ContextNet(nn.Module):
