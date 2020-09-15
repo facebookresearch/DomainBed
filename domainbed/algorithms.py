@@ -24,6 +24,7 @@ ALGORITHMS = [
     'MTL', 
     'SagNet',
     'ARM',
+    'VREx'
 ]
 
 def get_algorithm_class(algorithm_name):
@@ -266,17 +267,18 @@ class IRM(ERM):
 
     
 class VREx(ERM):
-    """V-REx algorithm from Out-of-Distribution Generalization via Risk Extrapolation (REx), David Krueger et al.
-       http://arxiv.org/abs/2003.00688
-    """
+    """V-REx algorithm from http://arxiv.org/abs/2003.00688"""
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(VREx, self).__init__(input_shape, num_classes, num_domains,
                                   hparams)
         self.register_buffer('update_count', torch.tensor([0]))
 
     def update(self, minibatches):
-        penalty_weight = (self.hparams['vrex_lambda'] if self.update_count >= self.hparams['vrex_penalty_anneal_iters']
-                          else 1.0)
+        if self.update_count >= self.hparams["vrex_penalty_anneal_iters"]:
+            penalty_weight = self.hparams["vrex_lambda"]
+        else:
+            penalty_weight = 1.0
+        
         nll = 0.
 
         all_x = torch.cat([x for x, y in minibatches])
@@ -290,12 +292,12 @@ class VREx(ERM):
             losses[i] = nll
 
         mean = losses.mean()
-        penalty =((losses - mean) ** 2).mean()
+        penalty = ((losses - mean) ** 2).mean()
         loss = mean + penalty_weight * penalty
 
         if self.update_count == self.hparams['vrex_penalty_anneal_iters']:
-            # Reset Adam (like IRM), because it doesn't like the sharp jump in gradient
-            # magnitudes that happens at this step.
+            # Reset Adam (like IRM), because it doesn't like the sharp jump in
+            # gradient magnitudes that happens at this step.
             self.optimizer = torch.optim.Adam(
                 self.network.parameters(),
                 lr=self.hparams["lr"],
