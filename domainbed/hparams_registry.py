@@ -66,7 +66,7 @@ def _hparams(algorithm, dataset, random_state):
         hparams['mixup_alpha'] = (0.2, 10**random_state.uniform(-1, -1))
     elif algorithm == "GroupDRO":
         hparams['groupdro_eta'] = (1e-2, 10**random_state.uniform(-3, -1))
-    elif algorithm == "MMD":
+    elif algorithm == "MMD" or algorithm == "CORAL":
         hparams['mmd_gamma'] = (1., 10**random_state.uniform(-1, 1))
     elif algorithm == "MLDG":
         hparams['mldg_beta'] = (1., 10**random_state.uniform(-1, 1))
@@ -74,7 +74,7 @@ def _hparams(algorithm, dataset, random_state):
         hparams['mtl_ema'] = (.99, random_state.choice([0.5, 0.9, 0.99, 1.]))
     elif algorithm == "VREx":
         hparams['vrex_lambda'] = (1e1, 10**random_state.uniform(-1, 5))
-        hparams['vrex_penalty_anneal_iters'] = (500, int(10**random_state.uniform(0, 4))
+        hparams['vrex_penalty_anneal_iters'] = (500, int(10**random_state.uniform(0, 4)))
 
     return hparams
 
