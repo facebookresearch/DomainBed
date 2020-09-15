@@ -2,7 +2,6 @@
 
 import numpy as np
 
-
 def _hparams(algorithm, dataset, random_state):
     """
     Global registry of hyperparams. Each entry is a (default, random) tuple.
@@ -34,7 +33,6 @@ def _hparams(algorithm, dataset, random_state):
     else:
         hparams['weight_decay'] = (0., 10**random_state.uniform(-6, -2))
 
-
     if algorithm in ['DANN', 'CDANN']:
         if dataset not in SMALL_IMAGES:
             hparams['lr_g'] = (5e-5, 10**random_state.uniform(-5, -3.5))
@@ -59,9 +57,7 @@ def _hparams(algorithm, dataset, random_state):
     elif algorithm == "RSC":
         hparams['rsc_f_drop_factor'] = (1/3, random_state.uniform(0,0.5)) # Feature drop factor
         hparams['rsc_b_drop_factor'] = (1/3, random_state.uniform(0, 0.5)) # Batch drop factor
-        hparams['resnet_dropout'] = (0, 0)
     elif algorithm == "SagNet":
-        hparams['resnet_dropout'] = (.5, random_state.choice([0., 0.1, 0.5]))
         hparams['sag_w_adv'] = (0.1, 10**random_state.uniform(-2, 1))
     elif algorithm == "IRM":
         hparams['irm_lambda'] = (1e2, 10**random_state.uniform(-1, 5))
@@ -76,6 +72,9 @@ def _hparams(algorithm, dataset, random_state):
         hparams['mldg_beta'] = (1., 10**random_state.uniform(-1, 1))
     elif algorithm == "MTL":
         hparams['mtl_ema'] = (.99, random_state.choice([0.5, 0.9, 0.99, 1.]))
+    elif algorithm == "VREx":
+        hparams['vrex_lambda'] = (1e1, 10**random_state.uniform(-1, 5))
+        hparams['vrex_penalty_anneal_iters'] = (500, int(10**random_state.uniform(0, 4))
 
     return hparams
 
