@@ -33,10 +33,10 @@ if __name__ == "__main__":
         'random_hparams).')
     parser.add_argument('--seed', type=int, default=0,
         help='Seed for everything else')
-    parser.add_argument('--steps', type=int, default=None,
-        help='Number of steps. Default is dataset-dependent.')
+    parser.add_argument('--epochs', type=int, default=None,
+        help='Number of epochs. Default is dataset-dependent.')
     parser.add_argument('--checkpoint_freq', type=int, default=None,
-        help='Checkpoint every N steps. Default is dataset-dependent.')
+        help='Checkpoint every N epochs. Default is dataset-dependent.')
     parser.add_argument('--test_envs', type=int, nargs='+', default=[0])
     parser.add_argument('--output_dir', type=str, default="train_output")
     parser.add_argument('--holdout_fraction', type=float, default=0.2)
@@ -45,7 +45,8 @@ if __name__ == "__main__":
 
     # If we ever want to implement checkpointing, just persist these values
     # every once in a while, and then load them from disk here.
-    start_step = 0
+    #start_step = 0
+    start_epoch = 0
     algorithm_dict = None
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -130,38 +131,33 @@ if __name__ == "__main__":
     algorithm.to(device)
 
     train_minibatches_iterator = zip(*train_loaders)
-    checkpoint_vals = collections.defaultdict(lambda: [])
-    curr_epoch_losses = []
 
     steps_per_epoch = min([len(env)/hparams['batch_size'] for env,_ in in_splits])
 
-    n_steps = args.steps or dataset.N_STEPS
     checkpoint_freq = args.checkpoint_freq or dataset.CHECKPOINT_FREQ
-
+    epochs = args.epochs or dataset.EPOCHS
     last_results_keys = None
-    for step in range(start_step, n_steps):
-        step_start_time = time.time()
-        minibatches_device = [(x.to(device), y.to(device))
-            for x,y in next(train_minibatches_iterator)]
-        step_vals = algorithm.update(minibatches_device)
-        checkpoint_vals['step_time'].append(time.time() - step_start_time)
 
-        for key, val in step_vals.items():
-            checkpoint_vals[key].append(val)
+    for epoch in range(start_epoch, epochs):
+        checkpoint_vals = collections.defaultdict(lambda: [])
+        epoch_start_time = time.time()
+        for step in range(int(steps_per_epoch)):
+            minibatches_device = [(x.to(device), y.to(device))
+                              for x, y in next(train_minibatches_iterator)]
+            step_vals = algorithm.update(minibatches_device)
 
-        curr_epoch_losses.append(checkpoint_vals["loss"][-1])
+            for key, val in step_vals.items():
+                checkpoint_vals[key].append(val)
 
-        # Scheduling is done per Epoch and usually on validation set. DG has multiple validation techiques so this should be the way to go.
-        if step % steps_per_epoch == 0:
-            if hparams["lr_scheduled"]:
-                mean_loss = np.mean(curr_epoch_losses)
-                algorithm.scheduler.step(mean_loss)
-                curr_epoch_losses = []
+        checkpoint_vals['epoch_time'].append(time.time() - epoch_start_time)
 
-        if step % checkpoint_freq == 0:
+        if hparams["lr_scheduled"]:
+            algorithm.scheduler.step(np.mean(checkpoint_vals["loss"]))
+
+        if epoch % checkpoint_freq == 0:
             results = {
-                'step': step,
-                'epoch': step / steps_per_epoch,
+                'epoch': epoch,
+                'lr': "{:.1e}".format(algorithm.optimizer.param_groups[0]['lr'])
             }
 
             for key, val in checkpoint_vals.items():
@@ -181,7 +177,7 @@ if __name__ == "__main__":
 
             results.update({
                 'hparams': hparams,
-                'args': vars(args)    
+                'args': vars(args)
             })
 
             epochs_path = os.path.join(args.output_dir, 'results.jsonl')
@@ -189,8 +185,6 @@ if __name__ == "__main__":
                 f.write(json.dumps(results, sort_keys=True) + "\n")
 
             algorithm_dict = algorithm.state_dict()
-            start_step = step + 1
-            checkpoint_vals = collections.defaultdict(lambda: [])
 
     if not args.skip_model_save:
         save_dict = {

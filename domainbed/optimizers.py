@@ -13,7 +13,7 @@ class GenericAdam():
     """
     def get_scheduler(self, algorithm):
         if algorithm == "RSC":
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, patience=3, threshold=0.0001, verbose=True)
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, patience=5, threshold=0.0001)
         else:
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, patience=3, threshold=0.0001, verbose=True)
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, patience=5, threshold=0.00005)
         return scheduler
