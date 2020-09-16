@@ -128,9 +128,11 @@ if __name__ == "__main__":
         algorithm.load_state_dict(algorithm_dict)
 
     algorithm.to(device)
+    #algorithm = torch.nn.DataParallel(algorithm, device_ids=range(torch.cuda.device_count())) # Data Parallelism
 
     train_minibatches_iterator = zip(*train_loaders)
     checkpoint_vals = collections.defaultdict(lambda: [])
+    curr_epoch_losses = []
 
     steps_per_epoch = min([len(env)/hparams['batch_size'] for env,_ in in_splits])
 
@@ -147,6 +149,15 @@ if __name__ == "__main__":
 
         for key, val in step_vals.items():
             checkpoint_vals[key].append(val)
+
+        curr_epoch_losses.append(checkpoint_vals["loss"][-1])
+
+        # Scheduling is done per Epoch and usually on validation set. DG has multiple validation techiques so this should be the way to go.
+        if step % steps_per_epoch == 0:
+            if hparams["lr_scheduled"]:
+                mean_loss = np.mean(curr_epoch_losses)
+                algorithm.scheduler.step(mean_loss)
+                curr_epoch_losses = []
 
         if step % checkpoint_freq == 0:
             results = {

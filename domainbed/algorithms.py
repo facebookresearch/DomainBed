@@ -9,6 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import random
 
+from domainbed import optimizers
 from domainbed import networks
 from domainbed.lib.misc import random_pairs_of_minibatches
 
@@ -25,7 +26,6 @@ ALGORITHMS = [
     'MTL', 
     'SagNet',
     'ARM',
-    'VREx',
     'RSC'
 ]
 
@@ -68,11 +68,10 @@ class ERM(Algorithm):
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
         self.classifier = nn.Linear(self.featurizer.n_outputs, num_classes)
         self.network = nn.Sequential(self.featurizer, self.classifier)
-        self.optimizer = torch.optim.Adam(
-            self.network.parameters(),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams['weight_decay']
-        )
+        self.optimizer_class = optimizers.GenericAdam(self.network.parameters(), self.hparams)
+        self.optimizer = self.optimizer_class.optimizer
+        if hparams["lr_scheduled"]:
+            self.scheduler = self.optimizer_class.get_scheduler(self.__class__.__name__)
 
     def update(self, minibatches):
         all_x = torch.cat([x for x,y in minibatches])
@@ -254,10 +253,7 @@ class IRM(ERM):
         if self.update_count == self.hparams['irm_penalty_anneal_iters']:
             # Reset Adam, because it doesn't like the sharp jump in gradient
             # magnitudes that happens at this step.
-            self.optimizer = torch.optim.Adam(
-                self.network.parameters(),
-                lr=self.hparams["lr"],
-                weight_decay=self.hparams['weight_decay'])
+            self.optimizer = optimizers.GenericAdam(self.network.parameters(), self.hparams).optimizer
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -267,53 +263,7 @@ class IRM(ERM):
         return {'loss': loss.item(), 'nll': nll.item(),
             'penalty': penalty.item()}
 
-    
-class VREx(ERM):
-    """V-REx algorithm from http://arxiv.org/abs/2003.00688"""
-    def __init__(self, input_shape, num_classes, num_domains, hparams):
-        super(VREx, self).__init__(input_shape, num_classes, num_domains,
-                                  hparams)
-        self.register_buffer('update_count', torch.tensor([0]))
 
-    def update(self, minibatches):
-        if self.update_count >= self.hparams["vrex_penalty_anneal_iters"]:
-            penalty_weight = self.hparams["vrex_lambda"]
-        else:
-            penalty_weight = 1.0
-        
-        nll = 0.
-
-        all_x = torch.cat([x for x, y in minibatches])
-        all_logits = self.network(all_x)
-        all_logits_idx = 0
-        losses = torch.zeros(len(minibatches))
-        for i, (x, y) in enumerate(minibatches):
-            logits = all_logits[all_logits_idx:all_logits_idx + x.shape[0]]
-            all_logits_idx += x.shape[0]
-            nll = F.cross_entropy(logits, y)
-            losses[i] = nll
-
-        mean = losses.mean()
-        penalty = ((losses - mean) ** 2).mean()
-        loss = mean + penalty_weight * penalty
-
-        if self.update_count == self.hparams['vrex_penalty_anneal_iters']:
-            # Reset Adam (like IRM), because it doesn't like the sharp jump in
-            # gradient magnitudes that happens at this step.
-            self.optimizer = torch.optim.Adam(
-                self.network.parameters(),
-                lr=self.hparams["lr"],
-                weight_decay=self.hparams['weight_decay'])
-
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-
-        self.update_count += 1
-        return {'loss': loss.item(), 'nll': nll.item(),
-                'penalty': penalty.item()}
-
-    
 class Mixup(ERM):
     """
     Mixup of minibatches from different domains
@@ -422,11 +372,7 @@ class MLDG(ERM):
             # fine tune clone-network on task "i"
             inner_net = copy.deepcopy(self.network)
 
-            inner_opt = torch.optim.Adam(
-                inner_net.parameters(),
-                lr=self.hparams["lr"],
-                weight_decay=self.hparams['weight_decay']
-            )
+            inner_opt = optimizers.GenericAdam(inner_net.parameters(), self.hparams).optimizer
 
             inner_obj = F.cross_entropy(inner_net(xi), yi)
 
@@ -608,12 +554,11 @@ class MTL(Algorithm):
                                   hparams)
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
         self.classifier = nn.Linear(self.featurizer.n_outputs * 2, num_classes)
-        self.optimizer = torch.optim.Adam(
+        self.optimizer = optimizers.GenericAdam(
             list(self.featurizer.parameters()) +\
             list(self.classifier.parameters()),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams['weight_decay']
-        )
+            self.hparams
+        ).optimizer
 
         self.register_buffer('embeddings',
                              torch.zeros(num_domains,
@@ -692,8 +637,7 @@ class SagNet(Algorithm):
         #         resnet_s.network.fc)
 
         def opt(p):
-            return torch.optim.Adam(p, lr=hparams["lr"],
-                    weight_decay=hparams["weight_decay"])
+            return optimizers.GenericAdam(p, self.hparams).optimizer
 
         self.optimizer_f = opt(self.network_f.parameters())
         self.optimizer_c = opt(self.network_c.parameters())
@@ -801,11 +745,10 @@ class RSC(ERM):
             self.flatten = networks.SqueezeLastTwo()
 
         self.network = nn.Sequential(self.featurizer, self.avgpool, self.flatten, self.classifier)
-        self.optimizer = torch.optim.Adam(
-            self.network.parameters(),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams['weight_decay']
-        )
+        self.optimizer_class = optimizers.GenericAdam(self.network.parameters(), self.hparams)
+        self.optimizer = self.optimizer_class.optimizer
+        if hparams["lr_scheduled"]:
+            self.scheduler = self.optimizer_class.get_scheduler(self.__class__.__name__)
 
     def create_onehots(self, num_samples, targets):
         one_hots = torch.zeros(num_samples, self.num_classes)  # By default this sets requires_grad = False

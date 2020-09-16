@@ -15,6 +15,7 @@ def _hparams(algorithm, dataset, random_state):
     hparams['resnet18'] = (False, False)
     hparams['resnet_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
     hparams['class_balanced'] = (False, False)
+    hparams['lr_scheduled'] = (False, False)
 
     if dataset not in SMALL_IMAGES:
         hparams['lr'] = (5e-5, 10**random_state.uniform(-5, -3.5))
