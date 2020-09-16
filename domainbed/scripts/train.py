@@ -128,7 +128,6 @@ if __name__ == "__main__":
         algorithm.load_state_dict(algorithm_dict)
 
     algorithm.to(device)
-    #algorithm = torch.nn.DataParallel(algorithm, device_ids=range(torch.cuda.device_count())) # Data Parallelism
 
     train_minibatches_iterator = zip(*train_loaders)
     checkpoint_vals = collections.defaultdict(lambda: [])
