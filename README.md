@@ -18,6 +18,8 @@ The [currently available algorithms](domainbed/algorithms.py) are:
 * Domain Adversarial Neural Network (DANN, [Ganin et al., 2015](https://arxiv.org/abs/1505.07818))
 * Conditional Domain Adversarial Neural Network (CDANN, [Li et al., 2018](https://arxiv.org/abs/1807.08479))
 * Style Agnostic Networks (SagNet, [Nam et al., 2020](https://arxiv.org/abs/1910.11645))
+* Representation Self-Challenging (RSC, [Huang et al., 2020](https://arxiv.org/abs/2007.02454))
+* Variance Risk Extrapolation (VREx, [Krueger et al., 2020](https://arxiv.org/abs/2003.00688))
 
 Send us a PR to add your algorithm! Our implementations use ResNet50 / ResNet18 networks ([He et al., 2015](https://arxiv.org/abs/1512.03385)) and the hyper-parameter grids [described here](domainbed/hparams_registry.py).
 
@@ -31,7 +33,7 @@ The [currently available datasets](domainbed/datasets.py) are:
 * PACS ([Li et al., 2017](https://arxiv.org/abs/1710.03077))
 * Office-Home ([Venkateswara et al., 2017](https://arxiv.org/abs/1706.07522))
 * A TerraIncognita ([Beery et al., 2018](https://arxiv.org/abs/1807.04975)) subset
-* DomainNet ([Peng et al., 2019](http://ai.bu.edu/M3SDA/)).
+* DomainNet ([Peng et al., 2019](http://ai.bu.edu/M3SDA/))
 
 Send us a PR to add your dataset! Any custom image dataset with folder structure `dataset/domain/class/image.xyz` is readily usable.
 
