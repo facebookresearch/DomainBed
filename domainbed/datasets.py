@@ -30,6 +30,7 @@ DATASETS = [
     "OfficeHome",
     "TerraIncognita",
     "DomainNet",
+    "SVIRO",
 ]
 
 NUM_ENVIRONMENTS = {
@@ -45,6 +46,7 @@ NUM_ENVIRONMENTS = {
     "OfficeHome": 4,
     "TerraIncognita": 4,
     "DomainNet": 6,
+    "SVIRO": 10,
 }
 
 
@@ -271,4 +273,11 @@ class TerraIncognita(MultipleEnvironmentImageFolder):
     ENVIRONMENT_NAMES = ["L100", "L38", "L43", "L46"]
     def __init__(self, root, test_envs, hparams):
         self.dir = os.path.join(root, "terra_incognita/")
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
+
+class SVIRO(MultipleEnvironmentImageFolder):
+    CHECKPOINT_FREQ = 300
+    ENVIRONMENT_NAMES = ["aclass", "escape", "hilux", "i3", "lexus", "tesla", "tiguan", "tucson", "x5", "zoe"]
+    def __init__(self, root, test_envs, hparams):
+        self.dir = os.path.join(root, "sviro/")
         super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
