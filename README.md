@@ -34,6 +34,7 @@ The [currently available datasets](domainbed/datasets.py) are:
 * Office-Home ([Venkateswara et al., 2017](https://arxiv.org/abs/1706.07522))
 * A TerraIncognita ([Beery et al., 2018](https://arxiv.org/abs/1807.04975)) subset
 * DomainNet ([Peng et al., 2019](http://ai.bu.edu/M3SDA/))
+* A SVIRO ([Dias Da Cruz et al., 2020](https://arxiv.org/abs/2001.03483)) subset
 
 Send us a PR to add your dataset! Any custom image dataset with folder structure `dataset/domain/class/image.xyz` is readily usable.
 
