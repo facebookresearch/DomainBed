@@ -54,7 +54,7 @@ class OracleSelectionMethod(SelectionMethod):
         test_env = run_records[0]['args']['test_envs'][0]
         test_out_acc_key = 'env{}_out_acc'.format(test_env)
         test_in_acc_key = 'env{}_in_acc'.format(test_env)
-        chosen_record = run_records.sorted(lambda r: r['step'])[-1]
+        chosen_record = run_records.sorted(lambda r: r['epoch'])[-1]
         return {
             'val_acc':  chosen_record[test_out_acc_key],
             'test_acc': chosen_record[test_in_acc_key]
@@ -120,7 +120,7 @@ class LeaveOneOutSelectionMethod(SelectionMethod):
 
     @classmethod
     def run_acc(self, records):
-        step_accs = records.group('step').map(lambda step, step_records:
+        step_accs = records.group('epoch').map(lambda step, step_records:
             self._step_acc(step_records)
         ).filter_not_none()
         if len(step_accs):
