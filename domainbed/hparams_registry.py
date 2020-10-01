@@ -55,8 +55,8 @@ def _hparams(algorithm, dataset, random_state):
         hparams['mlp_depth'] = (3, int(random_state.choice([3, 4, 5])))
         hparams['mlp_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
     elif algorithm == "RSC":
-        hparams['rsc_f_drop_factor'] = (1/3, random_state.uniform(0,0.5)) # Feature drop factor
-        hparams['rsc_b_drop_factor'] = (1/3, random_state.uniform(0, 0.5)) # Batch drop factor
+        hparams['rsc_f_drop_factor'] = (1/3, random_state.uniform(0, 0.5))
+        hparams['rsc_b_drop_factor'] = (1/3, random_state.uniform(0, 0.5))
     elif algorithm == "SagNet":
         hparams['sag_w_adv'] = (0.1, 10**random_state.uniform(-2, 1))
     elif algorithm == "IRM":

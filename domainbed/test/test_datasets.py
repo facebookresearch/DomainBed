@@ -32,13 +32,13 @@ class TestDatasets(unittest.TestCase):
         """
         Test that ERM can complete one step on a given dataset without raising
         an error.
-        Also test that NUM_ENVIRONMENTS[dataset] is set correctly.
+        Also test that num_environments() works correctly.
         """
         batch_size = 8
         hparams = hparams_registry.default_hparams('ERM', dataset_name)
         dataset = datasets.get_dataset_class(dataset_name)(
             os.environ['DATA_DIR'], [], hparams)
-        self.assertEqual(datasets.NUM_ENVIRONMENTS[dataset_name],
+        self.assertEqual(datasets.num_environments(dataset_name),
             len(dataset))
         algorithm = algorithms.get_algorithm_class('ERM')(
             dataset.input_shape,
