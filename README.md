@@ -6,7 +6,7 @@ DomainBed is a PyTorch suite containing benchmark datasets and algorithms for do
 
 ![Result table](domainbed/results/2020_10_06_7df6f06/results.png)
 
-Full results in LaTeX format available [here](domainbed/results/2020_10_06_7df6f06/results.tex).
+Full results for [commit 7df6f06](https://github.com/facebookresearch/DomainBed/tree/7df6f06a6f9062284812a3f174c306218932c5e4) in LaTeX format available [here](domainbed/results/2020_10_06_7df6f06/results.tex).
 
 ## Available algorithms
 
