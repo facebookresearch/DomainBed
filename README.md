@@ -2,6 +2,12 @@
 
 DomainBed is a PyTorch suite containing benchmark datasets and algorithms for domain generalization, as introduced in [In Search of Lost Domain Generalization](https://arxiv.org/abs/2007.01434).
 
+## Current results
+
+![Result table](domainbed/results/2020_10_06_7df6f06/results.png)
+
+Full results in LaTeX format available [here](domainbed/results/2020_10_06_7df6f06/results.tex).
+
 ## Available algorithms
 
 The [currently available algorithms](domainbed/algorithms.py) are:
