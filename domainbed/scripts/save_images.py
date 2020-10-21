@@ -19,7 +19,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
-    datasets_to_save = ['OfficeHome', 'TerraIncognita', 'DomainNet', 'RotatedMNIST', 'ColoredMNIST']
+    datasets_to_save = ['OfficeHome', 'TerraIncognita', 'DomainNet', 'RotatedMNIST', 'ColoredMNIST', 'SVIRO']
 
     for dataset_name in tqdm(datasets_to_save):
         hparams = hparams_registry.default_hparams('ERM', dataset_name)

@@ -240,6 +240,19 @@ def download_terra_incognita(data_dir):
     os.remove(annotations_file)
 
 
+# SVIRO #################################################################
+
+def download_sviro(data_dir):
+    # Original URL: https://sviro.kl.dfki.de
+    full_path = stage_path(data_dir, "sviro")
+    
+    download_and_extract("https://sviro.kl.dfki.de/?wpdmdl=1731", 
+                         os.path.join(data_dir, "sviro_grayscale_rectangle_classification.zip"))
+
+    os.rename(os.path.join(data_dir, "SVIRO_DOMAINBED"), 
+              full_path)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Download datasets')
     parser.add_argument('--data_dir', type=str, required=True)
@@ -251,3 +264,4 @@ if __name__ == "__main__":
     download_domain_net(args.data_dir)
     download_vlcs(args.data_dir)
     download_terra_incognita(args.data_dir)
+    download_sviro(args.data_dir)

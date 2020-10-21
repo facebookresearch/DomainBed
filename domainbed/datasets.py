@@ -24,8 +24,8 @@ DATASETS = [
     "OfficeHome",
     "TerraIncognita",
     "DomainNet",
+    "SVIRO",
 ]
-
 
 def get_dataset_class(dataset_name):
     """Return the dataset class with the given name."""
@@ -243,4 +243,11 @@ class TerraIncognita(MultipleEnvironmentImageFolder):
     ENVIRONMENTS = ["L100", "L38", "L43", "L46"]
     def __init__(self, root, test_envs, hparams):
         self.dir = os.path.join(root, "terra_incognita/")
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
+
+class SVIRO(MultipleEnvironmentImageFolder):
+    CHECKPOINT_FREQ = 300
+    ENVIRONMENT_NAMES = ["aclass", "escape", "hilux", "i3", "lexus", "tesla", "tiguan", "tucson", "x5", "zoe"]
+    def __init__(self, root, test_envs, hparams):
+        self.dir = os.path.join(root, "sviro/")
         super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
