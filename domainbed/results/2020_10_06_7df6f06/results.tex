@@ -1,0 +1,637 @@
+\documentclass{article}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\begin{document}
+\section{Full DomainBed results}
+% Total records: 1833734
+
+\subsection{Model selection: training-domain validation set}
+
+\subsubsection{ColoredMNIST}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Algorithm}   & \textbf{+90\%}       & \textbf{+80\%}       & \textbf{-90\%}       & \textbf{Avg}         \\
+\midrule
+ERM                  & 71.7 $\pm$ 0.1       & 72.9 $\pm$ 0.2       & 10.0 $\pm$ 0.1       & 51.5                 \\
+IRM                  & 72.5 $\pm$ 0.1       & 73.3 $\pm$ 0.5       & 10.2 $\pm$ 0.3       & 52.0                 \\
+GroupDRO             & 73.1 $\pm$ 0.3       & 73.2 $\pm$ 0.2       & 10.0 $\pm$ 0.2       & 52.1                 \\
+Mixup                & 72.7 $\pm$ 0.4       & 73.4 $\pm$ 0.1       & 10.1 $\pm$ 0.1       & 52.1                 \\
+MLDG                 & 71.5 $\pm$ 0.2       & 73.1 $\pm$ 0.2       & 9.8 $\pm$ 0.1        & 51.5                 \\
+CORAL                & 71.6 $\pm$ 0.3       & 73.1 $\pm$ 0.1       & 9.9 $\pm$ 0.1        & 51.5                 \\
+MMD                  & 71.4 $\pm$ 0.3       & 73.1 $\pm$ 0.2       & 9.9 $\pm$ 0.3        & 51.5                 \\
+DANN                 & 71.4 $\pm$ 0.9       & 73.1 $\pm$ 0.1       & 10.0 $\pm$ 0.0       & 51.5                 \\
+CDANN                & 72.0 $\pm$ 0.2       & 73.0 $\pm$ 0.2       & 10.2 $\pm$ 0.1       & 51.7                 \\
+MTL                  & 70.9 $\pm$ 0.2       & 72.8 $\pm$ 0.3       & 10.5 $\pm$ 0.1       & 51.4                 \\
+SagNet               & 71.8 $\pm$ 0.2       & 73.0 $\pm$ 0.2       & 10.3 $\pm$ 0.0       & 51.7                 \\
+ARM                  & 82.0 $\pm$ 0.5       & 76.5 $\pm$ 0.3       & 10.2 $\pm$ 0.0       & 56.2                 \\
+VREx                 & 72.4 $\pm$ 0.3       & 72.9 $\pm$ 0.4       & 10.2 $\pm$ 0.0       & 51.8                 \\
+RSC                  & 71.9 $\pm$ 0.3       & 73.1 $\pm$ 0.2       & 10.0 $\pm$ 0.2       & 51.7                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{RotatedMNIST}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{0}           & \textbf{15}          & \textbf{30}          & \textbf{45}          & \textbf{60}          & \textbf{75}          & \textbf{Avg}         \\
+\midrule
+ERM                  & 95.9 $\pm$ 0.1       & 98.9 $\pm$ 0.0       & 98.8 $\pm$ 0.0       & 98.9 $\pm$ 0.0       & 98.9 $\pm$ 0.0       & 96.4 $\pm$ 0.0       & 98.0                 \\
+IRM                  & 95.5 $\pm$ 0.1       & 98.8 $\pm$ 0.2       & 98.7 $\pm$ 0.1       & 98.6 $\pm$ 0.1       & 98.7 $\pm$ 0.0       & 95.9 $\pm$ 0.2       & 97.7                 \\
+GroupDRO             & 95.6 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 99.0 $\pm$ 0.0       & 98.9 $\pm$ 0.0       & 96.5 $\pm$ 0.2       & 98.0                 \\
+Mixup                & 95.8 $\pm$ 0.3       & 98.9 $\pm$ 0.0       & 98.9 $\pm$ 0.0       & 98.9 $\pm$ 0.0       & 98.8 $\pm$ 0.1       & 96.5 $\pm$ 0.3       & 98.0                 \\
+MLDG                 & 95.8 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 99.0 $\pm$ 0.0       & 98.9 $\pm$ 0.1       & 99.0 $\pm$ 0.0       & 95.8 $\pm$ 0.3       & 97.9                 \\
+CORAL                & 95.8 $\pm$ 0.3       & 98.8 $\pm$ 0.0       & 98.9 $\pm$ 0.0       & 99.0 $\pm$ 0.0       & 98.9 $\pm$ 0.1       & 96.4 $\pm$ 0.2       & 98.0                 \\
+MMD                  & 95.6 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 99.0 $\pm$ 0.0       & 99.0 $\pm$ 0.0       & 98.9 $\pm$ 0.0       & 96.0 $\pm$ 0.2       & 97.9                 \\
+DANN                 & 95.0 $\pm$ 0.5       & 98.9 $\pm$ 0.1       & 99.0 $\pm$ 0.0       & 99.0 $\pm$ 0.1       & 98.9 $\pm$ 0.0       & 96.3 $\pm$ 0.2       & 97.8                 \\
+CDANN                & 95.7 $\pm$ 0.2       & 98.8 $\pm$ 0.0       & 98.9 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 96.1 $\pm$ 0.3       & 97.9                 \\
+MTL                  & 95.6 $\pm$ 0.1       & 99.0 $\pm$ 0.1       & 99.0 $\pm$ 0.0       & 98.9 $\pm$ 0.1       & 99.0 $\pm$ 0.1       & 95.8 $\pm$ 0.2       & 97.9                 \\
+SagNet               & 95.9 $\pm$ 0.3       & 98.9 $\pm$ 0.1       & 99.0 $\pm$ 0.1       & 99.1 $\pm$ 0.0       & 99.0 $\pm$ 0.1       & 96.3 $\pm$ 0.1       & 98.0                 \\
+ARM                  & 96.7 $\pm$ 0.2       & 99.1 $\pm$ 0.0       & 99.0 $\pm$ 0.0       & 99.0 $\pm$ 0.1       & 99.1 $\pm$ 0.1       & 96.5 $\pm$ 0.4       & 98.2                 \\
+VREx                 & 95.9 $\pm$ 0.2       & 99.0 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.7 $\pm$ 0.1       & 96.2 $\pm$ 0.2       & 97.9                 \\
+RSC                  & 94.8 $\pm$ 0.5       & 98.7 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 98.8 $\pm$ 0.0       & 98.9 $\pm$ 0.1       & 95.9 $\pm$ 0.2       & 97.6                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{VLCS}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{C}           & \textbf{L}           & \textbf{S}           & \textbf{V}           & \textbf{Avg}         \\
+\midrule
+ERM                  & 97.7 $\pm$ 0.4       & 64.3 $\pm$ 0.9       & 73.4 $\pm$ 0.5       & 74.6 $\pm$ 1.3       & 77.5                 \\
+IRM                  & 98.6 $\pm$ 0.1       & 64.9 $\pm$ 0.9       & 73.4 $\pm$ 0.6       & 77.3 $\pm$ 0.9       & 78.5                 \\
+GroupDRO             & 97.3 $\pm$ 0.3       & 63.4 $\pm$ 0.9       & 69.5 $\pm$ 0.8       & 76.7 $\pm$ 0.7       & 76.7                 \\
+Mixup                & 98.3 $\pm$ 0.6       & 64.8 $\pm$ 1.0       & 72.1 $\pm$ 0.5       & 74.3 $\pm$ 0.8       & 77.4                 \\
+MLDG                 & 97.4 $\pm$ 0.2       & 65.2 $\pm$ 0.7       & 71.0 $\pm$ 1.4       & 75.3 $\pm$ 1.0       & 77.2                 \\
+CORAL                & 98.3 $\pm$ 0.1       & 66.1 $\pm$ 1.2       & 73.4 $\pm$ 0.3       & 77.5 $\pm$ 1.2       & 78.8                 \\
+MMD                  & 97.7 $\pm$ 0.1       & 64.0 $\pm$ 1.1       & 72.8 $\pm$ 0.2       & 75.3 $\pm$ 3.3       & 77.5                 \\
+DANN                 & 99.0 $\pm$ 0.3       & 65.1 $\pm$ 1.4       & 73.1 $\pm$ 0.3       & 77.2 $\pm$ 0.6       & 78.6                 \\
+CDANN                & 97.1 $\pm$ 0.3       & 65.1 $\pm$ 1.2       & 70.7 $\pm$ 0.8       & 77.1 $\pm$ 1.5       & 77.5                 \\
+MTL                  & 97.8 $\pm$ 0.4       & 64.3 $\pm$ 0.3       & 71.5 $\pm$ 0.7       & 75.3 $\pm$ 1.7       & 77.2                 \\
+SagNet               & 97.9 $\pm$ 0.4       & 64.5 $\pm$ 0.5       & 71.4 $\pm$ 1.3       & 77.5 $\pm$ 0.5       & 77.8                 \\
+ARM                  & 98.7 $\pm$ 0.2       & 63.6 $\pm$ 0.7       & 71.3 $\pm$ 1.2       & 76.7 $\pm$ 0.6       & 77.6                 \\
+VREx                 & 98.4 $\pm$ 0.3       & 64.4 $\pm$ 1.4       & 74.1 $\pm$ 0.4       & 76.2 $\pm$ 1.3       & 78.3                 \\
+RSC                  & 97.9 $\pm$ 0.1       & 62.5 $\pm$ 0.7       & 72.3 $\pm$ 1.2       & 75.6 $\pm$ 0.8       & 77.1                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{PACS}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{A}           & \textbf{C}           & \textbf{P}           & \textbf{S}           & \textbf{Avg}         \\
+\midrule
+ERM                  & 84.7 $\pm$ 0.4       & 80.8 $\pm$ 0.6       & 97.2 $\pm$ 0.3       & 79.3 $\pm$ 1.0       & 85.5                 \\
+IRM                  & 84.8 $\pm$ 1.3       & 76.4 $\pm$ 1.1       & 96.7 $\pm$ 0.6       & 76.1 $\pm$ 1.0       & 83.5                 \\
+GroupDRO             & 83.5 $\pm$ 0.9       & 79.1 $\pm$ 0.6       & 96.7 $\pm$ 0.3       & 78.3 $\pm$ 2.0       & 84.4                 \\
+Mixup                & 86.1 $\pm$ 0.5       & 78.9 $\pm$ 0.8       & 97.6 $\pm$ 0.1       & 75.8 $\pm$ 1.8       & 84.6                 \\
+MLDG                 & 85.5 $\pm$ 1.4       & 80.1 $\pm$ 1.7       & 97.4 $\pm$ 0.3       & 76.6 $\pm$ 1.1       & 84.9                 \\
+CORAL                & 88.3 $\pm$ 0.2       & 80.0 $\pm$ 0.5       & 97.5 $\pm$ 0.3       & 78.8 $\pm$ 1.3       & 86.2                 \\
+MMD                  & 86.1 $\pm$ 1.4       & 79.4 $\pm$ 0.9       & 96.6 $\pm$ 0.2       & 76.5 $\pm$ 0.5       & 84.6                 \\
+DANN                 & 86.4 $\pm$ 0.8       & 77.4 $\pm$ 0.8       & 97.3 $\pm$ 0.4       & 73.5 $\pm$ 2.3       & 83.6                 \\
+CDANN                & 84.6 $\pm$ 1.8       & 75.5 $\pm$ 0.9       & 96.8 $\pm$ 0.3       & 73.5 $\pm$ 0.6       & 82.6                 \\
+MTL                  & 87.5 $\pm$ 0.8       & 77.1 $\pm$ 0.5       & 96.4 $\pm$ 0.8       & 77.3 $\pm$ 1.8       & 84.6                 \\
+SagNet               & 87.4 $\pm$ 1.0       & 80.7 $\pm$ 0.6       & 97.1 $\pm$ 0.1       & 80.0 $\pm$ 0.4       & 86.3                 \\
+ARM                  & 86.8 $\pm$ 0.6       & 76.8 $\pm$ 0.5       & 97.4 $\pm$ 0.3       & 79.3 $\pm$ 1.2       & 85.1                 \\
+VREx                 & 86.0 $\pm$ 1.6       & 79.1 $\pm$ 0.6       & 96.9 $\pm$ 0.5       & 77.7 $\pm$ 1.7       & 84.9                 \\
+RSC                  & 85.4 $\pm$ 0.8       & 79.7 $\pm$ 1.8       & 97.6 $\pm$ 0.3       & 78.2 $\pm$ 1.2       & 85.2                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{OfficeHome}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{A}           & \textbf{C}           & \textbf{P}           & \textbf{R}           & \textbf{Avg}         \\
+\midrule
+ERM                  & 61.3 $\pm$ 0.7       & 52.4 $\pm$ 0.3       & 75.8 $\pm$ 0.1       & 76.6 $\pm$ 0.3       & 66.5                 \\
+IRM                  & 58.9 $\pm$ 2.3       & 52.2 $\pm$ 1.6       & 72.1 $\pm$ 2.9       & 74.0 $\pm$ 2.5       & 64.3                 \\
+GroupDRO             & 60.4 $\pm$ 0.7       & 52.7 $\pm$ 1.0       & 75.0 $\pm$ 0.7       & 76.0 $\pm$ 0.7       & 66.0                 \\
+Mixup                & 62.4 $\pm$ 0.8       & 54.8 $\pm$ 0.6       & 76.9 $\pm$ 0.3       & 78.3 $\pm$ 0.2       & 68.1                 \\
+MLDG                 & 61.5 $\pm$ 0.9       & 53.2 $\pm$ 0.6       & 75.0 $\pm$ 1.2       & 77.5 $\pm$ 0.4       & 66.8                 \\
+CORAL                & 65.3 $\pm$ 0.4       & 54.4 $\pm$ 0.5       & 76.5 $\pm$ 0.1       & 78.4 $\pm$ 0.5       & 68.7                 \\
+MMD                  & 60.4 $\pm$ 0.2       & 53.3 $\pm$ 0.3       & 74.3 $\pm$ 0.1       & 77.4 $\pm$ 0.6       & 66.3                 \\
+DANN                 & 59.9 $\pm$ 1.3       & 53.0 $\pm$ 0.3       & 73.6 $\pm$ 0.7       & 76.9 $\pm$ 0.5       & 65.9                 \\
+CDANN                & 61.5 $\pm$ 1.4       & 50.4 $\pm$ 2.4       & 74.4 $\pm$ 0.9       & 76.6 $\pm$ 0.8       & 65.8                 \\
+MTL                  & 61.5 $\pm$ 0.7       & 52.4 $\pm$ 0.6       & 74.9 $\pm$ 0.4       & 76.8 $\pm$ 0.4       & 66.4                 \\
+SagNet               & 63.4 $\pm$ 0.2       & 54.8 $\pm$ 0.4       & 75.8 $\pm$ 0.4       & 78.3 $\pm$ 0.3       & 68.1                 \\
+ARM                  & 58.9 $\pm$ 0.8       & 51.0 $\pm$ 0.5       & 74.1 $\pm$ 0.1       & 75.2 $\pm$ 0.3       & 64.8                 \\
+VREx                 & 60.7 $\pm$ 0.9       & 53.0 $\pm$ 0.9       & 75.3 $\pm$ 0.1       & 76.6 $\pm$ 0.5       & 66.4                 \\
+RSC                  & 60.7 $\pm$ 1.4       & 51.4 $\pm$ 0.3       & 74.8 $\pm$ 1.1       & 75.1 $\pm$ 1.3       & 65.5                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{TerraIncognita}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{L100}        & \textbf{L38}         & \textbf{L43}         & \textbf{L46}         & \textbf{Avg}         \\
+\midrule
+ERM                  & 49.8 $\pm$ 4.4       & 42.1 $\pm$ 1.4       & 56.9 $\pm$ 1.8       & 35.7 $\pm$ 3.9       & 46.1                 \\
+IRM                  & 54.6 $\pm$ 1.3       & 39.8 $\pm$ 1.9       & 56.2 $\pm$ 1.8       & 39.6 $\pm$ 0.8       & 47.6                 \\
+GroupDRO             & 41.2 $\pm$ 0.7       & 38.6 $\pm$ 2.1       & 56.7 $\pm$ 0.9       & 36.4 $\pm$ 2.1       & 43.2                 \\
+Mixup                & 59.6 $\pm$ 2.0       & 42.2 $\pm$ 1.4       & 55.9 $\pm$ 0.8       & 33.9 $\pm$ 1.4       & 47.9                 \\
+MLDG                 & 54.2 $\pm$ 3.0       & 44.3 $\pm$ 1.1       & 55.6 $\pm$ 0.3       & 36.9 $\pm$ 2.2       & 47.7                 \\
+CORAL                & 51.6 $\pm$ 2.4       & 42.2 $\pm$ 1.0       & 57.0 $\pm$ 1.0       & 39.8 $\pm$ 2.9       & 47.6                 \\
+MMD                  & 41.9 $\pm$ 3.0       & 34.8 $\pm$ 1.0       & 57.0 $\pm$ 1.9       & 35.2 $\pm$ 1.8       & 42.2                 \\
+DANN                 & 51.1 $\pm$ 3.5       & 40.6 $\pm$ 0.6       & 57.4 $\pm$ 0.5       & 37.7 $\pm$ 1.8       & 46.7                 \\
+CDANN                & 47.0 $\pm$ 1.9       & 41.3 $\pm$ 4.8       & 54.9 $\pm$ 1.7       & 39.8 $\pm$ 2.3       & 45.8                 \\
+MTL                  & 49.3 $\pm$ 1.2       & 39.6 $\pm$ 6.3       & 55.6 $\pm$ 1.1       & 37.8 $\pm$ 0.8       & 45.6                 \\
+SagNet               & 53.0 $\pm$ 2.9       & 43.0 $\pm$ 2.5       & 57.9 $\pm$ 0.6       & 40.4 $\pm$ 1.3       & 48.6                 \\
+ARM                  & 49.3 $\pm$ 0.7       & 38.3 $\pm$ 2.4       & 55.8 $\pm$ 0.8       & 38.7 $\pm$ 1.3       & 45.5                 \\
+VREx                 & 48.2 $\pm$ 4.3       & 41.7 $\pm$ 1.3       & 56.8 $\pm$ 0.8       & 38.7 $\pm$ 3.1       & 46.4                 \\
+RSC                  & 50.2 $\pm$ 2.2       & 39.2 $\pm$ 1.4       & 56.3 $\pm$ 1.4       & 40.8 $\pm$ 0.6       & 46.6                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{DomainNet}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{clip}        & \textbf{info}        & \textbf{paint}       & \textbf{quick}       & \textbf{real}        & \textbf{sketch}      & \textbf{Avg}         \\
+\midrule
+ERM                  & 58.1 $\pm$ 0.3       & 18.8 $\pm$ 0.3       & 46.7 $\pm$ 0.3       & 12.2 $\pm$ 0.4       & 59.6 $\pm$ 0.1       & 49.8 $\pm$ 0.4       & 40.9                 \\
+IRM                  & 48.5 $\pm$ 2.8       & 15.0 $\pm$ 1.5       & 38.3 $\pm$ 4.3       & 10.9 $\pm$ 0.5       & 48.2 $\pm$ 5.2       & 42.3 $\pm$ 3.1       & 33.9                 \\
+GroupDRO             & 47.2 $\pm$ 0.5       & 17.5 $\pm$ 0.4       & 33.8 $\pm$ 0.5       & 9.3 $\pm$ 0.3        & 51.6 $\pm$ 0.4       & 40.1 $\pm$ 0.6       & 33.3                 \\
+Mixup                & 55.7 $\pm$ 0.3       & 18.5 $\pm$ 0.5       & 44.3 $\pm$ 0.5       & 12.5 $\pm$ 0.4       & 55.8 $\pm$ 0.3       & 48.2 $\pm$ 0.5       & 39.2                 \\
+MLDG                 & 59.1 $\pm$ 0.2       & 19.1 $\pm$ 0.3       & 45.8 $\pm$ 0.7       & 13.4 $\pm$ 0.3       & 59.6 $\pm$ 0.2       & 50.2 $\pm$ 0.4       & 41.2                 \\
+CORAL                & 59.2 $\pm$ 0.1       & 19.7 $\pm$ 0.2       & 46.6 $\pm$ 0.3       & 13.4 $\pm$ 0.4       & 59.8 $\pm$ 0.2       & 50.1 $\pm$ 0.6       & 41.5                 \\
+MMD                  & 32.1 $\pm$ 13.3      & 11.0 $\pm$ 4.6       & 26.8 $\pm$ 11.3      & 8.7 $\pm$ 2.1        & 32.7 $\pm$ 13.8      & 28.9 $\pm$ 11.9      & 23.4                 \\
+DANN                 & 53.1 $\pm$ 0.2       & 18.3 $\pm$ 0.1       & 44.2 $\pm$ 0.7       & 11.8 $\pm$ 0.1       & 55.5 $\pm$ 0.4       & 46.8 $\pm$ 0.6       & 38.3                 \\
+CDANN                & 54.6 $\pm$ 0.4       & 17.3 $\pm$ 0.1       & 43.7 $\pm$ 0.9       & 12.1 $\pm$ 0.7       & 56.2 $\pm$ 0.4       & 45.9 $\pm$ 0.5       & 38.3                 \\
+MTL                  & 57.9 $\pm$ 0.5       & 18.5 $\pm$ 0.4       & 46.0 $\pm$ 0.1       & 12.5 $\pm$ 0.1       & 59.5 $\pm$ 0.3       & 49.2 $\pm$ 0.1       & 40.6                 \\
+SagNet               & 57.7 $\pm$ 0.3       & 19.0 $\pm$ 0.2       & 45.3 $\pm$ 0.3       & 12.7 $\pm$ 0.5       & 58.1 $\pm$ 0.5       & 48.8 $\pm$ 0.2       & 40.3                 \\
+ARM                  & 49.7 $\pm$ 0.3       & 16.3 $\pm$ 0.5       & 40.9 $\pm$ 1.1       & 9.4 $\pm$ 0.1        & 53.4 $\pm$ 0.4       & 43.5 $\pm$ 0.4       & 35.5                 \\
+VREx                 & 47.3 $\pm$ 3.5       & 16.0 $\pm$ 1.5       & 35.8 $\pm$ 4.6       & 10.9 $\pm$ 0.3       & 49.6 $\pm$ 4.9       & 42.0 $\pm$ 3.0       & 33.6                 \\
+RSC                  & 55.0 $\pm$ 1.2       & 18.3 $\pm$ 0.5       & 44.4 $\pm$ 0.6       & 12.2 $\pm$ 0.2       & 55.7 $\pm$ 0.7       & 47.8 $\pm$ 0.9       & 38.9                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{Averages}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Algorithm}        & \textbf{ColoredMNIST}     & \textbf{RotatedMNIST}     & \textbf{VLCS}             & \textbf{PACS}             & \textbf{OfficeHome}       & \textbf{TerraIncognita}   & \textbf{DomainNet}        & \textbf{Avg}              \\
+\midrule
+ERM                       & 51.5 $\pm$ 0.1            & 98.0 $\pm$ 0.0            & 77.5 $\pm$ 0.4            & 85.5 $\pm$ 0.2            & 66.5 $\pm$ 0.3            & 46.1 $\pm$ 1.8            & 40.9 $\pm$ 0.1            & 66.6                      \\
+IRM                       & 52.0 $\pm$ 0.1            & 97.7 $\pm$ 0.1            & 78.5 $\pm$ 0.5            & 83.5 $\pm$ 0.8            & 64.3 $\pm$ 2.2            & 47.6 $\pm$ 0.8            & 33.9 $\pm$ 2.8            & 65.4                      \\
+GroupDRO                  & 52.1 $\pm$ 0.0            & 98.0 $\pm$ 0.0            & 76.7 $\pm$ 0.6            & 84.4 $\pm$ 0.8            & 66.0 $\pm$ 0.7            & 43.2 $\pm$ 1.1            & 33.3 $\pm$ 0.2            & 64.8                      \\
+Mixup                     & 52.1 $\pm$ 0.2            & 98.0 $\pm$ 0.1            & 77.4 $\pm$ 0.6            & 84.6 $\pm$ 0.6            & 68.1 $\pm$ 0.3            & 47.9 $\pm$ 0.8            & 39.2 $\pm$ 0.1            & 66.7                      \\
+MLDG                      & 51.5 $\pm$ 0.1            & 97.9 $\pm$ 0.0            & 77.2 $\pm$ 0.4            & 84.9 $\pm$ 1.0            & 66.8 $\pm$ 0.6            & 47.7 $\pm$ 0.9            & 41.2 $\pm$ 0.1            & 66.7                      \\
+CORAL                     & 51.5 $\pm$ 0.1            & 98.0 $\pm$ 0.1            & 78.8 $\pm$ 0.6            & 86.2 $\pm$ 0.3            & 68.7 $\pm$ 0.3            & 47.6 $\pm$ 1.0            & 41.5 $\pm$ 0.1            & 67.5                      \\
+MMD                       & 51.5 $\pm$ 0.2            & 97.9 $\pm$ 0.0            & 77.5 $\pm$ 0.9            & 84.6 $\pm$ 0.5            & 66.3 $\pm$ 0.1            & 42.2 $\pm$ 1.6            & 23.4 $\pm$ 9.5            & 63.3                      \\
+DANN                      & 51.5 $\pm$ 0.3            & 97.8 $\pm$ 0.1            & 78.6 $\pm$ 0.4            & 83.6 $\pm$ 0.4            & 65.9 $\pm$ 0.6            & 46.7 $\pm$ 0.5            & 38.3 $\pm$ 0.1            & 66.1                      \\
+CDANN                     & 51.7 $\pm$ 0.1            & 97.9 $\pm$ 0.1            & 77.5 $\pm$ 0.1            & 82.6 $\pm$ 0.9            & 65.8 $\pm$ 1.3            & 45.8 $\pm$ 1.6            & 38.3 $\pm$ 0.3            & 65.6                      \\
+MTL                       & 51.4 $\pm$ 0.1            & 97.9 $\pm$ 0.0            & 77.2 $\pm$ 0.4            & 84.6 $\pm$ 0.5            & 66.4 $\pm$ 0.5            & 45.6 $\pm$ 1.2            & 40.6 $\pm$ 0.1            & 66.2                      \\
+SagNet                    & 51.7 $\pm$ 0.0            & 98.0 $\pm$ 0.0            & 77.8 $\pm$ 0.5            & 86.3 $\pm$ 0.2            & 68.1 $\pm$ 0.1            & 48.6 $\pm$ 1.0            & 40.3 $\pm$ 0.1            & 67.2                      \\
+ARM                       & 56.2 $\pm$ 0.2            & 98.2 $\pm$ 0.1            & 77.6 $\pm$ 0.3            & 85.1 $\pm$ 0.4            & 64.8 $\pm$ 0.3            & 45.5 $\pm$ 0.3            & 35.5 $\pm$ 0.2            & 66.1                      \\
+VREx                      & 51.8 $\pm$ 0.1            & 97.9 $\pm$ 0.1            & 78.3 $\pm$ 0.2            & 84.9 $\pm$ 0.6            & 66.4 $\pm$ 0.6            & 46.4 $\pm$ 0.6            & 33.6 $\pm$ 2.9            & 65.6                      \\
+RSC                       & 51.7 $\pm$ 0.2            & 97.6 $\pm$ 0.1            & 77.1 $\pm$ 0.5            & 85.2 $\pm$ 0.9            & 65.5 $\pm$ 0.9            & 46.6 $\pm$ 1.0            & 38.9 $\pm$ 0.5            & 66.1                      \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsection{Model selection: leave-one-domain-out cross-validation}
+
+\subsubsection{ColoredMNIST}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Algorithm}   & \textbf{+90\%}       & \textbf{+80\%}       & \textbf{-90\%}       & \textbf{Avg}         \\
+\midrule
+ERM                  & 50.0 $\pm$ 0.2       & 50.1 $\pm$ 0.2       & 10.0 $\pm$ 0.0       & 36.7                 \\
+IRM                  & 46.7 $\pm$ 2.4       & 51.2 $\pm$ 0.3       & 23.1 $\pm$ 10.7      & 40.3                 \\
+GroupDRO             & 50.1 $\pm$ 0.5       & 50.0 $\pm$ 0.5       & 10.2 $\pm$ 0.1       & 36.8                 \\
+Mixup                & 36.6 $\pm$ 10.9      & 53.4 $\pm$ 5.9       & 10.2 $\pm$ 0.1       & 33.4                 \\
+MLDG                 & 50.1 $\pm$ 0.6       & 50.1 $\pm$ 0.3       & 10.0 $\pm$ 0.1       & 36.7                 \\
+CORAL                & 49.5 $\pm$ 0.0       & 59.5 $\pm$ 8.2       & 10.2 $\pm$ 0.1       & 39.7                 \\
+MMD                  & 50.3 $\pm$ 0.2       & 50.0 $\pm$ 0.4       & 9.9 $\pm$ 0.2        & 36.8                 \\
+DANN                 & 49.9 $\pm$ 0.1       & 62.1 $\pm$ 7.0       & 10.0 $\pm$ 0.1       & 40.7                 \\
+CDANN                & 63.2 $\pm$ 10.1      & 44.4 $\pm$ 4.5       & 9.9 $\pm$ 0.2        & 39.1                 \\
+MTL                  & 44.3 $\pm$ 4.9       & 50.7 $\pm$ 0.0       & 10.1 $\pm$ 0.1       & 35.0                 \\
+SagNet               & 49.9 $\pm$ 0.4       & 49.7 $\pm$ 0.3       & 10.0 $\pm$ 0.1       & 36.5                 \\
+ARM                  & 50.0 $\pm$ 0.3       & 50.1 $\pm$ 0.3       & 10.2 $\pm$ 0.0       & 36.8                 \\
+VREx                 & 50.2 $\pm$ 0.4       & 50.5 $\pm$ 0.5       & 10.1 $\pm$ 0.0       & 36.9                 \\
+RSC                  & 49.6 $\pm$ 0.3       & 49.7 $\pm$ 0.4       & 10.1 $\pm$ 0.0       & 36.5                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{RotatedMNIST}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{0}           & \textbf{15}          & \textbf{30}          & \textbf{45}          & \textbf{60}          & \textbf{75}          & \textbf{Avg}         \\
+\midrule
+ERM                  & 95.3 $\pm$ 0.2       & 98.9 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 98.5 $\pm$ 0.1       & 96.2 $\pm$ 0.2       & 97.7                 \\
+IRM                  & 94.5 $\pm$ 0.5       & 98.2 $\pm$ 0.2       & 98.7 $\pm$ 0.1       & 96.6 $\pm$ 1.5       & 98.4 $\pm$ 0.1       & 95.8 $\pm$ 0.1       & 97.0                 \\
+GroupDRO             & 95.7 $\pm$ 0.3       & 98.7 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.6 $\pm$ 0.2       & 98.6 $\pm$ 0.2       & 95.3 $\pm$ 0.9       & 97.6                 \\
+Mixup                & 94.8 $\pm$ 0.4       & 98.8 $\pm$ 0.0       & 98.9 $\pm$ 0.1       & 99.0 $\pm$ 0.1       & 98.9 $\pm$ 0.0       & 96.4 $\pm$ 0.3       & 97.8                 \\
+MLDG                 & 94.3 $\pm$ 0.4       & 98.8 $\pm$ 0.1       & 99.0 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 96.0 $\pm$ 0.3       & 97.6                 \\
+CORAL                & 95.7 $\pm$ 0.5       & 98.5 $\pm$ 0.2       & 98.9 $\pm$ 0.2       & 98.6 $\pm$ 0.2       & 98.8 $\pm$ 0.1       & 96.3 $\pm$ 0.2       & 97.8                 \\
+MMD                  & 95.8 $\pm$ 0.2       & 98.7 $\pm$ 0.1       & 99.0 $\pm$ 0.0       & 98.8 $\pm$ 0.1       & 98.7 $\pm$ 0.1       & 96.1 $\pm$ 0.2       & 97.8                 \\
+DANN                 & 95.1 $\pm$ 0.5       & 98.3 $\pm$ 0.5       & 98.5 $\pm$ 0.1       & 99.0 $\pm$ 0.1       & 98.6 $\pm$ 0.1       & 96.1 $\pm$ 0.3       & 97.6                 \\
+CDANN                & 94.3 $\pm$ 0.5       & 98.4 $\pm$ 0.3       & 98.9 $\pm$ 0.1       & 98.7 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 95.7 $\pm$ 0.4       & 97.5                 \\
+MTL                  & 95.5 $\pm$ 0.3       & 98.6 $\pm$ 0.3       & 98.8 $\pm$ 0.1       & 99.0 $\pm$ 0.1       & 99.0 $\pm$ 0.1       & 95.6 $\pm$ 0.3       & 97.8                 \\
+SagNet               & 94.0 $\pm$ 1.6       & 98.7 $\pm$ 0.2       & 98.9 $\pm$ 0.1       & 99.1 $\pm$ 0.0       & 98.8 $\pm$ 0.1       & 74.2 $\pm$ 16.5      & 94.0                 \\
+ARM                  & 95.8 $\pm$ 0.1       & 99.0 $\pm$ 0.1       & 99.0 $\pm$ 0.0       & 98.9 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 96.9 $\pm$ 0.3       & 98.1                 \\
+VREx                 & 95.8 $\pm$ 0.2       & 98.7 $\pm$ 0.0       & 98.5 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 74.0 $\pm$ 20.1      & 95.5 $\pm$ 0.5       & 93.6                 \\
+RSC                  & 94.6 $\pm$ 0.0       & 98.4 $\pm$ 0.2       & 99.0 $\pm$ 0.1       & 98.9 $\pm$ 0.0       & 98.8 $\pm$ 0.1       & 95.9 $\pm$ 0.4       & 97.6                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{VLCS}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{C}           & \textbf{L}           & \textbf{S}           & \textbf{V}           & \textbf{Avg}         \\
+\midrule
+ERM                  & 98.0 $\pm$ 0.4       & 62.6 $\pm$ 0.9       & 70.8 $\pm$ 1.9       & 77.5 $\pm$ 1.9       & 77.2                 \\
+IRM                  & 98.6 $\pm$ 0.3       & 66.0 $\pm$ 1.1       & 69.3 $\pm$ 0.9       & 71.5 $\pm$ 1.9       & 76.3                 \\
+GroupDRO             & 98.1 $\pm$ 0.3       & 66.4 $\pm$ 0.9       & 71.0 $\pm$ 0.3       & 76.1 $\pm$ 1.4       & 77.9                 \\
+Mixup                & 98.4 $\pm$ 0.3       & 63.4 $\pm$ 0.7       & 72.9 $\pm$ 0.8       & 76.1 $\pm$ 1.2       & 77.7                 \\
+MLDG                 & 98.5 $\pm$ 0.3       & 61.7 $\pm$ 1.2       & 73.6 $\pm$ 1.8       & 75.0 $\pm$ 0.8       & 77.2                 \\
+CORAL                & 96.9 $\pm$ 0.9       & 65.7 $\pm$ 1.2       & 73.3 $\pm$ 0.7       & 78.7 $\pm$ 0.8       & 78.7                 \\
+MMD                  & 98.3 $\pm$ 0.1       & 65.6 $\pm$ 0.7       & 69.7 $\pm$ 1.0       & 75.7 $\pm$ 0.9       & 77.3                 \\
+DANN                 & 97.3 $\pm$ 1.3       & 63.7 $\pm$ 1.3       & 72.6 $\pm$ 1.4       & 74.2 $\pm$ 1.7       & 76.9                 \\
+CDANN                & 97.6 $\pm$ 0.6       & 63.4 $\pm$ 0.8       & 70.5 $\pm$ 1.4       & 78.6 $\pm$ 0.5       & 77.5                 \\
+MTL                  & 97.6 $\pm$ 0.6       & 60.6 $\pm$ 1.3       & 71.0 $\pm$ 1.2       & 77.2 $\pm$ 0.7       & 76.6                 \\
+SagNet               & 97.3 $\pm$ 0.4       & 61.6 $\pm$ 0.8       & 73.4 $\pm$ 1.9       & 77.6 $\pm$ 0.4       & 77.5                 \\
+ARM                  & 97.2 $\pm$ 0.5       & 62.7 $\pm$ 1.5       & 70.6 $\pm$ 0.6       & 75.8 $\pm$ 0.9       & 76.6                 \\
+VREx                 & 96.9 $\pm$ 0.3       & 64.8 $\pm$ 2.0       & 69.7 $\pm$ 1.8       & 75.5 $\pm$ 1.7       & 76.7                 \\
+RSC                  & 97.5 $\pm$ 0.6       & 63.1 $\pm$ 1.2       & 73.0 $\pm$ 1.3       & 76.2 $\pm$ 0.5       & 77.5                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{PACS}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{A}           & \textbf{C}           & \textbf{P}           & \textbf{S}           & \textbf{Avg}         \\
+\midrule
+ERM                  & 83.2 $\pm$ 1.3       & 76.8 $\pm$ 1.7       & 97.2 $\pm$ 0.3       & 74.8 $\pm$ 1.3       & 83.0                 \\
+IRM                  & 81.7 $\pm$ 2.4       & 77.0 $\pm$ 1.3       & 96.3 $\pm$ 0.2       & 71.1 $\pm$ 2.2       & 81.5                 \\
+GroupDRO             & 84.4 $\pm$ 0.7       & 77.3 $\pm$ 0.8       & 96.8 $\pm$ 0.8       & 75.6 $\pm$ 1.4       & 83.5                 \\
+Mixup                & 85.2 $\pm$ 1.9       & 77.0 $\pm$ 1.7       & 96.8 $\pm$ 0.8       & 73.9 $\pm$ 1.6       & 83.2                 \\
+MLDG                 & 81.4 $\pm$ 3.6       & 77.9 $\pm$ 2.3       & 96.2 $\pm$ 0.3       & 76.1 $\pm$ 2.1       & 82.9                 \\
+CORAL                & 80.5 $\pm$ 2.8       & 74.5 $\pm$ 0.4       & 96.8 $\pm$ 0.3       & 78.6 $\pm$ 1.4       & 82.6                 \\
+MMD                  & 84.9 $\pm$ 1.7       & 75.1 $\pm$ 2.0       & 96.1 $\pm$ 0.9       & 76.5 $\pm$ 1.5       & 83.2                 \\
+DANN                 & 84.3 $\pm$ 2.8       & 72.4 $\pm$ 2.8       & 96.5 $\pm$ 0.8       & 70.8 $\pm$ 1.3       & 81.0                 \\
+CDANN                & 78.3 $\pm$ 2.8       & 73.8 $\pm$ 1.6       & 96.4 $\pm$ 0.5       & 66.8 $\pm$ 5.5       & 78.8                 \\
+MTL                  & 85.6 $\pm$ 1.5       & 78.9 $\pm$ 0.6       & 97.1 $\pm$ 0.3       & 73.1 $\pm$ 2.7       & 83.7                 \\
+SagNet               & 81.1 $\pm$ 1.9       & 75.4 $\pm$ 1.3       & 95.7 $\pm$ 0.9       & 77.2 $\pm$ 0.6       & 82.3                 \\
+ARM                  & 85.9 $\pm$ 0.3       & 73.3 $\pm$ 1.9       & 95.6 $\pm$ 0.4       & 72.1 $\pm$ 2.4       & 81.7                 \\
+VREx                 & 81.6 $\pm$ 4.0       & 74.1 $\pm$ 0.3       & 96.9 $\pm$ 0.4       & 72.8 $\pm$ 2.1       & 81.3                 \\
+RSC                  & 83.7 $\pm$ 1.7       & 82.9 $\pm$ 1.1       & 95.6 $\pm$ 0.7       & 68.1 $\pm$ 1.5       & 82.6                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{OfficeHome}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{A}           & \textbf{C}           & \textbf{P}           & \textbf{R}           & \textbf{Avg}         \\
+\midrule
+ERM                  & 61.1 $\pm$ 0.9       & 50.7 $\pm$ 0.6       & 74.6 $\pm$ 0.3       & 76.4 $\pm$ 0.6       & 65.7                 \\
+IRM                  & 58.2 $\pm$ 1.2       & 51.6 $\pm$ 1.2       & 73.3 $\pm$ 2.2       & 74.1 $\pm$ 1.7       & 64.3                 \\
+GroupDRO             & 59.9 $\pm$ 0.4       & 51.0 $\pm$ 0.4       & 73.7 $\pm$ 0.3       & 76.0 $\pm$ 0.2       & 65.2                 \\
+Mixup                & 61.4 $\pm$ 0.5       & 53.0 $\pm$ 0.3       & 75.8 $\pm$ 0.2       & 77.7 $\pm$ 0.3       & 67.0                 \\
+MLDG                 & 60.5 $\pm$ 1.4       & 51.9 $\pm$ 0.2       & 74.4 $\pm$ 0.6       & 77.6 $\pm$ 0.4       & 66.1                 \\
+CORAL                & 64.5 $\pm$ 0.8       & 54.8 $\pm$ 0.2       & 76.6 $\pm$ 0.3       & 78.1 $\pm$ 0.2       & 68.5                 \\
+MMD                  & 60.8 $\pm$ 0.7       & 53.7 $\pm$ 0.5       & 50.2 $\pm$ 19.9      & 76.0 $\pm$ 0.7       & 60.2                 \\
+DANN                 & 60.2 $\pm$ 1.3       & 52.2 $\pm$ 0.9       & 71.3 $\pm$ 2.0       & 76.0 $\pm$ 0.6       & 64.9                 \\
+CDANN                & 58.7 $\pm$ 2.9       & 49.0 $\pm$ 2.1       & 73.6 $\pm$ 1.0       & 76.0 $\pm$ 1.1       & 64.3                 \\
+MTL                  & 59.1 $\pm$ 0.3       & 52.1 $\pm$ 1.2       & 74.7 $\pm$ 0.4       & 77.0 $\pm$ 0.6       & 65.7                 \\
+SagNet               & 63.0 $\pm$ 0.8       & 54.0 $\pm$ 0.3       & 76.6 $\pm$ 0.3       & 76.8 $\pm$ 0.4       & 67.6                 \\
+ARM                  & 58.7 $\pm$ 0.8       & 49.8 $\pm$ 1.1       & 73.1 $\pm$ 0.5       & 75.9 $\pm$ 0.1       & 64.4                 \\
+VREx                 & 57.6 $\pm$ 3.4       & 51.3 $\pm$ 1.3       & 74.9 $\pm$ 0.2       & 75.8 $\pm$ 0.7       & 64.9                 \\
+RSC                  & 61.6 $\pm$ 1.0       & 51.1 $\pm$ 0.8       & 74.8 $\pm$ 1.1       & 75.7 $\pm$ 0.9       & 65.8                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{TerraIncognita}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{L100}        & \textbf{L38}         & \textbf{L43}         & \textbf{L46}         & \textbf{Avg}         \\
+\midrule
+ERM                  & 34.4 $\pm$ 5.6       & 38.1 $\pm$ 4.0       & 55.7 $\pm$ 1.0       & 37.4 $\pm$ 1.1       & 41.4                 \\
+IRM                  & 46.7 $\pm$ 1.8       & 40.9 $\pm$ 2.1       & 52.2 $\pm$ 3.3       & 24.9 $\pm$ 10.0      & 41.2                 \\
+GroupDRO             & 45.2 $\pm$ 6.2       & 40.1 $\pm$ 2.0       & 55.8 $\pm$ 1.4       & 38.3 $\pm$ 4.2       & 44.9                 \\
+Mixup                & 59.7 $\pm$ 1.5       & 41.3 $\pm$ 2.1       & 55.9 $\pm$ 0.8       & 37.9 $\pm$ 1.5       & 48.7                 \\
+MLDG                 & 51.0 $\pm$ 1.9       & 39.2 $\pm$ 0.2       & 56.2 $\pm$ 1.1       & 38.3 $\pm$ 2.4       & 46.2                 \\
+CORAL                & 52.4 $\pm$ 7.2       & 39.7 $\pm$ 1.5       & 56.1 $\pm$ 0.9       & 37.1 $\pm$ 2.2       & 46.3                 \\
+MMD                  & 49.1 $\pm$ 2.2       & 42.0 $\pm$ 1.6       & 55.3 $\pm$ 1.9       & 39.5 $\pm$ 2.0       & 46.5                 \\
+DANN                 & 46.9 $\pm$ 3.9       & 38.8 $\pm$ 1.1       & 55.5 $\pm$ 1.4       & 36.2 $\pm$ 1.1       & 44.4                 \\
+CDANN                & 43.9 $\pm$ 7.3       & 32.5 $\pm$ 4.4       & 41.0 $\pm$ 7.8       & 42.4 $\pm$ 1.8       & 39.9                 \\
+MTL                  & 42.8 $\pm$ 4.6       & 43.9 $\pm$ 1.1       & 55.5 $\pm$ 0.8       & 37.5 $\pm$ 1.9       & 44.9                 \\
+SagNet               & 48.1 $\pm$ 2.4       & 47.1 $\pm$ 0.8       & 54.4 $\pm$ 1.1       & 39.1 $\pm$ 1.8       & 47.2                 \\
+ARM                  & 48.9 $\pm$ 5.3       & 34.4 $\pm$ 3.5       & 51.9 $\pm$ 0.8       & 35.4 $\pm$ 2.3       & 42.6                 \\
+VREx                 & 46.4 $\pm$ 1.4       & 25.5 $\pm$ 5.8       & 39.6 $\pm$ 12.8      & 37.8 $\pm$ 3.6       & 37.3                 \\
+RSC                  & 40.0 $\pm$ 1.3       & 32.1 $\pm$ 2.5       & 53.9 $\pm$ 0.5       & 34.2 $\pm$ 0.2       & 40.0                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{DomainNet}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{clip}        & \textbf{info}        & \textbf{paint}       & \textbf{quick}       & \textbf{real}        & \textbf{sketch}      & \textbf{Avg}         \\
+\midrule
+ERM                  & 58.1 $\pm$ 0.3       & 17.8 $\pm$ 0.3       & 47.0 $\pm$ 0.3       & 12.2 $\pm$ 0.4       & 59.2 $\pm$ 0.7       & 49.5 $\pm$ 0.6       & 40.6                 \\
+IRM                  & 47.5 $\pm$ 2.7       & 15.0 $\pm$ 1.5       & 37.3 $\pm$ 5.1       & 10.9 $\pm$ 0.5       & 48.0 $\pm$ 5.4       & 42.3 $\pm$ 3.1       & 33.5                 \\
+GroupDRO             & 47.2 $\pm$ 0.5       & 17.0 $\pm$ 0.6       & 33.8 $\pm$ 0.5       & 9.2 $\pm$ 0.4        & 51.6 $\pm$ 0.4       & 39.2 $\pm$ 1.2       & 33.0                 \\
+Mixup                & 54.4 $\pm$ 0.6       & 18.0 $\pm$ 0.4       & 44.5 $\pm$ 0.5       & 11.5 $\pm$ 0.2       & 55.8 $\pm$ 1.1       & 46.9 $\pm$ 0.2       & 38.5                 \\
+MLDG                 & 58.3 $\pm$ 0.7       & 19.3 $\pm$ 0.2       & 45.8 $\pm$ 0.7       & 13.2 $\pm$ 0.3       & 59.4 $\pm$ 0.2       & 49.8 $\pm$ 0.3       & 41.0                 \\
+CORAL                & 59.2 $\pm$ 0.1       & 19.5 $\pm$ 0.3       & 46.2 $\pm$ 0.1       & 13.4 $\pm$ 0.4       & 59.1 $\pm$ 0.5       & 49.5 $\pm$ 0.8       & 41.1                 \\
+MMD                  & 32.2 $\pm$ 13.3      & 11.0 $\pm$ 4.6       & 26.8 $\pm$ 11.3      & 8.7 $\pm$ 2.1        & 32.7 $\pm$ 13.8      & 28.9 $\pm$ 11.9      & 23.4                 \\
+DANN                 & 52.7 $\pm$ 0.1       & 18.0 $\pm$ 0.3       & 44.2 $\pm$ 0.7       & 11.8 $\pm$ 0.1       & 55.5 $\pm$ 0.4       & 46.8 $\pm$ 0.6       & 38.2                 \\
+CDANN                & 53.1 $\pm$ 0.9       & 17.3 $\pm$ 0.1       & 43.7 $\pm$ 0.9       & 11.6 $\pm$ 0.6       & 56.2 $\pm$ 0.4       & 45.9 $\pm$ 0.5       & 38.0                 \\
+MTL                  & 57.3 $\pm$ 0.3       & 19.3 $\pm$ 0.2       & 45.7 $\pm$ 0.4       & 12.5 $\pm$ 0.1       & 59.3 $\pm$ 0.2       & 49.2 $\pm$ 0.1       & 40.6                 \\
+SagNet               & 56.2 $\pm$ 0.3       & 18.9 $\pm$ 0.2       & 46.2 $\pm$ 0.5       & 12.6 $\pm$ 0.6       & 58.2 $\pm$ 0.6       & 49.1 $\pm$ 0.2       & 40.2                 \\
+ARM                  & 49.0 $\pm$ 0.7       & 15.8 $\pm$ 0.3       & 40.8 $\pm$ 1.1       & 9.4 $\pm$ 0.2        & 53.0 $\pm$ 0.4       & 43.4 $\pm$ 0.3       & 35.2                 \\
+VREx                 & 46.5 $\pm$ 4.1       & 15.6 $\pm$ 1.8       & 35.8 $\pm$ 4.6       & 10.9 $\pm$ 0.3       & 49.6 $\pm$ 4.9       & 42.0 $\pm$ 3.0       & 33.4                 \\
+RSC                  & 55.0 $\pm$ 1.2       & 18.3 $\pm$ 0.5       & 44.4 $\pm$ 0.6       & 12.2 $\pm$ 0.2       & 55.7 $\pm$ 0.7       & 47.8 $\pm$ 0.9       & 38.9                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{Averages}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Algorithm}        & \textbf{ColoredMNIST}     & \textbf{RotatedMNIST}     & \textbf{VLCS}             & \textbf{PACS}             & \textbf{OfficeHome}       & \textbf{TerraIncognita}   & \textbf{DomainNet}        & \textbf{Avg}              \\
+\midrule
+ERM                       & 36.7 $\pm$ 0.1            & 97.7 $\pm$ 0.0            & 77.2 $\pm$ 0.4            & 83.0 $\pm$ 0.7            & 65.7 $\pm$ 0.5            & 41.4 $\pm$ 1.4            & 40.6 $\pm$ 0.2            & 63.2                      \\
+IRM                       & 40.3 $\pm$ 4.2            & 97.0 $\pm$ 0.2            & 76.3 $\pm$ 0.6            & 81.5 $\pm$ 0.8            & 64.3 $\pm$ 1.5            & 41.2 $\pm$ 3.6            & 33.5 $\pm$ 3.0            & 62.0                      \\
+GroupDRO                  & 36.8 $\pm$ 0.1            & 97.6 $\pm$ 0.1            & 77.9 $\pm$ 0.5            & 83.5 $\pm$ 0.2            & 65.2 $\pm$ 0.2            & 44.9 $\pm$ 1.4            & 33.0 $\pm$ 0.3            & 62.7                      \\
+Mixup                     & 33.4 $\pm$ 4.7            & 97.8 $\pm$ 0.0            & 77.7 $\pm$ 0.6            & 83.2 $\pm$ 0.4            & 67.0 $\pm$ 0.2            & 48.7 $\pm$ 0.4            & 38.5 $\pm$ 0.3            & 63.8                      \\
+MLDG                      & 36.7 $\pm$ 0.2            & 97.6 $\pm$ 0.0            & 77.2 $\pm$ 0.9            & 82.9 $\pm$ 1.7            & 66.1 $\pm$ 0.5            & 46.2 $\pm$ 0.9            & 41.0 $\pm$ 0.2            & 64.0                      \\
+CORAL                     & 39.7 $\pm$ 2.8            & 97.8 $\pm$ 0.1            & 78.7 $\pm$ 0.4            & 82.6 $\pm$ 0.5            & 68.5 $\pm$ 0.2            & 46.3 $\pm$ 1.7            & 41.1 $\pm$ 0.1            & 65.0                      \\
+MMD                       & 36.8 $\pm$ 0.1            & 97.8 $\pm$ 0.1            & 77.3 $\pm$ 0.5            & 83.2 $\pm$ 0.2            & 60.2 $\pm$ 5.2            & 46.5 $\pm$ 1.5            & 23.4 $\pm$ 9.5            & 60.7                      \\
+DANN                      & 40.7 $\pm$ 2.3            & 97.6 $\pm$ 0.2            & 76.9 $\pm$ 0.4            & 81.0 $\pm$ 1.1            & 64.9 $\pm$ 1.2            & 44.4 $\pm$ 1.1            & 38.2 $\pm$ 0.2            & 63.4                      \\
+CDANN                     & 39.1 $\pm$ 4.4            & 97.5 $\pm$ 0.2            & 77.5 $\pm$ 0.2            & 78.8 $\pm$ 2.2            & 64.3 $\pm$ 1.7            & 39.9 $\pm$ 3.2            & 38.0 $\pm$ 0.1            & 62.2                      \\
+MTL                       & 35.0 $\pm$ 1.7            & 97.8 $\pm$ 0.1            & 76.6 $\pm$ 0.5            & 83.7 $\pm$ 0.4            & 65.7 $\pm$ 0.5            & 44.9 $\pm$ 1.2            & 40.6 $\pm$ 0.1            & 63.5                      \\
+SagNet                    & 36.5 $\pm$ 0.1            & 94.0 $\pm$ 3.0            & 77.5 $\pm$ 0.3            & 82.3 $\pm$ 0.1            & 67.6 $\pm$ 0.3            & 47.2 $\pm$ 0.9            & 40.2 $\pm$ 0.2            & 63.6                      \\
+ARM                       & 36.8 $\pm$ 0.0            & 98.1 $\pm$ 0.1            & 76.6 $\pm$ 0.5            & 81.7 $\pm$ 0.2            & 64.4 $\pm$ 0.2            & 42.6 $\pm$ 2.7            & 35.2 $\pm$ 0.1            & 62.2                      \\
+VREx                      & 36.9 $\pm$ 0.3            & 93.6 $\pm$ 3.4            & 76.7 $\pm$ 1.0            & 81.3 $\pm$ 0.9            & 64.9 $\pm$ 1.3            & 37.3 $\pm$ 3.0            & 33.4 $\pm$ 3.1            & 60.6                      \\
+RSC                       & 36.5 $\pm$ 0.2            & 97.6 $\pm$ 0.1            & 77.5 $\pm$ 0.5            & 82.6 $\pm$ 0.7            & 65.8 $\pm$ 0.7            & 40.0 $\pm$ 0.8            & 38.9 $\pm$ 0.5            & 62.7                      \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsection{Model selection: test-domain validation set (oracle)}
+
+\subsubsection{ColoredMNIST}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Algorithm}   & \textbf{+90\%}       & \textbf{+80\%}       & \textbf{-90\%}       & \textbf{Avg}         \\
+\midrule
+ERM                  & 71.8 $\pm$ 0.4       & 72.9 $\pm$ 0.1       & 28.7 $\pm$ 0.5       & 57.8                 \\
+IRM                  & 72.0 $\pm$ 0.1       & 72.5 $\pm$ 0.3       & 58.5 $\pm$ 3.3       & 67.7                 \\
+GroupDRO             & 73.5 $\pm$ 0.3       & 73.0 $\pm$ 0.3       & 36.8 $\pm$ 2.8       & 61.1                 \\
+Mixup                & 72.5 $\pm$ 0.2       & 73.9 $\pm$ 0.4       & 28.6 $\pm$ 0.2       & 58.4                 \\
+MLDG                 & 71.9 $\pm$ 0.3       & 73.5 $\pm$ 0.2       & 29.1 $\pm$ 0.9       & 58.2                 \\
+CORAL                & 71.1 $\pm$ 0.2       & 73.4 $\pm$ 0.2       & 31.1 $\pm$ 1.6       & 58.6                 \\
+MMD                  & 69.0 $\pm$ 2.3       & 70.4 $\pm$ 1.6       & 50.6 $\pm$ 0.2       & 63.3                 \\
+DANN                 & 72.4 $\pm$ 0.5       & 73.9 $\pm$ 0.5       & 24.9 $\pm$ 2.7       & 57.0                 \\
+CDANN                & 71.8 $\pm$ 0.5       & 72.9 $\pm$ 0.1       & 33.8 $\pm$ 6.4       & 59.5                 \\
+MTL                  & 71.2 $\pm$ 0.2       & 73.5 $\pm$ 0.2       & 28.0 $\pm$ 0.6       & 57.6                 \\
+SagNet               & 72.1 $\pm$ 0.3       & 73.2 $\pm$ 0.3       & 29.4 $\pm$ 0.5       & 58.2                 \\
+ARM                  & 84.9 $\pm$ 0.9       & 76.8 $\pm$ 0.6       & 27.9 $\pm$ 2.1       & 63.2                 \\
+VREx                 & 72.8 $\pm$ 0.3       & 73.0 $\pm$ 0.3       & 55.2 $\pm$ 4.0       & 67.0                 \\
+RSC                  & 72.0 $\pm$ 0.1       & 73.2 $\pm$ 0.1       & 30.2 $\pm$ 1.6       & 58.5                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{RotatedMNIST}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{0}           & \textbf{15}          & \textbf{30}          & \textbf{45}          & \textbf{60}          & \textbf{75}          & \textbf{Avg}         \\
+\midrule
+ERM                  & 95.3 $\pm$ 0.2       & 98.7 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.7 $\pm$ 0.2       & 98.9 $\pm$ 0.0       & 96.2 $\pm$ 0.2       & 97.8                 \\
+IRM                  & 94.9 $\pm$ 0.6       & 98.7 $\pm$ 0.2       & 98.6 $\pm$ 0.1       & 98.6 $\pm$ 0.2       & 98.7 $\pm$ 0.1       & 95.2 $\pm$ 0.3       & 97.5                 \\
+GroupDRO             & 95.9 $\pm$ 0.1       & 99.0 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 98.6 $\pm$ 0.1       & 96.3 $\pm$ 0.4       & 97.9                 \\
+Mixup                & 95.8 $\pm$ 0.3       & 98.7 $\pm$ 0.0       & 99.0 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 96.6 $\pm$ 0.2       & 98.0                 \\
+MLDG                 & 95.7 $\pm$ 0.2       & 98.9 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.6 $\pm$ 0.1       & 95.8 $\pm$ 0.4       & 97.8                 \\
+CORAL                & 96.2 $\pm$ 0.2       & 98.8 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 96.4 $\pm$ 0.2       & 98.0                 \\
+MMD                  & 96.1 $\pm$ 0.2       & 98.9 $\pm$ 0.0       & 99.0 $\pm$ 0.0       & 98.8 $\pm$ 0.0       & 98.9 $\pm$ 0.0       & 96.4 $\pm$ 0.2       & 98.0                 \\
+DANN                 & 95.9 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.6 $\pm$ 0.2       & 98.7 $\pm$ 0.1       & 98.9 $\pm$ 0.0       & 96.3 $\pm$ 0.3       & 97.9                 \\
+CDANN                & 95.9 $\pm$ 0.2       & 98.8 $\pm$ 0.0       & 98.7 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 96.1 $\pm$ 0.3       & 97.9                 \\
+MTL                  & 96.1 $\pm$ 0.2       & 98.9 $\pm$ 0.0       & 99.0 $\pm$ 0.0       & 98.7 $\pm$ 0.1       & 99.0 $\pm$ 0.0       & 95.8 $\pm$ 0.3       & 97.9                 \\
+SagNet               & 95.9 $\pm$ 0.1       & 99.0 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 98.6 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 96.3 $\pm$ 0.1       & 97.9                 \\
+ARM                  & 95.9 $\pm$ 0.4       & 99.0 $\pm$ 0.1       & 98.8 $\pm$ 0.1       & 98.9 $\pm$ 0.1       & 99.1 $\pm$ 0.1       & 96.7 $\pm$ 0.2       & 98.1                 \\
+VREx                 & 95.5 $\pm$ 0.2       & 99.0 $\pm$ 0.0       & 98.7 $\pm$ 0.2       & 98.8 $\pm$ 0.1       & 98.8 $\pm$ 0.0       & 96.4 $\pm$ 0.0       & 97.9                 \\
+RSC                  & 95.4 $\pm$ 0.1       & 98.6 $\pm$ 0.1       & 98.6 $\pm$ 0.1       & 98.9 $\pm$ 0.0       & 98.8 $\pm$ 0.1       & 95.4 $\pm$ 0.3       & 97.6                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{VLCS}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{C}           & \textbf{L}           & \textbf{S}           & \textbf{V}           & \textbf{Avg}         \\
+\midrule
+ERM                  & 97.6 $\pm$ 0.3       & 67.9 $\pm$ 0.7       & 70.9 $\pm$ 0.2       & 74.0 $\pm$ 0.6       & 77.6                 \\
+IRM                  & 97.3 $\pm$ 0.2       & 66.7 $\pm$ 0.1       & 71.0 $\pm$ 2.3       & 72.8 $\pm$ 0.4       & 76.9                 \\
+GroupDRO             & 97.7 $\pm$ 0.2       & 65.9 $\pm$ 0.2       & 72.8 $\pm$ 0.8       & 73.4 $\pm$ 1.3       & 77.4                 \\
+Mixup                & 97.8 $\pm$ 0.4       & 67.2 $\pm$ 0.4       & 71.5 $\pm$ 0.2       & 75.7 $\pm$ 0.6       & 78.1                 \\
+MLDG                 & 97.1 $\pm$ 0.5       & 66.6 $\pm$ 0.5       & 71.5 $\pm$ 0.1       & 75.0 $\pm$ 0.9       & 77.5                 \\
+CORAL                & 97.3 $\pm$ 0.2       & 67.5 $\pm$ 0.6       & 71.6 $\pm$ 0.6       & 74.5 $\pm$ 0.0       & 77.7                 \\
+MMD                  & 98.8 $\pm$ 0.0       & 66.4 $\pm$ 0.4       & 70.8 $\pm$ 0.5       & 75.6 $\pm$ 0.4       & 77.9                 \\
+DANN                 & 99.0 $\pm$ 0.2       & 66.3 $\pm$ 1.2       & 73.4 $\pm$ 1.4       & 80.1 $\pm$ 0.5       & 79.7                 \\
+CDANN                & 98.2 $\pm$ 0.1       & 68.8 $\pm$ 0.5       & 74.3 $\pm$ 0.6       & 78.1 $\pm$ 0.5       & 79.9                 \\
+MTL                  & 97.9 $\pm$ 0.7       & 66.1 $\pm$ 0.7       & 72.0 $\pm$ 0.4       & 74.9 $\pm$ 1.1       & 77.7                 \\
+SagNet               & 97.4 $\pm$ 0.3       & 66.4 $\pm$ 0.4       & 71.6 $\pm$ 0.1       & 75.0 $\pm$ 0.8       & 77.6                 \\
+ARM                  & 97.6 $\pm$ 0.6       & 66.5 $\pm$ 0.3       & 72.7 $\pm$ 0.6       & 74.4 $\pm$ 0.7       & 77.8                 \\
+VREx                 & 98.4 $\pm$ 0.2       & 66.4 $\pm$ 0.7       & 72.8 $\pm$ 0.1       & 75.0 $\pm$ 1.4       & 78.1                 \\
+RSC                  & 98.0 $\pm$ 0.4       & 67.2 $\pm$ 0.3       & 70.3 $\pm$ 1.3       & 75.6 $\pm$ 0.4       & 77.8                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{PACS}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{A}           & \textbf{C}           & \textbf{P}           & \textbf{S}           & \textbf{Avg}         \\
+\midrule
+ERM                  & 86.5 $\pm$ 1.0       & 81.3 $\pm$ 0.6       & 96.2 $\pm$ 0.3       & 82.7 $\pm$ 1.1       & 86.7                 \\
+IRM                  & 84.2 $\pm$ 0.9       & 79.7 $\pm$ 1.5       & 95.9 $\pm$ 0.4       & 78.3 $\pm$ 2.1       & 84.5                 \\
+GroupDRO             & 87.5 $\pm$ 0.5       & 82.9 $\pm$ 0.6       & 97.1 $\pm$ 0.3       & 81.1 $\pm$ 1.2       & 87.1                 \\
+Mixup                & 87.5 $\pm$ 0.4       & 81.6 $\pm$ 0.7       & 97.4 $\pm$ 0.2       & 80.8 $\pm$ 0.9       & 86.8                 \\
+MLDG                 & 87.0 $\pm$ 1.2       & 82.5 $\pm$ 0.9       & 96.7 $\pm$ 0.3       & 81.2 $\pm$ 0.6       & 86.8                 \\
+CORAL                & 86.6 $\pm$ 0.8       & 81.8 $\pm$ 0.9       & 97.1 $\pm$ 0.5       & 82.7 $\pm$ 0.6       & 87.1                 \\
+MMD                  & 88.1 $\pm$ 0.8       & 82.6 $\pm$ 0.7       & 97.1 $\pm$ 0.5       & 81.2 $\pm$ 1.2       & 87.2                 \\
+DANN                 & 87.0 $\pm$ 0.4       & 80.3 $\pm$ 0.6       & 96.8 $\pm$ 0.3       & 76.9 $\pm$ 1.1       & 85.2                 \\
+CDANN                & 87.7 $\pm$ 0.6       & 80.7 $\pm$ 1.2       & 97.3 $\pm$ 0.4       & 77.6 $\pm$ 1.5       & 85.8                 \\
+MTL                  & 87.0 $\pm$ 0.2       & 82.7 $\pm$ 0.8       & 96.5 $\pm$ 0.7       & 80.5 $\pm$ 0.8       & 86.7                 \\
+SagNet               & 87.4 $\pm$ 0.5       & 81.2 $\pm$ 1.2       & 96.3 $\pm$ 0.8       & 80.7 $\pm$ 1.1       & 86.4                 \\
+ARM                  & 85.0 $\pm$ 1.2       & 81.4 $\pm$ 0.2       & 95.9 $\pm$ 0.3       & 80.9 $\pm$ 0.5       & 85.8                 \\
+VREx                 & 87.8 $\pm$ 1.2       & 81.8 $\pm$ 0.7       & 97.4 $\pm$ 0.2       & 82.1 $\pm$ 0.7       & 87.2                 \\
+RSC                  & 86.0 $\pm$ 0.7       & 81.8 $\pm$ 0.9       & 96.8 $\pm$ 0.7       & 80.4 $\pm$ 0.5       & 86.2                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{OfficeHome}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{A}           & \textbf{C}           & \textbf{P}           & \textbf{R}           & \textbf{Avg}         \\
+\midrule
+ERM                  & 61.7 $\pm$ 0.7       & 53.4 $\pm$ 0.3       & 74.1 $\pm$ 0.4       & 76.2 $\pm$ 0.6       & 66.4                 \\
+IRM                  & 56.4 $\pm$ 3.2       & 51.2 $\pm$ 2.3       & 71.7 $\pm$ 2.7       & 72.7 $\pm$ 2.7       & 63.0                 \\
+GroupDRO             & 60.5 $\pm$ 1.6       & 53.1 $\pm$ 0.3       & 75.5 $\pm$ 0.3       & 75.9 $\pm$ 0.7       & 66.2                 \\
+Mixup                & 63.5 $\pm$ 0.2       & 54.6 $\pm$ 0.4       & 76.0 $\pm$ 0.3       & 78.0 $\pm$ 0.7       & 68.0                 \\
+MLDG                 & 60.5 $\pm$ 0.7       & 54.2 $\pm$ 0.5       & 75.0 $\pm$ 0.2       & 76.7 $\pm$ 0.5       & 66.6                 \\
+CORAL                & 64.8 $\pm$ 0.8       & 54.1 $\pm$ 0.9       & 76.5 $\pm$ 0.4       & 78.2 $\pm$ 0.4       & 68.4                 \\
+MMD                  & 60.4 $\pm$ 1.0       & 53.4 $\pm$ 0.5       & 74.9 $\pm$ 0.1       & 76.1 $\pm$ 0.7       & 66.2                 \\
+DANN                 & 60.6 $\pm$ 1.4       & 51.8 $\pm$ 0.7       & 73.4 $\pm$ 0.5       & 75.5 $\pm$ 0.9       & 65.3                 \\
+CDANN                & 57.9 $\pm$ 0.2       & 52.1 $\pm$ 1.2       & 74.9 $\pm$ 0.7       & 76.2 $\pm$ 0.2       & 65.3                 \\
+MTL                  & 60.7 $\pm$ 0.8       & 53.5 $\pm$ 1.3       & 75.2 $\pm$ 0.6       & 76.6 $\pm$ 0.6       & 66.5                 \\
+SagNet               & 62.7 $\pm$ 0.5       & 53.6 $\pm$ 0.5       & 76.0 $\pm$ 0.3       & 77.8 $\pm$ 0.1       & 67.5                 \\
+ARM                  & 58.8 $\pm$ 0.5       & 51.8 $\pm$ 0.7       & 74.0 $\pm$ 0.1       & 74.4 $\pm$ 0.2       & 64.8                 \\
+VREx                 & 59.6 $\pm$ 1.0       & 53.3 $\pm$ 0.3       & 73.2 $\pm$ 0.5       & 76.6 $\pm$ 0.4       & 65.7                 \\
+RSC                  & 61.7 $\pm$ 0.8       & 53.0 $\pm$ 0.9       & 74.8 $\pm$ 0.8       & 76.3 $\pm$ 0.5       & 66.5                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{TerraIncognita}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{L100}        & \textbf{L38}         & \textbf{L43}         & \textbf{L46}         & \textbf{Avg}         \\
+\midrule
+ERM                  & 59.4 $\pm$ 0.9       & 49.3 $\pm$ 0.6       & 60.1 $\pm$ 1.1       & 43.2 $\pm$ 0.5       & 53.0                 \\
+IRM                  & 56.5 $\pm$ 2.5       & 49.8 $\pm$ 1.5       & 57.1 $\pm$ 2.2       & 38.6 $\pm$ 1.0       & 50.5                 \\
+GroupDRO             & 60.4 $\pm$ 1.5       & 48.3 $\pm$ 0.4       & 58.6 $\pm$ 0.8       & 42.2 $\pm$ 0.8       & 52.4                 \\
+Mixup                & 67.6 $\pm$ 1.8       & 51.0 $\pm$ 1.3       & 59.0 $\pm$ 0.0       & 40.0 $\pm$ 1.1       & 54.4                 \\
+MLDG                 & 59.2 $\pm$ 0.1       & 49.0 $\pm$ 0.9       & 58.4 $\pm$ 0.9       & 41.4 $\pm$ 1.0       & 52.0                 \\
+CORAL                & 60.4 $\pm$ 0.9       & 47.2 $\pm$ 0.5       & 59.3 $\pm$ 0.4       & 44.4 $\pm$ 0.4       & 52.8                 \\
+MMD                  & 60.6 $\pm$ 1.1       & 45.9 $\pm$ 0.3       & 57.8 $\pm$ 0.5       & 43.8 $\pm$ 1.2       & 52.0                 \\
+DANN                 & 55.2 $\pm$ 1.9       & 47.0 $\pm$ 0.7       & 57.2 $\pm$ 0.9       & 42.9 $\pm$ 0.9       & 50.6                 \\
+CDANN                & 56.3 $\pm$ 2.0       & 47.1 $\pm$ 0.9       & 57.2 $\pm$ 1.1       & 42.4 $\pm$ 0.8       & 50.8                 \\
+MTL                  & 58.4 $\pm$ 2.1       & 48.4 $\pm$ 0.8       & 58.9 $\pm$ 0.6       & 43.0 $\pm$ 1.3       & 52.2                 \\
+SagNet               & 56.4 $\pm$ 1.9       & 50.5 $\pm$ 2.3       & 59.1 $\pm$ 0.5       & 44.1 $\pm$ 0.6       & 52.5                 \\
+ARM                  & 60.1 $\pm$ 1.5       & 48.3 $\pm$ 1.6       & 55.3 $\pm$ 0.6       & 40.9 $\pm$ 1.1       & 51.2                 \\
+VREx                 & 56.8 $\pm$ 1.7       & 46.5 $\pm$ 0.5       & 58.4 $\pm$ 0.3       & 43.8 $\pm$ 0.3       & 51.4                 \\
+RSC                  & 59.9 $\pm$ 1.4       & 46.7 $\pm$ 0.4       & 57.8 $\pm$ 0.5       & 44.3 $\pm$ 0.6       & 52.1                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{DomainNet}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Algorithm}   & \textbf{clip}        & \textbf{info}        & \textbf{paint}       & \textbf{quick}       & \textbf{real}        & \textbf{sketch}      & \textbf{Avg}         \\
+\midrule
+ERM                  & 58.6 $\pm$ 0.3       & 19.2 $\pm$ 0.2       & 47.0 $\pm$ 0.3       & 13.2 $\pm$ 0.2       & 59.9 $\pm$ 0.3       & 49.8 $\pm$ 0.4       & 41.3                 \\
+IRM                  & 40.4 $\pm$ 6.6       & 12.1 $\pm$ 2.7       & 31.4 $\pm$ 5.7       & 9.8 $\pm$ 1.2        & 37.7 $\pm$ 9.0       & 36.7 $\pm$ 5.3       & 28.0                 \\
+GroupDRO             & 47.2 $\pm$ 0.5       & 17.5 $\pm$ 0.4       & 34.2 $\pm$ 0.3       & 9.2 $\pm$ 0.4        & 51.9 $\pm$ 0.5       & 40.1 $\pm$ 0.6       & 33.4                 \\
+Mixup                & 55.6 $\pm$ 0.1       & 18.7 $\pm$ 0.4       & 45.1 $\pm$ 0.5       & 12.8 $\pm$ 0.3       & 57.6 $\pm$ 0.5       & 48.2 $\pm$ 0.4       & 39.6                 \\
+MLDG                 & 59.3 $\pm$ 0.1       & 19.6 $\pm$ 0.2       & 46.8 $\pm$ 0.2       & 13.4 $\pm$ 0.2       & 60.1 $\pm$ 0.4       & 50.4 $\pm$ 0.3       & 41.6                 \\
+CORAL                & 59.2 $\pm$ 0.1       & 19.9 $\pm$ 0.2       & 47.4 $\pm$ 0.2       & 14.0 $\pm$ 0.4       & 59.8 $\pm$ 0.2       & 50.4 $\pm$ 0.4       & 41.8                 \\
+MMD                  & 32.2 $\pm$ 13.3      & 11.2 $\pm$ 4.5       & 26.8 $\pm$ 11.3      & 8.8 $\pm$ 2.2        & 32.7 $\pm$ 13.8      & 29.0 $\pm$ 11.8      & 23.5                 \\
+DANN                 & 53.1 $\pm$ 0.2       & 18.3 $\pm$ 0.1       & 44.2 $\pm$ 0.7       & 11.9 $\pm$ 0.1       & 55.5 $\pm$ 0.4       & 46.8 $\pm$ 0.6       & 38.3                 \\
+CDANN                & 54.6 $\pm$ 0.4       & 17.3 $\pm$ 0.1       & 44.2 $\pm$ 0.7       & 12.8 $\pm$ 0.2       & 56.2 $\pm$ 0.4       & 45.9 $\pm$ 0.5       & 38.5                 \\
+MTL                  & 58.0 $\pm$ 0.4       & 19.2 $\pm$ 0.2       & 46.2 $\pm$ 0.1       & 12.7 $\pm$ 0.2       & 59.9 $\pm$ 0.1       & 49.0 $\pm$ 0.0       & 40.8                 \\
+SagNet               & 57.7 $\pm$ 0.3       & 19.1 $\pm$ 0.1       & 46.3 $\pm$ 0.5       & 13.5 $\pm$ 0.4       & 58.9 $\pm$ 0.4       & 49.5 $\pm$ 0.2       & 40.8                 \\
+ARM                  & 49.6 $\pm$ 0.4       & 16.5 $\pm$ 0.3       & 41.5 $\pm$ 0.8       & 10.8 $\pm$ 0.1       & 53.5 $\pm$ 0.3       & 43.9 $\pm$ 0.4       & 36.0                 \\
+VREx                 & 43.3 $\pm$ 4.5       & 14.1 $\pm$ 1.8       & 32.5 $\pm$ 5.0       & 9.8 $\pm$ 1.1        & 43.5 $\pm$ 5.6       & 37.7 $\pm$ 4.5       & 30.1                 \\
+RSC                  & 55.0 $\pm$ 1.2       & 18.3 $\pm$ 0.5       & 44.4 $\pm$ 0.6       & 12.5 $\pm$ 0.1       & 55.7 $\pm$ 0.7       & 47.8 $\pm$ 0.9       & 38.9                 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\subsubsection{Averages}
+
+\begin{center}
+\adjustbox{max width=\textwidth}{%
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Algorithm}        & \textbf{ColoredMNIST}     & \textbf{RotatedMNIST}     & \textbf{VLCS}             & \textbf{PACS}             & \textbf{OfficeHome}       & \textbf{TerraIncognita}   & \textbf{DomainNet}        & \textbf{Avg}              \\
+\midrule
+ERM                       & 57.8 $\pm$ 0.2            & 97.8 $\pm$ 0.1            & 77.6 $\pm$ 0.3            & 86.7 $\pm$ 0.3            & 66.4 $\pm$ 0.5            & 53.0 $\pm$ 0.3            & 41.3 $\pm$ 0.1            & 68.7                      \\
+IRM                       & 67.7 $\pm$ 1.2            & 97.5 $\pm$ 0.2            & 76.9 $\pm$ 0.6            & 84.5 $\pm$ 1.1            & 63.0 $\pm$ 2.7            & 50.5 $\pm$ 0.7            & 28.0 $\pm$ 5.1            & 66.9                      \\
+GroupDRO                  & 61.1 $\pm$ 0.9            & 97.9 $\pm$ 0.1            & 77.4 $\pm$ 0.5            & 87.1 $\pm$ 0.1            & 66.2 $\pm$ 0.6            & 52.4 $\pm$ 0.1            & 33.4 $\pm$ 0.3            & 67.9                      \\
+Mixup                     & 58.4 $\pm$ 0.2            & 98.0 $\pm$ 0.1            & 78.1 $\pm$ 0.3            & 86.8 $\pm$ 0.3            & 68.0 $\pm$ 0.2            & 54.4 $\pm$ 0.3            & 39.6 $\pm$ 0.1            & 69.0                      \\
+MLDG                      & 58.2 $\pm$ 0.4            & 97.8 $\pm$ 0.1            & 77.5 $\pm$ 0.1            & 86.8 $\pm$ 0.4            & 66.6 $\pm$ 0.3            & 52.0 $\pm$ 0.1            & 41.6 $\pm$ 0.1            & 68.7                      \\
+CORAL                     & 58.6 $\pm$ 0.5            & 98.0 $\pm$ 0.0            & 77.7 $\pm$ 0.2            & 87.1 $\pm$ 0.5            & 68.4 $\pm$ 0.2            & 52.8 $\pm$ 0.2            & 41.8 $\pm$ 0.1            & 69.2                      \\
+MMD                       & 63.3 $\pm$ 1.3            & 98.0 $\pm$ 0.1            & 77.9 $\pm$ 0.1            & 87.2 $\pm$ 0.1            & 66.2 $\pm$ 0.3            & 52.0 $\pm$ 0.4            & 23.5 $\pm$ 9.4            & 66.9                      \\
+DANN                      & 57.0 $\pm$ 1.0            & 97.9 $\pm$ 0.1            & 79.7 $\pm$ 0.5            & 85.2 $\pm$ 0.2            & 65.3 $\pm$ 0.8            & 50.6 $\pm$ 0.4            & 38.3 $\pm$ 0.1            & 67.7                      \\
+CDANN                     & 59.5 $\pm$ 2.0            & 97.9 $\pm$ 0.0            & 79.9 $\pm$ 0.2            & 85.8 $\pm$ 0.8            & 65.3 $\pm$ 0.5            & 50.8 $\pm$ 0.6            & 38.5 $\pm$ 0.2            & 68.2                      \\
+MTL                       & 57.6 $\pm$ 0.3            & 97.9 $\pm$ 0.1            & 77.7 $\pm$ 0.5            & 86.7 $\pm$ 0.2            & 66.5 $\pm$ 0.4            & 52.2 $\pm$ 0.4            & 40.8 $\pm$ 0.1            & 68.5                      \\
+SagNet                    & 58.2 $\pm$ 0.3            & 97.9 $\pm$ 0.0            & 77.6 $\pm$ 0.1            & 86.4 $\pm$ 0.4            & 67.5 $\pm$ 0.2            & 52.5 $\pm$ 0.4            & 40.8 $\pm$ 0.2            & 68.7                      \\
+ARM                       & 63.2 $\pm$ 0.7            & 98.1 $\pm$ 0.1            & 77.8 $\pm$ 0.3            & 85.8 $\pm$ 0.2            & 64.8 $\pm$ 0.4            & 51.2 $\pm$ 0.5            & 36.0 $\pm$ 0.2            & 68.1                      \\
+VREx                      & 67.0 $\pm$ 1.3            & 97.9 $\pm$ 0.1            & 78.1 $\pm$ 0.2            & 87.2 $\pm$ 0.6            & 65.7 $\pm$ 0.3            & 51.4 $\pm$ 0.5            & 30.1 $\pm$ 3.7            & 68.2                      \\
+RSC                       & 58.5 $\pm$ 0.5            & 97.6 $\pm$ 0.1            & 77.8 $\pm$ 0.6            & 86.2 $\pm$ 0.5            & 66.5 $\pm$ 0.6            & 52.1 $\pm$ 0.2            & 38.9 $\pm$ 0.6            & 68.2                      \\
+\bottomrule
+\end{tabular}}
+\end{center}
+\end{document}

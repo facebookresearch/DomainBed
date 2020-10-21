@@ -25,7 +25,7 @@ if __name__ == '__main__':
         hparams = hparams_registry.default_hparams('ERM', dataset_name)
         dataset = datasets.get_dataset_class(dataset_name)(
             args.data_dir,
-            list(range(datasets.NUM_ENVIRONMENTS[dataset_name])),
+            list(range(datasets.num_environments(dataset_name))),
             hparams)
         for env_idx, env in enumerate(tqdm(dataset)):
             for i in tqdm(range(50)):
@@ -46,5 +46,5 @@ if __name__ == '__main__':
                 x = x.numpy().astype('uint8').transpose(1,2,0)
                 imageio.imwrite(
                     os.path.join(args.output_dir,
-                        f'{dataset_name}_env{env_idx}{dataset.environments[env_idx]}_{i}_idx{idx}_class{y}.png'),
+                        f'{dataset_name}_env{env_idx}{dataset.ENVIRONMENTS[env_idx]}_{i}_idx{idx}_class{y}.png'),
                     x)
