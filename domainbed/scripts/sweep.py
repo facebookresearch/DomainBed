@@ -100,7 +100,7 @@ def make_args_list(n_trials, dataset_names, algorithms, n_hparams, steps,
         for dataset in dataset_names:
             for algorithm in algorithms:
                 all_test_envs = all_test_env_combinations(
-                    datasets.NUM_ENVIRONMENTS[dataset])
+                    datasets.num_environments(dataset))
                 for test_envs in all_test_envs:
                     for hparams_seed in range(n_hparams):
                         train_args = {}

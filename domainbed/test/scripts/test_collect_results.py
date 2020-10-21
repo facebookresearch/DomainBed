@@ -27,10 +27,10 @@ class TestCollectResults(unittest.TestCase):
 
     def test_format_mean(self):
         self.assertEqual(
-            collect_results.format_mean([0.1, 0.2, 0.3], False),
+            collect_results.format_mean([0.1, 0.2, 0.3], False)[2],
             '20.0 +/- 4.7')
         self.assertEqual(
-            collect_results.format_mean([0.1, 0.2, 0.3], True),
+            collect_results.format_mean([0.1, 0.2, 0.3], True)[2],
             '20.0 $\pm$ 4.7')
 
     def test_print_table_non_latex(self):
@@ -61,16 +61,15 @@ class TestCollectResults(unittest.TestCase):
             temp_out.getvalue(),
             textwrap.dedent(r"""
             \begin{center}
+            \adjustbox{max width=\textwidth}{%
             \begin{tabular}{lcc}
             \toprule
-            \multicolumn{8}{c}{Header text} \
-            \midrule
             \textbf{C1 & \textbf{C2 \\
             \midrule
             R1         & 1          & 2          \\
             R2         & 3          & 4          \\
             \bottomrule
-            \end{tabular}
+            \end{tabular}}
             \end{center}
             """)
         )
