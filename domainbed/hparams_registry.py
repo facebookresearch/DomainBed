@@ -1,7 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import numpy as np
-import lib.misc
+from domainbed.lib import misc
 
 def _define_hparam(hparams, hparam_name, default_val, random_val_fn):
     hparams[hparam_name] = (hparams, hparam_name, default_val, random_val_fn)
@@ -20,7 +20,7 @@ def _hparams(algorithm, dataset, random_seed):
         returns a random hyperparameter value."""
         assert(name not in hparams)
         random_state = np.random.RandomState(
-            lib.misc.seed_hash(random_seed, name)
+            misc.seed_hash(random_seed, name)
         )
         hparams[name] = (default_val, random_val_fn(random_state))
 
