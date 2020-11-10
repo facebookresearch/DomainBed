@@ -7,7 +7,7 @@ def _define_hparam(hparams, hparam_name, default_val, random_val_fn):
     hparams[hparam_name] = (hparams, hparam_name, default_val, random_val_fn)
 
 
-def _hparams(algorithm, dataset, random_state):
+def _hparams(algorithm, dataset, random_seed):
     """
     Global registry of hyperparams. Each entry is a (default, random) tuple.
     New algorithms / networks / etc. should add entries here.
@@ -19,10 +19,10 @@ def _hparams(algorithm, dataset, random_state):
         """Define a hyperparameter. random_val_fn takes a RandomState and
         returns a random hyperparameter value."""
         assert(name not in hparams)
-        rand = np.random.RandomState(
-            lib.misc.seed_hash(random_state.randn(), name)
+        random_state = np.random.RandomState(
+            lib.misc.seed_hash(random_seed, name)
         )
-        hparams[name] = (default_val, random_val_fn(rand))
+        hparams[name] = (default_val, random_val_fn(random_state))
 
     # Unconditional hparam definitions.
 
@@ -121,10 +121,8 @@ def _hparams(algorithm, dataset, random_state):
     return hparams
 
 def default_hparams(algorithm, dataset):
-    dummy_random_state = np.random.RandomState(0)
     return {a: b for a,(b,c) in
-        _hparams(algorithm, dataset, dummy_random_state).items()}
+        _hparams(algorithm, dataset, 0).items()}
 
 def random_hparams(algorithm, dataset, seed):
-    random_state = np.random.RandomState(seed)
-    return {a: c for a,(b,c) in _hparams(algorithm, dataset, random_state).items()}
+    return {a: c for a,(b,c) in _hparams(algorithm, dataset, seed).items()}
