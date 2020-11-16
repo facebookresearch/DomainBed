@@ -22,6 +22,8 @@ import torch
 
 class TestTrain(unittest.TestCase):
 
+    @unittest.skipIf('DATA_DIR' not in os.environ, 'needs DATA_DIR environment '
+        'variable')
     def test_end_to_end(self):
         """Test that train.py successfully completes one step"""
         output_dir = os.path.join('/tmp', str(uuid.uuid4()))

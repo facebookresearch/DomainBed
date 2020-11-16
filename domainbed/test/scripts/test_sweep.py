@@ -81,6 +81,8 @@ class TestSweep(unittest.TestCase):
         )
         assert(len(args_list) == 2*3*(3+3))
 
+    @unittest.skipIf('DATA_DIR' not in os.environ, 'needs DATA_DIR environment '
+        'variable')
     def test_end_to_end(self):
         output_dir = os.path.join('/tmp', str(uuid.uuid4()))
         result = subprocess.run(f'python -m domainbed.scripts.sweep launch '
