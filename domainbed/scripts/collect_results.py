@@ -18,7 +18,7 @@ import tqdm
 
 from domainbed import datasets
 from domainbed import algorithms
-from domainbed.lib import misc
+from domainbed.lib import misc, reporting
 from domainbed import model_selection
 from domainbed.lib.query import Q
 import warnings
@@ -66,24 +66,9 @@ def print_table(table, header_text, row_labels, col_labels, colwidth=10,
         print("\\end{tabular}}")
         print("\\end{center}")
 
-def get_grouped_records(records):
-    """Group records by (trial_seed, dataset, algorithm, test_env). Because
-    records can have multiple test envs, a given record may appear in more than
-    one group."""
-    result = collections.defaultdict(lambda: [])
-    for r in records:
-        for test_env in r["args"]["test_envs"]:
-            group = (r["args"]["trial_seed"],
-                r["args"]["dataset"],
-                r["args"]["algorithm"],
-                test_env)
-            result[group].append(r)
-    return Q([{"trial_seed": t, "dataset": d, "algorithm": a, "test_env": e,
-        "records": Q(r)} for (t,d,a,e),r in result.items()])
-
 def print_results_tables(records, selection_method, latex):
     """Given all records, print a results table for each dataset."""
-    grouped_records = get_grouped_records(records).map(lambda group:
+    grouped_records = reporting.get_grouped_records(records).map(lambda group:
         { **group, "sweep_acc": selection_method.sweep_acc(group["records"]) }
     ).filter(lambda g: g["sweep_acc"] is not None)
 
@@ -156,21 +141,6 @@ def print_results_tables(records, selection_method, latex):
     print_table(table, header_text, alg_names, col_labels, colwidth=25,
         latex=latex)
 
-def load_records(path):
-    records = []
-    for i, subdir in tqdm.tqdm(list(enumerate(os.listdir(path))),
-                               ncols=80,
-                               leave=False):
-        results_path = os.path.join(path, subdir, "results.jsonl")
-        try:
-            with open(results_path, "r") as f:
-                for line in f:
-                    records.append(json.loads(line[:-1]))
-        except IOError:
-            pass
-
-    return Q(records)
-
 if __name__ == "__main__":
     np.set_printoptions(suppress=True)
 
@@ -184,7 +154,7 @@ if __name__ == "__main__":
 
     sys.stdout = misc.Tee(os.path.join(args.input_dir, results_file), "w")
 
-    records = load_records(args.input_dir)
+    records = reporting.load_records(args.input_dir)
    
     if args.latex:
         print("\\documentclass{article}")
