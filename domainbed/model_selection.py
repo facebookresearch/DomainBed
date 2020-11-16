@@ -24,18 +24,30 @@ class SelectionMethod:
         raise NotImplementedError
 
     @classmethod
+    def hparams_accs(self, records):
+        """
+        Given all records from a single (dataset, algorithm, test env) pair,
+        return a sorted list of (run_acc, records) tuples.
+        """
+        return (records.group('args.hparams_seed')
+            .map(lambda _, run_records:
+                (
+                    self.run_acc(run_records),
+                    run_records
+                )
+            ).filter(lambda x: x[0] is not None)
+            .sorted(key=lambda x: x[0]['val_acc'])[::-1]
+        )
+
+    @classmethod
     def sweep_acc(self, records):
         """
         Given all records from a single (dataset, algorithm, test env) pair,
         return the mean test acc of the k runs with the top val accs.
         """
-        sorted_run_accs = (records
-            .group('args.hparams_seed')
-            .map(lambda _, run_records: self.run_acc(run_records))
-            .filter_not_none()
-            .sorted(key=lambda ra: ra['val_acc']))
-        if len(sorted_run_accs):
-            return sorted_run_accs[-1]['test_acc']
+        _hparams_accs = self.hparams_accs(records)
+        if len(_hparams_accs):
+            return _hparams_accs[0][0]['test_acc']
         else:
             return None
 
