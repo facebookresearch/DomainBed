@@ -388,9 +388,6 @@ class MLDG(ERM):
     Algorithm 1 / Equation (3) from: https://arxiv.org/pdf/1710.03463.pdf
     Related: https://arxiv.org/pdf/1703.03400.pdf
     Related: https://arxiv.org/pdf/1910.13580.pdf
-
-    TODO: update() has at least one bug, possibly more. Disabling this whole
-    algorithm until it gets figured out.
     """
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(MLDG, self).__init__(input_shape, num_classes, num_domains,
