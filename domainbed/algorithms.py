@@ -25,7 +25,8 @@ ALGORITHMS = [
     'SagNet',
     'ARM',
     'VREx',
-    'RSC'
+    'RSC',
+    'SD'
 ]
 
 def get_algorithm_class(algorithm_name):
@@ -818,3 +819,29 @@ class RSC(ERM):
         self.optimizer.step()
 
         return {'loss': loss.item()}
+
+
+class SD(ERM):
+    """
+    Gradient Starvation: A Learning Proclivity in Neural Networks
+    Equation 25 from [https://arxiv.org/pdf/2011.09468.pdf]
+    """
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(SD, self).__init__(input_shape, num_classes, num_domains,
+                                        hparams)
+        self.sd_reg = hparams["sd_reg"] 
+
+    def update(self, minibatches):
+        all_x = torch.cat([x for x,y in minibatches])
+        all_y = torch.cat([y for x,y in minibatches])
+        all_p = self.predict(all_x)
+
+        loss = F.cross_entropy(all_p, all_y)
+        penalty = (all_p ** 2).mean()
+        objective = loss + self.sd_reg * penalty
+
+        self.optimizer.zero_grad()
+        objective.backward()
+        self.optimizer.step()
+
+        return {'loss': loss.item(), 'penalty': penalty.item()}
