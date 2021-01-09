@@ -43,6 +43,7 @@ if __name__ == "__main__":
     parser.add_argument('--output_dir', type=str, default="train_output")
     parser.add_argument('--holdout_fraction', type=float, default=0.2)
     parser.add_argument('--skip_model_save', action='store_true')
+    parser.add_argument('--save_model_every_checkpoint', action='store_true')
     args = parser.parse_args()
 
     # If we ever want to implement checkpointing, just persist these values
@@ -148,6 +149,20 @@ if __name__ == "__main__":
     n_steps = args.steps or dataset.N_STEPS
     checkpoint_freq = args.checkpoint_freq or dataset.CHECKPOINT_FREQ
 
+    def save_checkpoint(filename):
+        if args.skip_model_save:
+            return
+        save_dict = {
+            "args": vars(args),
+            "model_input_shape": dataset.input_shape,
+            "model_num_classes": dataset.num_classes,
+            "model_num_domains": len(dataset) - len(args.test_envs),
+            "model_hparams": hparams,
+            "model_dict": algorithm.cpu().state_dict()
+        }
+        torch.save(save_dict, os.path.join(args.output_dir, filename))
+
+
     last_results_keys = None
     for step in range(start_step, n_steps):
         step_start_time = time.time()
@@ -193,17 +208,10 @@ if __name__ == "__main__":
             start_step = step + 1
             checkpoint_vals = collections.defaultdict(lambda: [])
 
-    if not args.skip_model_save:
-        save_dict = {
-            "args": vars(args),
-            "model_input_shape": dataset.input_shape,
-            "model_num_classes": dataset.num_classes,
-            "model_num_domains": len(dataset) - len(args.test_envs),
-            "model_hparams": hparams,
-            "model_dict": algorithm.cpu().state_dict()
-        }
+            if args.save_model_every_checkpoint:
+                save_checkpoint(f'model_step{step}.pkl')
 
-        torch.save(save_dict, os.path.join(args.output_dir, "model.pkl"))
+    save_checkpoint('model.pkl')
 
     with open(os.path.join(args.output_dir, 'done'), 'w') as f:
         f.write('done')
