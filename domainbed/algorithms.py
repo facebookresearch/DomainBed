@@ -47,10 +47,13 @@ class Algorithm(torch.nn.Module):
         super(Algorithm, self).__init__()
         self.hparams = hparams
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         """
         Perform one update step, given a list of (x, y) tuples for all
         environments.
+
+        Admits an optional list of unlabeled minibatches from the test domains,
+        when task is domain_adaptation.
         """
         raise NotImplementedError
 
@@ -74,7 +77,7 @@ class ERM(Algorithm):
             weight_decay=self.hparams['weight_decay']
         )
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         all_x = torch.cat([x for x,y in minibatches])
         all_y = torch.cat([y for x,y in minibatches])
         loss = F.cross_entropy(self.predict(all_x), all_y)
@@ -150,7 +153,7 @@ class AbstractDANN(Algorithm):
             weight_decay=self.hparams['weight_decay_g'],
             betas=(self.hparams['beta1'], 0.9))
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         device = "cuda" if minibatches[0][0].is_cuda else "cpu"
         self.update_count += 1
         all_x = torch.cat([x for x, y in minibatches])
@@ -234,7 +237,7 @@ class IRM(ERM):
         result = torch.sum(grad_1 * grad_2)
         return result
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         device = "cuda" if minibatches[0][0].is_cuda else "cpu"
         penalty_weight = (self.hparams['irm_lambda'] if self.update_count
                           >= self.hparams['irm_penalty_anneal_iters'] else
@@ -278,7 +281,7 @@ class VREx(ERM):
                                   hparams)
         self.register_buffer('update_count', torch.tensor([0]))
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         if self.update_count >= self.hparams["vrex_penalty_anneal_iters"]:
             penalty_weight = self.hparams["vrex_lambda"]
         else:
@@ -327,7 +330,7 @@ class Mixup(ERM):
         super(Mixup, self).__init__(input_shape, num_classes, num_domains,
                                     hparams)
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         objective = 0
 
         for (xi, yi), (xj, yj) in random_pairs_of_minibatches(minibatches):
@@ -359,7 +362,7 @@ class GroupDRO(ERM):
                                         hparams)
         self.register_buffer("q", torch.Tensor())
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         device = "cuda" if minibatches[0][0].is_cuda else "cpu"
 
         if not len(self.q):
@@ -394,7 +397,7 @@ class MLDG(ERM):
         super(MLDG, self).__init__(input_shape, num_classes, num_domains,
                                    hparams)
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         """
         Terms being computed:
             * Li = Loss(xi, yi, params)
@@ -472,7 +475,7 @@ class MLDG(ERM):
     # compute second-order derivatives, implementing the First-Order MAML
     # method (FOMAML) described in the original MAML paper.
 
-    # def update(self, minibatches):
+    # def update(self, minibatches, unlabeled=None):
     #     objective = 0
     #     beta = self.hparams["beta"]
     #     inner_iterations = self.hparams["inner_iterations"]
@@ -548,7 +551,7 @@ class AbstractMMD(ERM):
 
             return mean_diff + cova_diff
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         objective = 0
         penalty = 0 
         nmb = len(minibatches)
@@ -621,7 +624,7 @@ class MTL(Algorithm):
 
         self.ema = self.hparams['mtl_ema']
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         loss = 0
         for env, (x, y) in enumerate(minibatches):
             loss += F.cross_entropy(self.predict(x, env), y)
@@ -732,7 +735,7 @@ class SagNet(Algorithm):
         x = x * (var + eps).sqrt() + mean
         return x.view(*sizes)
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         all_x = torch.cat([x for x, y in minibatches])
         all_y = torch.cat([y for x, y in minibatches])
 
@@ -772,7 +775,7 @@ class RSC(ERM):
         self.drop_b = (1 - hparams['rsc_b_drop_factor']) * 100
         self.num_classes = num_classes
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         device = "cuda" if minibatches[0][0].is_cuda else "cpu"
 
         # inputs
@@ -831,7 +834,7 @@ class SD(ERM):
                                         hparams)
         self.sd_reg = hparams["sd_reg"] 
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
         all_x = torch.cat([x for x,y in minibatches])
         all_y = torch.cat([y for x,y in minibatches])
         all_p = self.predict(all_x)
