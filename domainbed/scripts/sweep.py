@@ -94,7 +94,7 @@ def all_test_env_combinations(n):
             yield [i, j]
 
 def make_args_list(n_trials, dataset_names, algorithms, n_hparams, steps,
-    data_dir, hparams):
+    data_dir, task, hparams):
     args_list = []
     for trial_seed in range(n_trials):
         for dataset in dataset_names:
@@ -109,6 +109,7 @@ def make_args_list(n_trials, dataset_names, algorithms, n_hparams, steps,
                         train_args['test_envs'] = test_envs
                         train_args['hparams_seed'] = hparams_seed
                         train_args['data_dir'] = data_dir
+                        train_args['task'] = task 
                         train_args['trial_seed'] = trial_seed
                         train_args['seed'] = misc.seed_hash(dataset,
                             algorithm, test_envs, hparams_seed, trial_seed)
@@ -132,6 +133,7 @@ if __name__ == "__main__":
     parser.add_argument('command', choices=['launch', 'delete_incomplete'])
     parser.add_argument('--datasets', nargs='+', type=str, default=DATASETS)
     parser.add_argument('--algorithms', nargs='+', type=str, default=algorithms.ALGORITHMS)
+    parser.add_argument('--task', type=str, default="domain_generalization")
     parser.add_argument('--n_hparams', type=int, default=20)
     parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--data_dir', type=str, required=True)
@@ -150,6 +152,7 @@ if __name__ == "__main__":
         n_hparams=args.n_hparams,
         steps=args.steps,
         data_dir=args.data_dir,
+        task=args.task,
         hparams=args.hparams
     )
 
