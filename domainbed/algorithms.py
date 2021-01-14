@@ -377,7 +377,7 @@ class GroupDRO(ERM):
 
         self.q /= self.q.sum()
 
-        loss = torch.dot(losses, self.q) / len(minibatches)
+        loss = torch.dot(losses, self.q)
 
         self.optimizer.zero_grad()
         loss.backward()
