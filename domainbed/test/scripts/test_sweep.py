@@ -77,6 +77,9 @@ class TestSweep(unittest.TestCase):
             n_hparams=3,
             steps=123,
             data_dir='/tmp/data',
+            task='domain_generalization',
+            holdout_fraction=0.2,
+            single_test_envs=False,
             hparams=None
         )
         assert(len(args_list) == 2*3*(3+3))

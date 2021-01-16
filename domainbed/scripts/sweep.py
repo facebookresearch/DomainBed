@@ -85,8 +85,10 @@ class Job:
         print(f'Deleted {len(jobs)} jobs!')
 
 def all_test_env_combinations(n):
-    """For a dataset with n >= 3 envs, return all combinations of 1 and 2 test
-    envs."""
+    """
+    For a dataset with n >= 3 envs, return all combinations of 1 and 2 test
+    envs.
+    """
     assert(n >= 3)
     for i in range(n):
         yield [i]
@@ -94,19 +96,24 @@ def all_test_env_combinations(n):
             yield [i, j]
 
 def make_args_list(n_trials, dataset_names, algorithms, n_hparams, steps,
-    data_dir, task, hparams):
+    data_dir, task, holdout_fraction, single_test_envs, hparams):
     args_list = []
     for trial_seed in range(n_trials):
         for dataset in dataset_names:
             for algorithm in algorithms:
-                all_test_envs = all_test_env_combinations(
-                    datasets.num_environments(dataset))
+                if single_test_envs:
+                    all_test_envs = [
+                        [i] for i in range(datasets.num_environments(dataset))]
+                else:
+                    all_test_envs = all_test_env_combinations(
+                        datasets.num_environments(dataset))
                 for test_envs in all_test_envs:
                     for hparams_seed in range(n_hparams):
                         train_args = {}
                         train_args['dataset'] = dataset
                         train_args['algorithm'] = algorithm
                         train_args['test_envs'] = test_envs
+                        train_args['holdout_fraction'] = holdout_fraction
                         train_args['hparams_seed'] = hparams_seed
                         train_args['data_dir'] = data_dir
                         train_args['task'] = task 
@@ -142,6 +149,8 @@ if __name__ == "__main__":
     parser.add_argument('--command_launcher', type=str, required=True)
     parser.add_argument('--steps', type=int, default=None)
     parser.add_argument('--hparams', type=str, default=None)
+    parser.add_argument('--holdout_fraction', type=float, default=0.2)
+    parser.add_argument('--single_test_envs', action='store_true')
     parser.add_argument('--skip_confirmation', action='store_true')
     args = parser.parse_args()
 
@@ -153,6 +162,8 @@ if __name__ == "__main__":
         steps=args.steps,
         data_dir=args.data_dir,
         task=args.task,
+        holdout_fraction=args.holdout_fraction,
+        single_test_envs=args.single_test_envs,
         hparams=args.hparams
     )
 
