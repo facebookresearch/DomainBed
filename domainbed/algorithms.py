@@ -19,9 +19,9 @@ ALGORITHMS = [
     'MLDG',
     'CORAL',
     'MMD',
-    'DANN', 
-    'CDANN', 
-    'MTL', 
+    'DANN',
+    'CDANN',
+    'MTL',
     'SagNet',
     'ARM',
     'VREx',
@@ -69,7 +69,11 @@ class ERM(Algorithm):
         super(ERM, self).__init__(input_shape, num_classes, num_domains,
                                   hparams)
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
-        self.classifier = nn.Linear(self.featurizer.n_outputs, num_classes)
+        self.classifier = networks.Classifier(
+            self.featurizer.n_outputs,
+            num_classes,
+            self.hparams['nonlinear_classifier'])
+
         self.network = nn.Sequential(self.featurizer, self.classifier)
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
@@ -132,7 +136,10 @@ class AbstractDANN(Algorithm):
 
         # Algorithms
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
-        self.classifier = nn.Linear(self.featurizer.n_outputs, num_classes)
+        self.classifier = networks.Classifier(
+            self.featurizer.n_outputs,
+            num_classes,
+            self.hparams['nonlinear_classifier'])
         self.discriminator = networks.MLP(self.featurizer.n_outputs,
             num_domains, self.hparams)
         self.class_embeddings = nn.Embedding(num_classes,
@@ -140,14 +147,14 @@ class AbstractDANN(Algorithm):
 
         # Optimizers
         self.disc_opt = torch.optim.Adam(
-            (list(self.discriminator.parameters()) + 
+            (list(self.discriminator.parameters()) +
                 list(self.class_embeddings.parameters())),
             lr=self.hparams["lr_d"],
             weight_decay=self.hparams['weight_decay_d'],
             betas=(self.hparams['beta1'], 0.9))
 
         self.gen_opt = torch.optim.Adam(
-            (list(self.featurizer.parameters()) + 
+            (list(self.featurizer.parameters()) +
                 list(self.classifier.parameters())),
             lr=self.hparams["lr_g"],
             weight_decay=self.hparams['weight_decay_g'],
@@ -273,7 +280,7 @@ class IRM(ERM):
         return {'loss': loss.item(), 'nll': nll.item(),
             'penalty': penalty.item()}
 
-    
+
 class VREx(ERM):
     """V-REx algorithm from http://arxiv.org/abs/2003.00688"""
     def __init__(self, input_shape, num_classes, num_domains, hparams):
@@ -286,7 +293,7 @@ class VREx(ERM):
             penalty_weight = self.hparams["vrex_lambda"]
         else:
             penalty_weight = 1.0
-        
+
         nll = 0.
 
         all_x = torch.cat([x for x, y in minibatches])
@@ -319,7 +326,7 @@ class VREx(ERM):
         return {'loss': loss.item(), 'nll': nll.item(),
                 'penalty': penalty.item()}
 
-    
+
 class Mixup(ERM):
     """
     Mixup of minibatches from different domains
@@ -509,7 +516,7 @@ class AbstractMMD(ERM):
     def __init__(self, input_shape, num_classes, num_domains, hparams, gaussian):
         super(AbstractMMD, self).__init__(input_shape, num_classes, num_domains,
                                   hparams)
-        if gaussian: 
+        if gaussian:
             self.kernel_type = "gaussian"
         else:
             self.kernel_type = "mean_cov"
@@ -521,7 +528,7 @@ class AbstractMMD(ERM):
                           x1,
                           x2.transpose(-2, -1), alpha=-2).add_(x1_norm)
         return res.clamp_min_(1e-30)
-    
+
     def gaussian_kernel(self, x, y, gamma=[0.001, 0.01, 0.1, 1, 10, 100,
                                            1000]):
         D = self.my_cdist(x, y)
@@ -553,7 +560,7 @@ class AbstractMMD(ERM):
 
     def update(self, minibatches, unlabeled=None):
         objective = 0
-        penalty = 0 
+        penalty = 0
         nmb = len(minibatches)
 
         features = [self.featurizer(xi) for xi, _ in minibatches]
@@ -591,7 +598,7 @@ class MMD(AbstractMMD):
 
 class CORAL(AbstractMMD):
     """
-    MMD using mean and covariance difference 
+    MMD using mean and covariance difference
     """
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
@@ -610,7 +617,10 @@ class MTL(Algorithm):
         super(MTL, self).__init__(input_shape, num_classes, num_domains,
                                   hparams)
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
-        self.classifier = nn.Linear(self.featurizer.n_outputs * 2, num_classes)
+        self.classifier = networks.Classifier(
+            self.featurizer.n_outputs * 2,
+            num_classes,
+            self.hparams['nonlinear_classifier'])
         self.optimizer = torch.optim.Adam(
             list(self.featurizer.parameters()) +\
             list(self.classifier.parameters()),
@@ -654,7 +664,7 @@ class MTL(Algorithm):
 class SagNet(Algorithm):
     """
     Style Agnostic Network
-    Algorithm 1 from: https://arxiv.org/abs/1910.11645 
+    Algorithm 1 from: https://arxiv.org/abs/1910.11645
     """
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
@@ -663,9 +673,15 @@ class SagNet(Algorithm):
         # featurizer network
         self.network_f = networks.Featurizer(input_shape, self.hparams)
         # content network
-        self.network_c = nn.Linear(self.network_f.n_outputs, num_classes)
+        self.network_c = networks.Classifier(
+            self.network_f.n_outputs,
+            num_classes,
+            self.hparams['nonlinear_classifier'])
         # style network
-        self.network_s = nn.Linear(self.network_f.n_outputs, num_classes)
+        self.network_s = networks.Classifier(
+            self.network_f.n_outputs,
+            num_classes,
+            self.hparams['nonlinear_classifier'])
 
         # # This commented block of code implements something closer to the
         # # original paper, but is specific to ResNet and puts in disadvantage
@@ -710,7 +726,7 @@ class SagNet(Algorithm):
     def forward_s(self, x):
         # learning style network on randomized content
         return self.network_s(self.randomize(self.network_f(x), "content"))
-    
+
     def randomize(self, x, what="style", eps=1e-5):
         device = "cuda" if x.is_cuda else "cpu"
         sizes = x.size()
@@ -718,13 +734,13 @@ class SagNet(Algorithm):
 
         if len(sizes) == 4:
             x = x.view(sizes[0], sizes[1], -1)
-            alpha = alpha.unsqueeze(-1) 
+            alpha = alpha.unsqueeze(-1)
 
         mean = x.mean(-1, keepdim=True)
         var = x.var(-1, keepdim=True)
-        
+
         x = (x - mean) / (var + eps).sqrt()
-        
+
         idx_swap = torch.randperm(sizes[0])
         if what == "style":
             mean = alpha * mean + (1 - alpha) * mean[idx_swap]
@@ -747,12 +763,12 @@ class SagNet(Algorithm):
         self.optimizer_f.step()
         self.optimizer_c.step()
 
-        # learn style 
+        # learn style
         self.optimizer_s.zero_grad()
         loss_s = F.cross_entropy(self.forward_s(all_x), all_y)
         loss_s.backward()
         self.optimizer_s.step()
-       
+
         # learn adversary
         self.optimizer_f.zero_grad()
         loss_adv = -F.log_softmax(self.forward_s(all_x), dim=1).mean(1).mean()
@@ -832,7 +848,7 @@ class SD(ERM):
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(SD, self).__init__(input_shape, num_classes, num_domains,
                                         hparams)
-        self.sd_reg = hparams["sd_reg"] 
+        self.sd_reg = hparams["sd_reg"]
 
     def update(self, minibatches, unlabeled=None):
         all_x = torch.cat([x for x,y in minibatches])

@@ -1,25 +1,25 @@
-Total records: 160
+Total records: 200
 
 -------- Dataset: VLCS, model selection method: training-domain validation set
 Algorithm             C                     L                     S                     V                     Avg                  
-ERM                   98.0 +/- 0.2          64.4 +/- 0.2          73.1 +/- 2.0          76.6 +/- 0.4          78.0                 
+ERM                   98.0 +/- 0.2          64.2 +/- 0.8          74.1 +/- 0.4          77.1 +/- 0.2          78.3                 
 
 -------- Averages, model selection method: training-domain validation set
 Algorithm                  VLCS                       Avg                       
-ERM                        78.0 +/- 0.5               78.0                      
+ERM                        78.3 +/- 0.0               78.3                      
 
 -------- Dataset: VLCS, model selection method: leave-one-domain-out cross-validation
 Algorithm             C                     L                     S                     V                     Avg                  
-ERM                   98.5 +/- 0.2          62.5 +/- 1.2          69.8 +/- 1.0          75.6 +/- 2.4          76.6                 
+ERM                   96.9 +/- 1.0          64.4 +/- 0.9          70.5 +/- 0.5          76.7 +/- 0.1          77.1                 
 
 -------- Averages, model selection method: leave-one-domain-out cross-validation
 Algorithm                  VLCS                       Avg                       
-ERM                        76.6 +/- 0.0               76.6                      
+ERM                        77.1 +/- 0.1               77.1                      
 
 -------- Dataset: VLCS, model selection method: test-domain validation set (oracle)
 Algorithm             C                     L                     S                     V                     Avg                  
-ERM                   98.0 +/- 0.1          64.5 +/- 0.4          73.1 +/- 2.0          74.7 +/- 0.4          77.6                 
+ERM                   96.9 +/- 1.0          65.9 +/- 0.5          71.6 +/- 1.3          76.9 +/- 0.3          77.8                 
 
 -------- Averages, model selection method: test-domain validation set (oracle)
 Algorithm                  VLCS                       Avg                       
-ERM                        77.6 +/- 0.3               77.6                      
+ERM                        77.8 +/- 0.3               77.8                      

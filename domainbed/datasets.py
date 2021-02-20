@@ -10,7 +10,7 @@ from torchvision.datasets import MNIST, ImageFolder
 from torchvision.transforms.functional import rotate
 
 from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
-from wilds.datasets.fmow_dataset import FMoWDataset 
+from wilds.datasets.fmow_dataset import FMoWDataset
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -50,7 +50,7 @@ class MultipleDomainDataset:
     N_WORKERS = 8            # Default, subclasses may override
     ENVIRONMENTS = None      # Subclasses should override
     INPUT_SHAPE = None       # Subclasses should override
-    
+
     def __getitem__(self, index):
         return self.datasets[index]
 
@@ -315,7 +315,7 @@ class WILDSDataset(MultipleDomainDataset):
         ])
 
         self.datasets = []
-        
+
         for i, metadata_value in enumerate(
                 self.metadata_values(dataset, metadata_name)):
             if augment and (i not in test_envs):
@@ -344,7 +344,7 @@ class WILDSCamelyon(WILDSDataset):
         dataset = Camelyon17Dataset(root_dir=root)
         super().__init__(
             dataset, "hospital", test_envs, hparams['data_augmentation'], hparams)
-        
+
 
 class WILDSFMoW(WILDSDataset):
     ENVIRONMENTS = [ "region_0", "region_1", "region_2", "region_3",
@@ -353,5 +353,3 @@ class WILDSFMoW(WILDSDataset):
         dataset = FMoWDataset(root_dir=root)
         super().__init__(
             dataset, "region", test_envs, hparams['data_augmentation'], hparams)
-
-dataset = WILDSFMoW("/checkpoint/dlp/datasets_new/", [0], {"data_augmentation": True})

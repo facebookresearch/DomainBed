@@ -1,0 +1,40 @@
+Environment:
+	Python: 3.7.6
+	PyTorch: 1.7.0
+	Torchvision: 0.8.1
+	CUDA: 9.2
+	CUDNN: 7603
+	NumPy: 1.19.4
+	PIL: 8.1.0
+Args:
+	algorithm: ERM
+	checkpoint_freq: None
+	data_dir: /checkpoint/dlp/datasets_new
+	dataset: VLCS
+	holdout_fraction: 0.2
+	hparams: None
+	hparams_seed: 1
+	output_dir: domainbed/misc/test_sweep_data/8cfbf830754065d02f9723c57abc992e
+	save_model_every_checkpoint: False
+	seed: 1878899245
+	skip_model_save: False
+	steps: 1001
+	task: domain_generalization
+	test_envs: [1, 3]
+	trial_seed: 0
+	uda_holdout_fraction: 0
+HParams:
+	batch_size: 39
+	class_balanced: False
+	data_augmentation: True
+	lr: 2.7028930742148706e-05
+	nonlinear_classifier: False
+	resnet18: False
+	resnet_dropout: 0.5
+	weight_decay: 0.00044832883881609976
+env0_in_acc   env0_out_acc  env1_in_acc   env1_out_acc  env2_in_acc   env2_out_acc  env3_in_acc   env3_out_acc  epoch         loss          step          step_time    
+0.7544169611  0.7349823322  0.4640000000  0.4990583804  0.4185072353  0.4344512195  0.4439096631  0.4459259259  0.0000000000  1.6586600542  0             0.8204424381 
+1.0000000000  1.0000000000  0.6381176471  0.6195856874  0.9021325209  0.7942073171  0.7460199926  0.7688888889  10.335689045  0.2694484687  300           0.2729239146 
+0.9991166078  0.9964664311  0.6084705882  0.5969868173  0.9405940594  0.7942073171  0.7141799334  0.7200000000  20.671378091  0.1227226931  600           0.2742725794 
+1.0000000000  1.0000000000  0.6475294118  0.6572504708  0.9630616908  0.8003048780  0.7671232877  0.7762962963  31.007067137  0.0694726440  900           0.2802266463 
+1.0000000000  0.9964664311  0.6244705882  0.6101694915  0.9813404417  0.8079268293  0.7778600518  0.7777777778  34.452296819  0.0363020070  1000          0.2752757215 
