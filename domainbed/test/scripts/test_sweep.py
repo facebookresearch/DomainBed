@@ -74,6 +74,7 @@ class TestSweep(unittest.TestCase):
             n_trials=2,
             dataset_names=['Debug28'],
             algorithms=['ERM'],
+            n_hparams_from=0,
             n_hparams=3,
             steps=123,
             data_dir='/tmp/data',
