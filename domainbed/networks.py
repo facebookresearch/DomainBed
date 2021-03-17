@@ -7,6 +7,31 @@ import torchvision.models
 
 from domainbed.lib import misc
 from domainbed.lib import wide_resnet
+import copy
+
+
+def remove_batch_norm_from_resnet(model):
+    fuse = torch.nn.utils.fusion.fuse_conv_bn_eval
+    model.eval()
+
+    model.conv1 = fuse(model.conv1, model.bn1)
+    model.bn1 = Identity()
+
+    for name, module in model.named_modules():
+        if name.startswith("layer") and len(name) == 6:
+            for b, bottleneck in enumerate(module):
+                for name2, module2 in bottleneck.named_modules():
+                    if name2.startswith("conv"):
+                        bn_name = "bn" + name2[-1]
+                        setattr(bottleneck, name2,
+                                fuse(module2, getattr(bottleneck, bn_name)))
+                        setattr(bottleneck, bn_name, Identity())
+                if isinstance(bottleneck.downsample, torch.nn.Sequential):
+                    bottleneck.downsample[0] = fuse(bottleneck.downsample[0],
+                                                    bottleneck.downsample[1])
+                    bottleneck.downsample[1] = Identity()
+    model.train()
+    return model
 
 
 class Identity(nn.Module):
@@ -58,6 +83,8 @@ class ResNet(torch.nn.Module):
         else:
             self.network = torchvision.models.resnet50(pretrained=True)
             self.n_outputs = 2048
+
+        self.network = remove_batch_norm_from_resnet(self.network)
 
         # adapt number of channels
         nc = input_shape[0]
@@ -184,3 +211,24 @@ def Classifier(in_features, out_features, is_nonlinear=False):
             torch.nn.Linear(in_features // 4, out_features))
     else:
         return torch.nn.Linear(in_features, out_features)
+
+
+class Whole(nn.Module):
+    def __init__(self, input_shape, num_classes, hparams, weights=None):
+        super(Whole, self).__init__()
+        featurizer = Featurizer(input_shape, hparams)
+        classifier = Classifier(
+            featurizer.n_outputs,
+            num_classes,
+            hparams['nonlinear_classifier'])
+        self.net = nn.Sequential(
+            featurizer, classifier
+        )
+        if weights is not None:
+            self.load_state_dict(copy.deepcopy(weights))
+
+    def reset_weights(self, weights):
+        self.load_state_dict(copy.deepcopy(weights))
+
+    def forward(self, x):
+        return self.net(x)

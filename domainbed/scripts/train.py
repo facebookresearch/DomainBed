@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', type=str, default="RotatedMNIST")
     parser.add_argument('--algorithm', type=str, default="ERM")
     parser.add_argument('--task', type=str, default="domain_generalization",
-        help='domain_generalization | domain_adaptation')
+        choices=["domain_generalization", "domain_adaptation"])
     parser.add_argument('--hparams', type=str,
         help='JSON-serialized hparams dict')
     parser.add_argument('--hparams_seed', type=int, default=0,
@@ -44,7 +44,8 @@ if __name__ == "__main__":
     parser.add_argument('--test_envs', type=int, nargs='+', default=[0])
     parser.add_argument('--output_dir', type=str, default="train_output")
     parser.add_argument('--holdout_fraction', type=float, default=0.2)
-    parser.add_argument('--uda_holdout_fraction', type=float, default=0)
+    parser.add_argument('--uda_holdout_fraction', type=float, default=0,
+        help="For domain adaptation, % of test to use unlabeled for training.")
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
     args = parser.parse_args()
@@ -102,7 +103,7 @@ if __name__ == "__main__":
 
     # Split each env into an 'in-split' and an 'out-split'. We'll train on
     # each in-split except the test envs, and evaluate on all splits.
-    
+
     # To allow unsupervised domain adaptation experiments, we split each test
     # env into 'in-split', 'uda-split' and 'out-split'. The 'in-split' is used
     # by collect_results.py to compute classification accuracies.  The
@@ -139,6 +140,9 @@ if __name__ == "__main__":
         if len(uda):
             uda_splits.append((uda, uda_weights))
 
+    if args.task == "domain_adaptation" and len(uda_splits) == 0:
+        raise ValueError("Not enough unlabeled samples for domain adaptation.")
+
     train_loaders = [InfiniteDataLoader(
         dataset=env,
         weights=env_weights,
@@ -146,7 +150,7 @@ if __name__ == "__main__":
         num_workers=dataset.N_WORKERS)
         for i, (env, env_weights) in enumerate(in_splits)
         if i not in args.test_envs]
-    
+
     uda_loaders = [InfiniteDataLoader(
         dataset=env,
         weights=env_weights,
@@ -239,7 +243,7 @@ if __name__ == "__main__":
 
             results.update({
                 'hparams': hparams,
-                'args': vars(args)    
+                'args': vars(args)
             })
 
             epochs_path = os.path.join(args.output_dir, 'results.jsonl')
