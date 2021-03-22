@@ -82,7 +82,7 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('tau', 0.9, lambda r: r.uniform(0.5, 1.))
 
     elif algorithm == "IGA":
-        _hparam('penalty', 1000, 10**random.uniform(1, 5))
+        _hparam('penalty', 1000, 10**r.uniform(1, 5))
 
 
     # Dataset-and-algorithm-specific hparam definitions. Each block of code
