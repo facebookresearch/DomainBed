@@ -1,0 +1,139 @@
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.6/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/scripts/train.py", line 99, in <module>
+    args.test_envs, hparams)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/datasets.py", line 161, in __init__
+    self.rotate_dataset, (1, 28, 28,), 10)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/datasets.py", line 91, in __init__
+    original_dataset_tr = MNIST(root, train=True, download=True)
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/mnist.py", line 79, in __init__
+    self.download()
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/mnist.py", line 140, in download
+    os.makedirs(self.raw_folder, exist_ok=True)
+  File "/usr/lib/python3.6/os.py", line 210, in makedirs
+    makedirs(head, mode, exist_ok)
+  File "/usr/lib/python3.6/os.py", line 210, in makedirs
+    makedirs(head, mode, exist_ok)
+  File "/usr/lib/python3.6/os.py", line 210, in makedirs
+    makedirs(head, mode, exist_ok)
+  [Previous line repeated 1 more time]
+  File "/usr/lib/python3.6/os.py", line 220, in makedirs
+    mkdir(name, mode)
+PermissionError: [Errno 13] Permission denied: '/my'
+0it [00:00, ?it/s]Traceback (most recent call last):
+  File "/usr/lib/python3.6/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.6/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/scripts/train.py", line 99, in <module>
+    args.test_envs, hparams)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/datasets.py", line 161, in __init__
+    self.rotate_dataset, (1, 28, 28,), 10)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/datasets.py", line 91, in __init__
+    original_dataset_tr = MNIST(root, train=True, download=True)
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/mnist.py", line 79, in __init__
+    self.download()
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/mnist.py", line 146, in download
+    download_and_extract_archive(url, download_root=self.raw_folder, filename=filename, md5=md5)
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/utils.py", line 256, in download_and_extract_archive
+    download_url(url, download_root, filename, md5)
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/utils.py", line 84, in download_url
+    raise e
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/utils.py", line 72, in download_url
+    reporthook=gen_bar_updater()
+  File "/usr/lib/python3.6/urllib/request.py", line 248, in urlretrieve
+    with contextlib.closing(urlopen(url, data)) as fp:
+  File "/usr/lib/python3.6/urllib/request.py", line 223, in urlopen
+    return opener.open(url, data, timeout)
+  File "/usr/lib/python3.6/urllib/request.py", line 532, in open
+    response = meth(req, response)
+  File "/usr/lib/python3.6/urllib/request.py", line 642, in http_response
+    'http', request, response, code, msg, hdrs)
+  File "/usr/lib/python3.6/urllib/request.py", line 570, in error
+    return self._call_chain(*args)
+  File "/usr/lib/python3.6/urllib/request.py", line 504, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.6/urllib/request.py", line 650, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 503: Service Unavailable
+0it [00:00, ?it/s]
+0it [00:00, ?it/s]Traceback (most recent call last):
+  File "/usr/lib/python3.6/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.6/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/scripts/train.py", line 99, in <module>
+    args.test_envs, hparams)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/datasets.py", line 161, in __init__
+    self.rotate_dataset, (1, 28, 28,), 10)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/datasets.py", line 91, in __init__
+    original_dataset_tr = MNIST(root, train=True, download=True)
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/mnist.py", line 79, in __init__
+    self.download()
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/mnist.py", line 146, in download
+    download_and_extract_archive(url, download_root=self.raw_folder, filename=filename, md5=md5)
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/utils.py", line 256, in download_and_extract_archive
+    download_url(url, download_root, filename, md5)
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/utils.py", line 84, in download_url
+    raise e
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/utils.py", line 72, in download_url
+    reporthook=gen_bar_updater()
+  File "/usr/lib/python3.6/urllib/request.py", line 248, in urlretrieve
+    with contextlib.closing(urlopen(url, data)) as fp:
+  File "/usr/lib/python3.6/urllib/request.py", line 223, in urlopen
+    return opener.open(url, data, timeout)
+  File "/usr/lib/python3.6/urllib/request.py", line 532, in open
+    response = meth(req, response)
+  File "/usr/lib/python3.6/urllib/request.py", line 642, in http_response
+    'http', request, response, code, msg, hdrs)
+  File "/usr/lib/python3.6/urllib/request.py", line 570, in error
+    return self._call_chain(*args)
+  File "/usr/lib/python3.6/urllib/request.py", line 504, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.6/urllib/request.py", line 650, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 503: Service Unavailable
+0it [00:00, ?it/s]
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.6/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/scripts/train.py", line 99, in <module>
+    args.test_envs, hparams)
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/mnist.py", line 83, in __init__
+    ' You can use download=True to download it')
+RuntimeError: Dataset not found. You can use download=True to download it
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.6/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/scripts/train.py", line 99, in <module>
+    args.test_envs, hparams)
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/mnist.py", line 83, in __init__
+    ' You can use download=True to download it')
+RuntimeError: Dataset not found. You can use download=True to download it
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.6/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/scripts/train.py", line 99, in <module>
+    args.test_envs, hparams)
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/mnist.py", line 83, in __init__
+    ' You can use download=True to download it')
+RuntimeError: Dataset not found. You can use download=True to download it
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.6/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/jcaudet/Documents/GitRepos/DomainBed/domainbed/scripts/train.py", line 99, in <module>
+    args.test_envs, hparams)
+  File "/home/jcaudet/.local/lib/python3.6/site-packages/torchvision/datasets/mnist.py", line 83, in __init__
+    ' You can use download=True to download it')
+RuntimeError: Dataset not found. You can use download=True to download it

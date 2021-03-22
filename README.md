@@ -60,17 +60,17 @@ Send us a PR to add your dataset! Any custom image dataset with folder structure
 Download the datasets:
 
 ```sh
-python -m domainbed.scripts.download \
-       --data_dir=/my/datasets/path
+python3 -m domainbed.scripts.download \
+       --data_dir=./domainbed/data
 ```
 
 Train a model:
 
 ```sh
-python -m domainbed.scripts.train\
-       --data_dir=/my/datasets/path\
+python3 -m domainbed.scripts.train\
+       --data_dir=./domainbed/data\
        --algorithm ERM\
-       --dataset RotatedMNIST
+       --dataset MNIST
 ```
 
 Launch a sweep:

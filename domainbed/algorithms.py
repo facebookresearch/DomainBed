@@ -26,7 +26,8 @@ ALGORITHMS = [
     'ARM',
     'VREx',
     'RSC',
-    'SD'
+    'SD',
+    'ILC'
 ]
 
 def get_algorithm_class(algorithm_name):
@@ -387,8 +388,7 @@ class GroupDRO(ERM):
         loss = torch.dot(losses, self.q)
 
         self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+        loss = F.cross_entropy(all_p, all_y)
 
         return {'loss': loss.item()}
 
@@ -864,3 +864,185 @@ class SD(ERM):
         self.optimizer.step()
 
         return {'loss': loss.item(), 'penalty': penalty.item()}
+
+class ILC(ERM):
+    """
+    Learning Explanations that are Hard to Vary [https://arxiv.org/abs/2009.00329]
+    AND-Mask implementation from [https://github.com/gibipara92/learning-explanations-hard-to-vary]
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(ILC, self).__init__(input_shape, num_classes, num_domains, hparams)
+
+        self.tau = hparams["agreement_thresh"]
+
+    def update(self, minibatches, unlabeled=None):
+        
+        losses = []
+        all_x = torch.cat([x for x,y in minibatches])
+        all_logits = self.network(all_x)
+        all_logits_idx = 0
+        for i, (x, y) in enumerate(minibatches):
+            logits = all_logits[all_logits_idx:all_logits_idx + x.shape[0]]
+            all_logits_idx += x.shape[0]
+            losses.append( F.cross_entropy(logits, y) )
+
+        self.optimizer.zero_grad()
+        grads = self.get_masked_grad(self.tau,
+            losses, params=self.network.parameters())
+        self.optimizer.step()
+
+        return {'loss': losses.sum()}
+
+    def get_masked_grad(tau, losses, parameters):
+
+        gradients = []
+        for loss in losses:
+            gradients.append(list(torch.autograd.grad(loss, parameters)))
+            gradients[-1][0] = gradients[-1][0] / gradients[-1][0].norm()
+
+        for ge_all, parameter in zip(zip(*gradients), parameters):
+            # environment-wise gradients (num_environments x num_parameters)
+            ge_cat = torch.cat(ge_all)
+
+            # treat scalar parameters also as matrices
+            if ge_cat.dim() == 1:
+                ge_cat = ge_cat.view(len(losses), -1)
+
+            # creates a mask with zeros on weak features
+            mask = (torch.abs(torch.sign(ge_cat).sum(0))
+                    > len(losses) * tau).int()
+
+            # mean gradient (1 x num_parameters)
+            g_mean = ge_cat.mean(0, keepdim=True)
+
+            # apply the mask
+            g_masked = mask * g_mean
+
+        return g_masked
+
+class IGA(ERM):
+    """
+    Inter-environmental Gradient Alignment
+    From https://arxiv.org/abs/2008.01883v2
+    """
+
+    def __init__(self, in_features, num_classes, num_domains, hparams):
+        super(IGA, self).__init__(in_features, num_classes, num_domains, hparams)
+
+    def fit(self, envs, num_iterations, callback=False):
+        for epoch in range(num_iterations):
+            losses = [self.loss(self.network(x), y)
+                      for x, y in envs["train"]["envs"]]
+            gradients = [
+                grad(loss, self.parameters(), create_graph=True)
+                for loss in losses
+            ]
+            # average loss and gradients
+            avg_loss = sum(losses) / len(losses)
+            avg_gradient = grad(avg_loss, self.parameters(), create_graph=True)
+
+            # compute trace penalty
+            penalty_value = 0
+            for gradient in gradients:
+                for gradient_i, avg_grad_i in zip(gradient, avg_gradient):
+                    penalty_value += (gradient_i - avg_grad_i).pow(2).sum()
+
+            self.optimizer.zero_grad()
+            (avg_loss + self.hparams['penalty'] * penalty_value).backward()
+            self.optimizer.step()
+
+            if callback:
+                # compute errors
+                utils.compute_errors(self, envs)
+
+    def predict(self, x):
+        return self.network(x)
+
+
+
+
+        # get_grads(self, agreement_threshold, batch_size, loss_fn,
+        #                 n_agreement_envs, params, output,
+        #                 target,
+        #                 method,
+        #                 scale_grad_inverse_sparsity,
+        #                 ):
+        # """
+        # Use the and mask or the geometric mean to put gradients together.
+        # Modifies gradients wrt params in place (inside param.grad).
+        # Returns mean loss and masks for diagnostics.
+
+        # Args:
+        #     agreement_threshold: a float between 0 and 1 (tau in the paper).
+        #         If 1 -> requires complete sign agreement across all environments (everything else gets masked out),
+        #             if 0 it requires no agreement, and it becomes essentially standard sgd if method == 'and_mask'. Values
+        #             in between are fractional ratios of agreement.
+        #     batch_size: The original batch size per environment. Needed to perform reshaping, so that grads can be computed
+        #         independently per each environment.
+        #     loss_fn: the loss function
+        #     n_agreement_envs: the number of environments that were stacked in the inputs. Needed to perform reshaping.
+        #     params: the model parameters
+        #     output: the output of the model, where inputs were *all examples from all envs stacked in a big batch*. This is
+        #         done to at least compute the forward pass somewhat efficiently.
+        #     method: 'and_mask' or 'geom_mean'.
+        #     scale_grad_inverse_sparsity: If True, rescale the magnitude of the gradient components that survived the mask,
+        #         layer-wise, to compensate for the reduce overall magnitude after masking and/or geometric mean.
+
+        # Returns:
+        #     mean_loss: mean loss across environments
+        #     masks: a list of the binary masks (every element corresponds to one layer) applied to the gradient.
+        # """
+
+        # param_gradients = [[] for _ in params]
+        # outputs = output.view(n_agreement_envs, batch_size, -1)
+        # targets = target.view(n_agreement_envs, batch_size, -1)
+
+        # outputs = outputs.squeeze(-1)
+        # targets = targets.squeeze(-1)
+
+        # total_loss = 0.
+        # for env_outputs, env_targets in zip(outputs, targets):
+        #     env_loss = loss_fn(env_outputs, env_targets)
+        #     total_loss += env_loss
+        #     env_grads = torch.autograd.grad(env_loss, params,
+        #                                     retain_graph=True)
+        #     for grads, env_grad in zip(param_gradients, env_grads):
+        #         grads.append(env_grad)
+        # mean_loss = total_loss / n_agreement_envs
+        # assert len(param_gradients) == len(params)
+        # assert len(param_gradients[0]) == n_agreement_envs
+
+        # masks = []
+        # avg_grads = []
+        # weights = []
+        # for param, grads in zip(params, param_gradients):
+        #     assert len(grads) == n_agreement_envs
+        #     grads = torch.stack(grads, dim=0)
+        #     assert grads.shape == (n_agreement_envs,) + param.shape
+        #     grad_signs = torch.sign(grads)
+        #     mask = torch.mean(grad_signs, dim=0).abs() >= agreement_threshold
+        #     mask = mask.to(torch.float32)
+        #     assert mask.numel() == param.numel()
+        #     avg_grad = torch.mean(grads, dim=0)
+        #     assert mask.shape == avg_grad.shape
+
+        #     if method == 'and_mask':
+        #         mask_t = (mask.sum() / mask.numel())
+        #         param.grad = mask * avg_grad
+        #         if scale_grad_inverse_sparsity:
+        #             param.grad *= (1. / (1e-10 + mask_t))
+        #     elif method == 'geom_mean':
+        #         prod_grad = torch.sign(avg_grad) * torch.exp(torch.sum(torch.log(torch.abs(grads) + 1e-10), dim=0) / n_agreement_envs)
+        #         mask_t = (mask.sum() / mask.numel())
+        #         param.grad = mask * prod_grad
+        #         if scale_grad_inverse_sparsity:
+        #             param.grad *= (1. / (1e-10 + mask_t))
+        #     else:
+        #         raise ValueError()
+
+        #     weights.append(param.data)
+        #     avg_grads.append(avg_grad)
+        #     masks.append(mask)
+
+        # return mean_loss, masks

@@ -78,6 +78,12 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == "SD":
         _hparam('sd_reg', 0.1, lambda r: 10**r.uniform(-5, -1))
 
+    elif algorithm == "ILC":
+        _hparam('tau', 0.9, lambda r: r.uniform(0.5, 1.))
+
+    elif algorithm == "IGA":
+        _hparam('penalty', 1000, 10**random.uniform(1, 5))
+
 
     # Dataset-and-algorithm-specific hparam definitions. Each block of code
     # below corresponds to exactly one hparam. Avoid nested conditionals.
