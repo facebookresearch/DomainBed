@@ -874,52 +874,49 @@ class ILC(ERM):
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(ILC, self).__init__(input_shape, num_classes, num_domains, hparams)
 
-        self.tau = hparams["agreement_thresh"]
+        self.tau = hparams["tau"]
 
     def update(self, minibatches, unlabeled=None):
         
-        losses = []
+        total_loss = 0
+        param_gradients = [[] for _ in self.network.parameters()]
         all_x = torch.cat([x for x,y in minibatches])
         all_logits = self.network(all_x)
         all_logits_idx = 0
+        self.optimizer.zero_grad()
         for i, (x, y) in enumerate(minibatches):
             logits = all_logits[all_logits_idx:all_logits_idx + x.shape[0]]
             all_logits_idx += x.shape[0]
-            losses.append( F.cross_entropy(logits, y) )
+            
+            env_loss = F.cross_entropy(logits, y)
+            total_loss += env_loss
 
-        self.optimizer.zero_grad()
-        grads = self.get_masked_grad(self.tau,
-            losses, params=self.network.parameters())
+            env_grads = autograd.grad(env_loss, self.network.parameters(), retain_graph=True)
+            for grads, env_grad in zip(param_gradients, env_grads):
+                grads.append(env_grad)
+            
+        mean_loss = total_loss / len(minibatches)
+
+        self.mask_grads(self.tau, param_gradients, self.network.parameters())
+
         self.optimizer.step()
 
-        return {'loss': losses.sum()}
+        return {'loss': mean_loss.item()}
 
-    def get_masked_grad(tau, losses, parameters):
+    def mask_grads(self, tau, gradients, params):
 
-        gradients = []
-        for loss in losses:
-            gradients.append(list(torch.autograd.grad(loss, parameters)))
-            gradients[-1][0] = gradients[-1][0] / gradients[-1][0].norm()
+        for param, grads in zip(params, gradients):
+            grads = torch.stack(grads, dim=0)
+            grad_signs = torch.sign(grads)
+            mask = torch.mean(grad_signs, dim=0).abs() >= self.tau
+            mask = mask.to(torch.float32)
+            avg_grad = torch.mean(grads, dim=0)
 
-        for ge_all, parameter in zip(zip(*gradients), parameters):
-            # environment-wise gradients (num_environments x num_parameters)
-            ge_cat = torch.cat(ge_all)
+            mask_t = (mask.sum() / mask.numel())
+            param.grad = mask * avg_grad
+            param.grad *= (1. / (1e-10 + mask_t))
 
-            # treat scalar parameters also as matrices
-            if ge_cat.dim() == 1:
-                ge_cat = ge_cat.view(len(losses), -1)
-
-            # creates a mask with zeros on weak features
-            mask = (torch.abs(torch.sign(ge_cat).sum(0))
-                    > len(losses) * tau).int()
-
-            # mean gradient (1 x num_parameters)
-            g_mean = ge_cat.mean(0, keepdim=True)
-
-            # apply the mask
-            g_masked = mask * g_mean
-
-        return g_masked
+        return 0
 
 class IGA(ERM):
     """
