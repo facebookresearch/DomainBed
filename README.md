@@ -72,6 +72,11 @@ python3 -m domainbed.scripts.train\
        --algorithm ILC\
        --dataset RotatedMNIST
 ```
+```sh
+python3 -m domainbed.scripts.train\
+       --algorithm ILC\
+       --dataset Spirals
+```
 
 Launch a sweep:
 
