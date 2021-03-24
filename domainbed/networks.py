@@ -26,6 +26,32 @@ class SqueezeLastTwo(nn.Module):
         return x.view(x.shape[0], x.shape[1])
 
 
+# class MLP(nn.Module):
+#     """Just  an MLP"""
+#     def __init__(self, n_inputs, n_outputs, hparams):
+#         super(MLP, self).__init__()
+#         self.width = hparams['mlp_width']
+#         self.input = nn.Linear(n_inputs, hparams['mlp_width'])
+#         self.dropout = nn.Dropout(hparams['mlp_dropout'])
+#         self.hiddens = nn.ModuleList([
+#             nn.Linear(hparams['mlp_width'],hparams['mlp_width'])
+#             for _ in range(hparams['mlp_depth']-2)])
+#         self.output = nn.Linear(hparams['mlp_width'], n_outputs)
+#         self.n_outputs = n_outputs
+
+#     def forward(self, x):
+#         x = self.input(x)
+#         nn.BatchNorm1d(self.width)
+#         x = F.relu(x)
+#         x = self.dropout(x)
+#         for hidden in self.hiddens:
+#             x = hidden(x)
+#             nn.BatchNorm1d(self.width)
+#             x = F.relu(x)
+#             x = self.dropout(x)
+#         x = self.output(x)
+#         return x
+
 class MLP(nn.Module):
     """Just  an MLP"""
     def __init__(self, n_inputs, n_outputs, hparams):
@@ -164,7 +190,7 @@ class ContextNet(nn.Module):
 def Featurizer(input_shape, hparams):
     """Auto-select an appropriate featurizer for the given input shape."""
     if len(input_shape) == 1:
-        return MLP(input_shape[0], 128, hparams)
+        return MLP(input_shape[0], hparams["mlp_width"], hparams)
     elif input_shape[1:3] == (28, 28):
         return MNIST_CNN(input_shape)
     elif input_shape[1:3] == (32, 32):
