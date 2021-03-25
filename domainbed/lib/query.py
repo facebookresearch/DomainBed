@@ -151,7 +151,6 @@ class Q(object):
         selector = make_selector_fn(selector)
         return self.filter(lambda r: selector(r) == value)
 
-
     def filter_not_none(self):
         return self.filter(lambda r: r is not None)
 

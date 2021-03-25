@@ -95,7 +95,7 @@ def all_test_env_combinations(n):
         for j in range(i+1, n):
             yield [i, j]
 
-def make_args_list(n_trials, dataset_names, algorithms, n_hparams, steps,
+def make_args_list(n_trials, dataset_names, algorithms, n_hparams_from, n_hparams, steps,
     data_dir, task, holdout_fraction, single_test_envs, hparams):
     args_list = []
     for trial_seed in range(n_trials):
@@ -108,7 +108,7 @@ def make_args_list(n_trials, dataset_names, algorithms, n_hparams, steps,
                     all_test_envs = all_test_env_combinations(
                         datasets.num_environments(dataset))
                 for test_envs in all_test_envs:
-                    for hparams_seed in range(n_hparams):
+                    for hparams_seed in range(n_hparams_from, n_hparams):
                         train_args = {}
                         train_args['dataset'] = dataset
                         train_args['algorithm'] = algorithm
@@ -116,7 +116,7 @@ def make_args_list(n_trials, dataset_names, algorithms, n_hparams, steps,
                         train_args['holdout_fraction'] = holdout_fraction
                         train_args['hparams_seed'] = hparams_seed
                         train_args['data_dir'] = data_dir
-                        train_args['task'] = task 
+                        train_args['task'] = task
                         train_args['trial_seed'] = trial_seed
                         train_args['seed'] = misc.seed_hash(dataset,
                             algorithm, test_envs, hparams_seed, trial_seed)
@@ -141,6 +141,7 @@ if __name__ == "__main__":
     parser.add_argument('--datasets', nargs='+', type=str, default=DATASETS)
     parser.add_argument('--algorithms', nargs='+', type=str, default=algorithms.ALGORITHMS)
     parser.add_argument('--task', type=str, default="domain_generalization")
+    parser.add_argument('--n_hparams_from', type=int, default=0)
     parser.add_argument('--n_hparams', type=int, default=20)
     parser.add_argument('--output_dir', type=str, required=True)
     parser.add_argument('--data_dir', type=str, required=True)
@@ -158,6 +159,7 @@ if __name__ == "__main__":
         n_trials=args.n_trials,
         dataset_names=args.datasets,
         algorithms=args.algorithms,
+        n_hparams_from=args.n_hparams_from,
         n_hparams=args.n_hparams,
         steps=args.steps,
         data_dir=args.data_dir,
