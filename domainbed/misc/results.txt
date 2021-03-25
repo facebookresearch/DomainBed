@@ -1,0 +1,10 @@
+Total records: 0
+
+-------- Averages, model selection method: training-domain validation set
+Algorithm                  Avg                       
+
+-------- Averages, model selection method: leave-one-domain-out cross-validation
+Algorithm                  Avg                       
+
+-------- Averages, model selection method: test-domain validation set (oracle)
+Algorithm                  Avg                       

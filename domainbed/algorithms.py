@@ -389,7 +389,8 @@ class GroupDRO(ERM):
         loss = torch.dot(losses, self.q)
 
         self.optimizer.zero_grad()
-        loss = F.cross_entropy(all_p, all_y)
+        loss.backward()
+        self.optimizer.step()
 
         return {'loss': loss.item()}
 

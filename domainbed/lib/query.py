@@ -146,7 +146,11 @@ class Q(object):
     def filter(self, fn):
         return Q([x for x in self._list if fn(x)])
 
-    def filtermake_weights_for_balanced_classes self.filter(lambda r: selector(r) == value)
+    def filter_equals(self, selector, value):
+        """like [x for x in y if x.selector == value]"""
+        selector = make_selector_fn(selector)
+        return self.filter(lambda r: selector(r) == value)
+
 
     def filter_not_none(self):
         return self.filter(lambda r: r is not None)

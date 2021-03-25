@@ -13,8 +13,6 @@ from torchvision.transforms.functional import rotate
 from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
 from wilds.datasets.fmow_dataset import FMoWDataset
 
-import matplotlib.pyplot as plt
-
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 DATASETS = [

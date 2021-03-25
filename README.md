@@ -69,17 +69,6 @@ Train a model:
 ```sh
 python3 -m domainbed.scripts.train\
        --data_dir=./domainbed/data/MNIST/\
-       --algorithm ILC\
-       --dataset RotatedMNIST
-```
-```sh
-python3 -m domainbed.scripts.train\
-       --algorithm ILC\
-       --dataset Spirals
-```
-```sh
-python3 -m domainbed.scripts.train\
-       --data_dir=./domainbed/data/MNIST/\
        --algorithm IGA\
        --dataset ColoredMNIST\
        --test_env 2
