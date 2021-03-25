@@ -77,7 +77,13 @@ python3 -m domainbed.scripts.train\
        --algorithm ILC\
        --dataset Spirals
 ```
-
+```sh
+python3 -m domainbed.scripts.train\
+       --data_dir=./domainbed/data/MNIST/\
+       --algorithm IGA\
+       --dataset ColoredMNIST\
+       --test_env 2
+```
 Launch a sweep:
 
 ```sh

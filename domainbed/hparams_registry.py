@@ -16,6 +16,7 @@ def _hparams(algorithm, dataset, random_seed):
     NON_IMAGES = ['Spirals']
 
     hparams = {}
+
     def _hparam(name, default_val, random_val_fn):
         """Define a hyperparameter. random_val_fn takes a RandomState and
         returns a random hyperparameter value."""
@@ -44,7 +45,7 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('beta1', 0.5, lambda r: r.choice([0., 0.5]))
         _hparam('mlp_width', 256, lambda r: int(2 ** r.uniform(6, 10)))
         _hparam('mlp_depth', 3, lambda r: int(r.choice([3, 4, 5])))
-        _hparam('mlp_dropout', 0., lambda r: r.choice([0., 0.1, 0.5]))
+        _hparam('mlp_dropout', 0., lambda r: r.choice([0., 0.1, 0.5])) 
 
     elif algorithm == "RSC":
         _hparam('rsc_f_drop_factor', 1/3, lambda r: r.uniform(0, 0.5))
@@ -83,7 +84,7 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('tau', 1, lambda r: r.uniform(0.5, 1.))
 
     elif algorithm == "IGA":
-        _hparam('penalty', 1000, 10**r.uniform(1, 5))
+        _hparam('penalty', 1000, lambda r: 10**r.uniform(1, 5))
 
 
     # Dataset-and-algorithm-specific hparam definitions. Each block of code
