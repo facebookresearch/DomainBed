@@ -80,7 +80,7 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == "SD":
         _hparam('sd_reg', 0.1, lambda r: 10**r.uniform(-5, -1))
 
-    elif algorithm == "ILC":
+    elif algorithm == "ANDMask":
         _hparam('tau', 1, lambda r: r.uniform(0.5, 1.))
 
     elif algorithm == "IGA":

@@ -27,7 +27,7 @@ ALGORITHMS = [
     'VREx',
     'RSC',
     'SD',
-    'ILC',
+    'ANDMask',
     'IGA'
 ]
 
@@ -867,14 +867,14 @@ class SD(ERM):
 
         return {'loss': loss.item(), 'penalty': penalty.item()}
 
-class ILC(ERM):
+class ANDMask(ERM):
     """
     Learning Explanations that are Hard to Vary [https://arxiv.org/abs/2009.00329]
     AND-Mask implementation from [https://github.com/gibipara92/learning-explanations-hard-to-vary]
     """
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
-        super(ILC, self).__init__(input_shape, num_classes, num_domains, hparams)
+        super(ANDMask, self).__init__(input_shape, num_classes, num_domains, hparams)
 
         self.tau = hparams["tau"]
 

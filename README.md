@@ -73,6 +73,7 @@ python3 -m domainbed.scripts.train\
        --dataset ColoredMNIST\
        --test_env 2
 ```
+
 Launch a sweep:
 
 ```sh
