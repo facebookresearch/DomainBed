@@ -26,7 +26,9 @@ ALGORITHMS = [
     'ARM',
     'VREx',
     'RSC',
-    'SD'
+    'SD',
+    'ANDMask',
+    'IGA'
 ]
 
 def get_algorithm_class(algorithm_name):
@@ -864,3 +866,97 @@ class SD(ERM):
         self.optimizer.step()
 
         return {'loss': loss.item(), 'penalty': penalty.item()}
+
+class ANDMask(ERM):
+    """
+    Learning Explanations that are Hard to Vary [https://arxiv.org/abs/2009.00329]
+    AND-Mask implementation from [https://github.com/gibipara92/learning-explanations-hard-to-vary]
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(ANDMask, self).__init__(input_shape, num_classes, num_domains, hparams)
+
+        self.tau = hparams["tau"]
+
+    def update(self, minibatches, unlabeled=None):
+        
+        total_loss = 0
+        param_gradients = [[] for _ in self.network.parameters()]
+        all_x = torch.cat([x for x,y in minibatches])
+        all_logits = self.network(all_x)
+        all_logits_idx = 0
+        for i, (x, y) in enumerate(minibatches):
+            logits = all_logits[all_logits_idx:all_logits_idx + x.shape[0]]
+            all_logits_idx += x.shape[0]
+            
+            env_loss = F.cross_entropy(logits, y)
+            total_loss += env_loss
+
+            env_grads = autograd.grad(env_loss, self.network.parameters(), retain_graph=True)
+            for grads, env_grad in zip(param_gradients, env_grads):
+                grads.append(env_grad)
+            
+        mean_loss = total_loss / len(minibatches)
+
+        self.optimizer.zero_grad()
+        self.mask_grads(self.tau, param_gradients, self.network.parameters())
+        self.optimizer.step()
+
+        return {'loss': mean_loss.item()}
+
+    def mask_grads(self, tau, gradients, params):
+
+        for param, grads in zip(params, gradients):
+            grads = torch.stack(grads, dim=0)
+            grad_signs = torch.sign(grads)
+            mask = torch.mean(grad_signs, dim=0).abs() >= self.tau
+            mask = mask.to(torch.float32)
+            avg_grad = torch.mean(grads, dim=0)
+
+            mask_t = (mask.sum() / mask.numel())
+            param.grad = mask * avg_grad
+            param.grad *= (1. / (1e-10 + mask_t))
+
+        return 0
+
+class IGA(ERM):
+    """
+    Inter-environmental Gradient Alignment
+    From https://arxiv.org/abs/2008.01883v2
+    """
+
+    def __init__(self, in_features, num_classes, num_domains, hparams):
+        super(IGA, self).__init__(in_features, num_classes, num_domains, hparams)
+
+    def update(self, minibatches, unlabeled=False):
+
+        all_x = torch.cat([x for x,y in minibatches])
+        all_logits = self.network(all_x)
+
+        total_loss = 0
+        all_logits_idx = 0
+        grads = []
+        for i, (x, y) in enumerate(minibatches):
+            logits = all_logits[all_logits_idx:all_logits_idx + x.shape[0]]
+            all_logits_idx += x.shape[0]
+            
+            env_loss = F.cross_entropy(logits, y)
+            total_loss += env_loss
+
+            grads.append( autograd.grad(env_loss, self.network.parameters(), retain_graph=True) )
+            
+        mean_loss = total_loss / len(minibatches)
+        mean_grad = autograd.grad(mean_loss, self.network.parameters(), retain_graph=True)
+
+        # compute trace penalty
+        penalty_value = 0
+        for grad in grads:
+            for g, mean_g in zip(grad, mean_grad):
+                penalty_value += (g - mean_g).pow(2).sum()
+
+        self.optimizer.zero_grad()
+        (mean_loss + self.hparams['penalty'] * penalty_value).backward()
+        self.optimizer.step()
+
+
+        return {'loss': mean_loss.item(), 'penalty': penalty_value.item()}

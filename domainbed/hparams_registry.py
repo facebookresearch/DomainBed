@@ -13,8 +13,10 @@ def _hparams(algorithm, dataset, random_seed):
     New algorithms / networks / etc. should add entries here.
     """
     SMALL_IMAGES = ['Debug28', 'RotatedMNIST', 'ColoredMNIST']
+    NON_IMAGES = ['Spirals']
 
     hparams = {}
+
     def _hparam(name, default_val, random_val_fn):
         """Define a hyperparameter. random_val_fn takes a RandomState and
         returns a random hyperparameter value."""
@@ -43,7 +45,7 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('beta1', 0.5, lambda r: r.choice([0., 0.5]))
         _hparam('mlp_width', 256, lambda r: int(2 ** r.uniform(6, 10)))
         _hparam('mlp_depth', 3, lambda r: int(r.choice([3, 4, 5])))
-        _hparam('mlp_dropout', 0., lambda r: r.choice([0., 0.1, 0.5]))
+        _hparam('mlp_dropout', 0., lambda r: r.choice([0., 0.1, 0.5])) 
 
     elif algorithm == "RSC":
         _hparam('rsc_f_drop_factor', 1/3, lambda r: r.uniform(0, 0.5))
@@ -78,21 +80,34 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == "SD":
         _hparam('sd_reg', 0.1, lambda r: 10**r.uniform(-5, -1))
 
+    elif algorithm == "ANDMask":
+        _hparam('tau', 1, lambda r: r.uniform(0.5, 1.))
+
+    elif algorithm == "IGA":
+        _hparam('penalty', 1000, lambda r: 10**r.uniform(1, 5))
+
 
     # Dataset-and-algorithm-specific hparam definitions. Each block of code
     # below corresponds to exactly one hparam. Avoid nested conditionals.
 
     if dataset in SMALL_IMAGES:
         _hparam('lr', 1e-3, lambda r: 10**r.uniform(-4.5, -2.5))
+    elif dataset in NON_IMAGES:
+        _hparam('lr', 1e-2, lambda r: 10**r.uniform(-4.5, -2.5))
     else:
         _hparam('lr', 5e-5, lambda r: 10**r.uniform(-5, -3.5))
 
-
     if dataset in SMALL_IMAGES:
         _hparam('weight_decay', 0., lambda r: 0.)
+    elif dataset in NON_IMAGES:
+        _hparam('weight_decay', 1e-3, lambda r: 10**r.uniform(-6, -2))
     else:
         _hparam('weight_decay', 0., lambda r: 10**r.uniform(-6, -2))
 
+    if dataset in NON_IMAGES:
+        _hparam('mlp_width', 256, lambda r: int(2 ** r.uniform(6, 10)))
+        _hparam('mlp_depth', 2, lambda r: int(r.choice([3, 4, 5])))
+        _hparam('mlp_dropout', 0., lambda r: r.choice([0., 0.1, 0.5]))
 
     if dataset in SMALL_IMAGES:
         _hparam('batch_size', 64, lambda r: int(2**r.uniform(3, 9)) )
@@ -100,6 +115,8 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('batch_size', 8, lambda r: 8)
     elif dataset == 'DomainNet':
         _hparam('batch_size', 32, lambda r: int(2**r.uniform(3, 5)) )
+    elif dataset in NON_IMAGES:
+        _hparam('batch_size', 256, lambda r: int(2**r.uniform(3, 5.5)) )
     else:
         _hparam('batch_size', 32, lambda r: int(2**r.uniform(3, 5.5)) )
 
