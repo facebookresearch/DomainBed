@@ -104,7 +104,7 @@ def print_results_tables(records, selection_method, latex):
                 table[i][-1] = "{:.1f}".format(sum(means) / len(means))
 
         col_labels = [
-            "Algorithm", 
+            "Algorithm",
             *datasets.get_dataset_class(dataset).ENVIRONMENTS,
             "Avg"
         ]
@@ -146,7 +146,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="Domain generalization testbed")
-    parser.add_argument("--input_dir", type=str, default="")
+    parser.add_argument("--input_dir", type=str, required=True)
     parser.add_argument("--latex", action="store_true")
     args = parser.parse_args()
 
@@ -155,13 +155,13 @@ if __name__ == "__main__":
     sys.stdout = misc.Tee(os.path.join(args.input_dir, results_file), "w")
 
     records = reporting.load_records(args.input_dir)
-   
+
     if args.latex:
         print("\\documentclass{article}")
         print("\\usepackage{booktabs}")
         print("\\usepackage{adjustbox}")
         print("\\begin{document}")
-        print("\\section{Full DomainBed results}") 
+        print("\\section{Full DomainBed results}")
         print("% Total records:", len(records))
     else:
         print("Total records:", len(records))
@@ -176,7 +176,7 @@ if __name__ == "__main__":
         if args.latex:
             print()
             print("\\subsection{{Model selection: {}}}".format(
-                selection_method.name)) 
+                selection_method.name))
         print_results_tables(records, selection_method, args.latex)
 
     if args.latex:

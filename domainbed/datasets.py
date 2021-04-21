@@ -2,7 +2,6 @@
 
 import os
 import torch
-import numpy as np
 from PIL import Image, ImageFile
 from torchvision import transforms
 import torchvision.datasets.folder
@@ -32,8 +31,6 @@ DATASETS = [
     # WILDS datasets
     "WILDSCamelyon",
     "WILDSFMoW"
-    #Other
-    "Spirals"
 ]
 
 def get_dataset_class(dataset_name):
@@ -167,7 +164,7 @@ class RotatedMNIST(MultipleEnvironmentMNIST):
         rotation = transforms.Compose([
             transforms.ToPILImage(),
             transforms.Lambda(lambda x: rotate(x, angle, fill=(0,),
-                                               resample=Image.BICUBIC)),
+                interpolation=torchvision.transforms.InterpolationMode.BILINEAR)),
             transforms.ToTensor()])
 
         x = torch.zeros(len(images), 1, 28, 28)
@@ -178,86 +175,6 @@ class RotatedMNIST(MultipleEnvironmentMNIST):
 
         return TensorDataset(x, y)
 
-class Spirals(MultipleDomainDataset):
-    CHECKPOINT_FREQ = 10
-
-    def __init__(self, root, test_env, hparams):
-        super().__init__()
-        self.datasets = []
-        environments = [i for i in range(8)]
-
-        test_dataset = self.make_tensor_dataset(env='test')
-        self.datasets.append(test_dataset)
-        for env in environments:
-            env_dataset = self.make_tensor_dataset(env=env)
-            self.datasets.append(env_dataset)
-        
-        self.input_shape = (10,)
-        self.num_classes = 2
-
-    def make_tensor_dataset(self, env, n_examples=1024, n_envs=16, n_revolutions=3, n_dims=8,
-                        flip_first_signature=False,
-                        seed=0):
-
-        if env == 'test':
-            inputs, labels = self.generate_environment(2000,
-                                            n_rotations=n_revolutions,
-                                            env=env,
-                                            n_envs=n_envs,
-                                            n_dims_signatures=n_dims,
-                                            seed=2 ** 32 - 1
-                                            )
-        else:
-            inputs, labels = self.generate_environment(n_examples,
-                                            n_rotations=n_revolutions,
-                                            env=env,
-                                            n_envs=n_envs,
-                                            n_dims_signatures=n_dims,
-                                            seed=seed
-                                            )
-        if flip_first_signature:
-            inputs[:1, 2:] = -inputs[:1, 2:]
-
-        return TensorDataset(torch.tensor(inputs), torch.tensor(labels))
-
-    def generate_environment(self, n_examples, n_rotations, env, n_envs,
-                        n_dims_signatures,
-                        seed=None):
-        """
-        env must either be "test" or an int between 0 and n_envs-1
-        n_dims_signatures: how many dimensions for the signatures (spirals are always 2)
-        seed: seed for numpy
-        """
-        assert env == 'test' or 0 <= int(env) < n_envs
-
-        # Generate fixed dictionary of signatures
-        rng = np.random.RandomState(seed)
-
-        signatures_matrix = rng.randn(n_envs, n_dims_signatures)
-
-        radii = rng.uniform(0.08, 1, n_examples)
-        angles = 2 * n_rotations * np.pi * radii
-
-        labels = rng.randint(0, 2, n_examples)
-        angles = angles + np.pi * labels
-
-        radii += rng.uniform(-0.02, 0.02, n_examples)
-        xs = np.cos(angles) * radii
-        ys = np.sin(angles) * radii
-
-        if env == 'test':
-            signatures = rng.randn(n_examples, n_dims_signatures)
-        else:
-            env = int(env)
-            signatures_labels = np.array(labels * 2 - 1).reshape(1, -1)
-            signatures = signatures_matrix[env] * signatures_labels.T
-
-        signatures = np.stack(signatures)
-        mechanisms = np.stack((xs, ys), axis=1)
-        mechanisms /= mechanisms.std(axis=0)  # make approx unit variance (signatures already are)
-        inputs = np.hstack((mechanisms, signatures))
-
-        return inputs.astype(np.float32), labels.astype(np.long)
 
 class MultipleEnvironmentImageFolder(MultipleDomainDataset):
     def __init__(self, root, test_envs, augment, hparams):

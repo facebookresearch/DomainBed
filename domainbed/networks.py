@@ -83,7 +83,7 @@ class ResNet(torch.nn.Module):
             self.network = torchvision.models.resnet50(pretrained=True)
             self.n_outputs = 2048
 
-        self.network = remove_batch_norm_from_resnet(self.network)
+        # self.network = remove_batch_norm_from_resnet(self.network)
 
         # adapt number of channels
         nc = input_shape[0]
