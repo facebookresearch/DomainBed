@@ -7,6 +7,7 @@ import torchvision.models
 
 from domainbed.lib import misc
 from domainbed.lib import wide_resnet
+import copy
 
 
 def remove_batch_norm_from_resnet(model):
@@ -210,3 +211,24 @@ def Classifier(in_features, out_features, is_nonlinear=False):
             torch.nn.Linear(in_features // 4, out_features))
     else:
         return torch.nn.Linear(in_features, out_features)
+
+
+class Whole(nn.Module):
+    def __init__(self, input_shape, num_classes, hparams, weights=None):
+        super(Whole, self).__init__()
+        featurizer = Featurizer(input_shape, hparams)
+        classifier = Classifier(
+            featurizer.n_outputs,
+            num_classes,
+            hparams['nonlinear_classifier'])
+        self.net = nn.Sequential(
+            featurizer, classifier
+        )
+        if weights is not None:
+            self.load_state_dict(copy.deepcopy(weights))
+
+    def reset_weights(self, weights):
+        self.load_state_dict(copy.deepcopy(weights))
+
+    def forward(self, x):
+        return self.net(x)

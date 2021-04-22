@@ -16,7 +16,7 @@ class InfiniteDataLoader:
     def __init__(self, dataset, weights, batch_size, num_workers):
         super().__init__()
 
-        if weights:
+        if weights != None:
             sampler = torch.utils.data.WeightedRandomSampler(weights,
                 replacement=True,
                 num_samples=batch_size)
