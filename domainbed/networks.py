@@ -5,7 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models
 
-from domainbed.lib import misc
 from domainbed.lib import wide_resnet
 import copy
 
@@ -42,13 +41,6 @@ class Identity(nn.Module):
     def forward(self, x):
         return x
 
-class SqueezeLastTwo(nn.Module):
-    """A module which squeezes the last two dimensions, ordinary squeeze can be a problem for batch size 1"""
-    def __init__(self):
-        super(SqueezeLastTwo, self).__init__()
-
-    def forward(self, x):
-        return x.view(x.shape[0], x.shape[1])
 
 class MLP(nn.Module):
     """Just  an MLP"""
@@ -57,7 +49,7 @@ class MLP(nn.Module):
         self.input = nn.Linear(n_inputs, hparams['mlp_width'])
         self.dropout = nn.Dropout(hparams['mlp_dropout'])
         self.hiddens = nn.ModuleList([
-            nn.Linear(hparams['mlp_width'],hparams['mlp_width'])
+            nn.Linear(hparams['mlp_width'], hparams['mlp_width'])
             for _ in range(hparams['mlp_depth']-2)])
         self.output = nn.Linear(hparams['mlp_width'], n_outputs)
         self.n_outputs = n_outputs
@@ -72,6 +64,7 @@ class MLP(nn.Module):
             x = F.relu(x)
         x = self.output(x)
         return x
+
 
 class ResNet(torch.nn.Module):
     """ResNet with the softmax chopped off and the batchnorm frozen"""
@@ -122,6 +115,7 @@ class ResNet(torch.nn.Module):
             if isinstance(m, nn.BatchNorm2d):
                 m.eval()
 
+
 class MNIST_CNN(nn.Module):
     """
     Hand-tuned architecture for MNIST.
@@ -143,8 +137,7 @@ class MNIST_CNN(nn.Module):
         self.bn2 = nn.GroupNorm(8, 128)
         self.bn3 = nn.GroupNorm(8, 128)
 
-        self.avgpool = nn.AdaptiveAvgPool2d((1,1))
-        self.squeezeLastTwo = SqueezeLastTwo()
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
     def forward(self, x):
         x = self.conv1(x)
@@ -164,8 +157,9 @@ class MNIST_CNN(nn.Module):
         x = self.bn3(x)
 
         x = self.avgpool(x)
-        x = self.squeezeLastTwo(x)
+        x = x.view(len(x), -1)
         return x
+
 
 class ContextNet(nn.Module):
     def __init__(self, input_shape):
@@ -215,7 +209,7 @@ def Classifier(in_features, out_features, is_nonlinear=False):
 
 class WholeFish(nn.Module):
     def __init__(self, input_shape, num_classes, hparams, weights=None):
-        super(Whole, self).__init__()
+        super(WholeFish, self).__init__()
         featurizer = Featurizer(input_shape, hparams)
         classifier = Classifier(
             featurizer.n_outputs,
