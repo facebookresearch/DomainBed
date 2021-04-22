@@ -16,7 +16,6 @@ from domainbed.lib.misc import random_pairs_of_minibatches, ParamDict
 ALGORITHMS = [
     'ERM',
     'Fish',
-    'FishSmooth',
     'IRM',
     'GroupDRO',
     'Mixup',
@@ -104,17 +103,13 @@ class ERM(Algorithm):
 
 class Fish(Algorithm):
     """
-    Empirical Risk Minimization (ERM)
+    Implementation of Fish, as seen in Gradient Matching for Domain 
+    Generalization, Shi et al. 2021.
     """
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(Fish, self).__init__(input_shape, num_classes, num_domains,
                                    hparams)
-        self.featurizer = networks.Featurizer(input_shape, self.hparams)
-        self.classifier = networks.Classifier(
-            self.featurizer.n_outputs,
-            num_classes,
-            self.hparams['nonlinear_classifier'])
         self.input_shape = input_shape
         self.num_classes = num_classes
 
@@ -161,96 +156,6 @@ class Fish(Algorithm):
         self.network.reset_weights(meta_weights)
 
         return {'loss': loss.item()}
-
-    def predict(self, x):
-        return self.network(x)
-
-
-class FishSmooth(Algorithm):
-    """
-    Empirical Risk Minimization (ERM)
-    """
-
-    def __init__(self, input_shape, num_classes, num_domains, hparams):
-        super(FishSmooth, self).__init__(
-            input_shape, num_classes, num_domains, hparams)
-        self.featurizer = networks.Featurizer(input_shape, self.hparams)
-        self.classifier = networks.Classifier(
-            self.featurizer.n_outputs,
-            num_classes,
-            self.hparams['nonlinear_classifier'])
-        self.input_shape = input_shape
-        self.num_classes = num_classes
-
-        self.network = networks.Whole(input_shape, num_classes, hparams)
-        self.optimizer = torch.optim.Adam(
-            self.network.parameters(),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams['weight_decay']
-        )
-        self.optimizer_inner_state_fish = None
-
-    def create_clone(self, device):
-        self.network_inner_fish = networks.Whole(self.input_shape, self.num_classes, self.hparams,
-                                                 weights=self.network.state_dict()).to(device)
-        self.optimizer_inner_fish = torch.optim.Adam(
-            self.network_inner_fish.parameters(),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams['weight_decay']
-        )
-        self.network_inner_erm = networks.Whole(self.input_shape, self.num_classes, self.hparams,
-                                                weights=self.network.state_dict()).to(device)
-        if self.optimizer_inner_state_fish is not None:
-            self.optimizer_inner_fish.load_state_dict(
-                self.optimizer_inner_state_fish)
-
-    def fish(self, grads_fish, grads_erm, model, gamma):
-        for name, param in model.named_parameters():
-            grad_sum = torch.stack(grads_erm[name], 0).sum(0)
-            grad_fish = torch.stack(grads_fish[name], 0).sum(0)
-            param.grad.data.add_(grad_sum + gamma * (grad_fish - grad_sum))
-
-    def accum_grad(self, model, grads):
-        for name, param in model.named_parameters():
-            grads[name].append(copy.deepcopy(param.grad))
-        return grads
-
-    def init_grad(self, source, device):
-        for p in source.parameters():
-            if p.grad is None:
-                p.grad = Variable(torch.zeros(p.size())).to(device)
-            p.grad.data.zero_()  # not sure this is required
-
-    def update(self, minibatches, unlabeled=None):
-        self.create_clone(minibatches[0][0].device)
-
-        grads_fish, grads_erm = defaultdict(list), defaultdict(list)
-        for x, y in minibatches:
-            # compute G
-            loss_fish = F.cross_entropy(self.network_inner_fish(x), y)
-            self.optimizer_inner_fish.zero_grad()
-            loss_fish.backward()
-            grads_fish = self.accum_grad(self.network_inner_fish, grads_fish)
-            self.optimizer_inner_fish.step()
-            # compute \bar{G}
-            loss_erm = F.cross_entropy(self.network_inner_erm(x), y)
-            loss_erm.backward()
-            grads_erm = self.accum_grad(self.network_inner_erm, grads_erm)
-            self.network_inner_erm.zero_grad()
-        self.optimizer_inner_state_fish = self.optimizer_inner_fish.state_dict()
-
-        self.init_grad(self.network, minibatches[0][0].device)
-        self.fish(grads_fish, grads_erm, self.network,
-                         gamma=self.hparams["scaling_fish"])
-        self.optimizer.step()
-
-        all_changed_keys = dict(self.network.named_parameters()).keys()
-        for (name, param), (n, p) in zip(self.network.state_dict().items(),
-                                         self.network_inner_erm.state_dict().items()):
-            if name not in all_changed_keys:
-                self.network.state_dict()[name] += p - param
-
-        return {'loss': loss_fish.item()}
 
     def predict(self, x):
         return self.network(x)
