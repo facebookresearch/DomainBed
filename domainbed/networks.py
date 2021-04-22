@@ -213,7 +213,7 @@ def Classifier(in_features, out_features, is_nonlinear=False):
         return torch.nn.Linear(in_features, out_features)
 
 
-class Whole(nn.Module):
+class WholeFish(nn.Module):
     def __init__(self, input_shape, num_classes, hparams, weights=None):
         super(Whole, self).__init__()
         featurizer = Featurizer(input_shape, hparams)

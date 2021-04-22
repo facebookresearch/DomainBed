@@ -113,7 +113,7 @@ class Fish(Algorithm):
         self.input_shape = input_shape
         self.num_classes = num_classes
 
-        self.network = networks.Whole(input_shape, num_classes, hparams)
+        self.network = networks.WholeFish(input_shape, num_classes, hparams)
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
             lr=self.hparams["lr"],
@@ -122,7 +122,7 @@ class Fish(Algorithm):
         self.optimizer_inner_state = None
 
     def create_clone(self, device):
-        self.network_inner = networks.Whole(self.input_shape, self.num_classes, self.hparams,
+        self.network_inner = networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
                                             weights=self.network.state_dict()).to(device)
         self.optimizer_inner = torch.optim.Adam(
             self.network_inner.parameters(),

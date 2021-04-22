@@ -50,9 +50,6 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == 'Fish':
         _hparam('meta_lr', 0.5, lambda r:r.choice([0.05, 0.1, 0.5]))
 
-    elif algorithm == 'FishSmooth':
-        _hparam('scaling_fish', 0.5, lambda r:r.uniform(0, 1))
-
     elif algorithm == "RSC":
         _hparam('rsc_f_drop_factor', 1/3, lambda r: r.uniform(0, 0.5))
         _hparam('rsc_b_drop_factor', 1/3, lambda r: r.uniform(0, 0.5))
