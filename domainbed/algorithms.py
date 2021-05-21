@@ -1007,10 +1007,14 @@ class IGA(ERM):
             env_loss = F.cross_entropy(logits, y)
             total_loss += env_loss
 
-            grads.append( autograd.grad(env_loss, self.network.parameters(), retain_graph=True, create_graph=True) )
+            env_grad = autograd.grad(env_loss, self.network.parameters(), 
+                                        create_graph=True)
+
+            grads.append(env_grad)
             
         mean_loss = total_loss / len(minibatches)
-        mean_grad = autograd.grad(mean_loss, self.network.parameters(), retain_graph=True, create_graph=True)
+        mean_grad = autograd.grad(mean_loss, self.network.parameters(), 
+                                        create_graph=True)
 
         # compute trace penalty
         penalty_value = 0
@@ -1018,14 +1022,13 @@ class IGA(ERM):
             for g, mean_g in zip(grad, mean_grad):
                 penalty_value += (g - mean_g).pow(2).sum()
 
-        loss = mean_loss + self.hparams['penalty'] * penalty_value
+        objective = mean_loss + self.hparams['penalty'] * penalty_value
 
         self.optimizer.zero_grad()
-        loss.backward()
+        objective.backward()
         self.optimizer.step()
 
         return {'loss': mean_loss.item(), 'penalty': penalty_value.item()}
-
     
     
 class SelfReg(ERM):
