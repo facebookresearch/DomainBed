@@ -1,4 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+import math
 
 import torch
 import torch.nn as nn
@@ -31,6 +32,7 @@ ALGORITHMS = [
     'RSC',
     'SD',
     'ANDMask',
+    'SANDMask',    # SAND-mask
     'IGA',
     'SelfReg'
 ]
@@ -1118,3 +1120,74 @@ class SelfReg(ERM):
         self.optimizer.step()
 
         return {'loss': loss.item()}
+
+
+class SANDMask(ERM):
+    """
+    TODO add link arxiv 
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(SANDMask, self).__init__(input_shape, num_classes, num_domains, hparams)
+
+        self.tau = hparams["tau"]
+        self.k = hparams["k"]
+        betas = (0.9, 0.999)
+        self.optimizer = torch.optim.Adam(
+            self.network.parameters(),
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams['weight_decay'],
+            betas=betas
+        )
+
+        self.register_buffer('update_count', torch.tensor([0]))
+
+    def update(self, minibatches, unlabeled=None):
+
+        total_loss = 0
+        param_gradients = [[] for _ in self.network.parameters()]
+        all_x = torch.cat([x for x, y in minibatches])
+        all_logits = self.network(all_x)
+        all_logits_idx = 0
+        for i, (x, y) in enumerate(minibatches):
+            logits = all_logits[all_logits_idx:all_logits_idx + x.shape[0]]
+            all_logits_idx += x.shape[0]
+
+            env_loss = F.cross_entropy(logits, y)
+            total_loss += env_loss
+
+            # TODO
+            env_grads = autograd.grad(env_loss, self.network.parameters(), retain_graph=True)
+            for grads, env_grad in zip(param_gradients, env_grads):
+                grads.append(env_grad)
+
+        mean_loss = total_loss / len(minibatches)
+
+        self.optimizer.zero_grad()
+        # TODO
+        self.mask_grads(param_gradients, self.network.parameters())
+        self.optimizer.step()
+        self.update_count += 1
+
+        return {'loss': mean_loss.item()}
+
+    def mask_grads(self, gradients, params):
+        '''
+        TODO
+        '''
+        device = gradients[0][0].device
+        for param, grads in zip(params, gradients):
+            grads = torch.stack(grads, dim=0)
+            avg_grad = torch.mean(grads, dim=0)
+            grad_signs = torch.sign(grads)
+            gamma = torch.tensor(1.0).to(device)
+            grads_var = grads.var(dim=0)
+            grads_var[torch.isnan(grads_var)] = 1e-17
+            lam = (gamma * grads_var).pow(-1)
+            mask = torch.tanh(self.k * lam * (torch.abs(grad_signs.mean(dim=0)) - self.tau))
+            mask = torch.max(mask, torch.zeros_like(mask))
+            mask[torch.isnan(mask)] = 1e-17
+            mask_t = (mask.sum() / mask.numel())
+            param.grad = mask * avg_grad
+            param.grad *= (1. / (1e-10 + mask_t))
+
