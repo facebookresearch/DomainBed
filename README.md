@@ -1,16 +1,12 @@
-# SAND-mask Repository
+# Welcome to DomainBed
 
-This repo is the code release for "[SAND-mask: An Enhanced Gradient Masking Strategy for the Discovery of Invariances in Domain Generalization](https://arxiv.org/abs/2106.02266)".
+DomainBed is a PyTorch suite containing benchmark datasets and algorithms for domain generalization, as introduced in [In Search of Lost Domain Generalization](https://arxiv.org/abs/2007.01434).
 
-# Forked from DomainBed
+## Current results
 
-This project is mainly developed on top of the DomainBed repository, which is a PyTorch suite containing benchmark datasets and algorithms for domain generalization, as introduced in [In Search of Lost Domain Generalization](https://arxiv.org/abs/2007.01434).
+![Result table](domainbed/results/2020_10_06_7df6f06/results.png)
 
-## Published results
-
-![Agnostic table](domainbed/results/Agnostic_Results.png)
-![Oracle table](domainbed/results/Oracle_Results.png)
-![Spirals table](domainbed/results/Spirals_Results.png)
+Full results for [commit 7df6f06](https://github.com/facebookresearch/DomainBed/tree/7df6f06a6f9062284812a3f174c306218932c5e4) in LaTeX format available [here](domainbed/results/2020_10_06_7df6f06/results.tex).
 
 ## Available algorithms
 
@@ -28,10 +24,14 @@ The [currently available algorithms](domainbed/algorithms.py) are:
 * Conditional Domain Adversarial Neural Network (CDANN, [Li et al., 2018](https://openaccess.thecvf.com/content_ECCV_2018/papers/Ya_Li_Deep_Domain_Generalization_ECCV_2018_paper.pdf))
 * Style Agnostic Networks (SagNet, [Nam et al., 2020](https://arxiv.org/abs/1910.11645))
 * Adaptive Risk Minimization (ARM, [Zhang et al., 2020](https://arxiv.org/abs/2007.02931)), contributed by [@zhangmarvin](https://github.com/zhangmarvin)
+* Variance Risk Extrapolation (VREx, [Krueger et al., 2020](https://arxiv.org/abs/2003.00688)), contributed by [@zdhNarsil](https://github.com/zdhNarsil)
 * Representation Self-Challenging (RSC, [Huang et al., 2020](https://arxiv.org/abs/2007.02454)), contributed by [@SirRob1997](https://github.com/SirRob1997)
-----
+* Spectral Decoupling (SD, [Pezeshki et al., 2020](https://arxiv.org/abs/2011.09468))
 * Learning Explanations that are Hard to Vary (AND-Mask, [Parascandolo et al., 2020](https://arxiv.org/abs/2009.00329))
-* SAND-mask: An Enhanced Gradient Masking Strategy for the Discovery of Invariances in Domain Generalization (SAND-Mask)
+* Out-of-Distribution Generalization with Maximal Invariant Predictor (IGA, [Koyama et al., 2020](https://arxiv.org/abs/2008.01883))
+* Gradient Matching for Domain Generalization (Fish, [Shi et al., 2021](https://arxiv.org/pdf/2104.09937.pdf))
+* Self-supervised Contrastive Regularization (SelfReg, [Kim et al., 2021](https://arxiv.org/abs/2104.09841))
+* Smoothed-AND mask (SAND-mask, [Shahtalebi et al., 2021](https://arxiv.org/abs/2106.02266))
 
 Send us a PR to add your algorithm! Our implementations use ResNet50 / ResNet18 networks ([He et al., 2015](https://arxiv.org/abs/1512.03385)) and the hyper-parameter grids [described here](domainbed/hparams_registry.py).
 
@@ -45,7 +45,10 @@ The [currently available datasets](domainbed/datasets.py) are:
 * PACS ([Li et al., 2017](https://arxiv.org/abs/1710.03077))
 * Office-Home ([Venkateswara et al., 2017](https://arxiv.org/abs/1706.07522))
 * A TerraIncognita ([Beery et al., 2018](https://arxiv.org/abs/1807.04975)) subset
-* Spirals ([Parascandolo et al., 2020](https://arxiv.org/abs/2009.00329))
+* DomainNet ([Peng et al., 2019](http://ai.bu.edu/M3SDA/))
+* A SVIRO ([Dias Da Cruz et al., 2020](https://arxiv.org/abs/2001.03483)) subset
+* WILDS ([Koh et al., 2020](https://arxiv.org/abs/2012.07421)) FMoW ([Christie et al., 2018](https://arxiv.org/abs/1711.07846)) about satellite images
+* WILDS ([Koh et al., 2020](https://arxiv.org/abs/2012.07421)) Camelyon17 ([Bandi et al., 2019](https://pubmed.ncbi.nlm.nih.gov/30716025/)) about tumor detection in tissues
 
 Send us a PR to add your dataset! Any custom image dataset with folder structure `dataset/domain/class/image.xyz` is readily usable. While we include some datasets from the [WILDS project](https://wilds.stanford.edu/), please use their [official code](https://github.com/p-lambda/wilds/) if you wish to participate in their leaderboard.
 
@@ -62,17 +65,18 @@ Send us a PR to add your dataset! Any custom image dataset with folder structure
 Download the datasets:
 
 ```sh
-python -m domainbed.scripts.download \
-       --data_dir=/my/datasets/path
+python3 -m domainbed.scripts.download \
+       --data_dir=./domainbed/data
 ```
 
 Train a model:
 
 ```sh
-python -m domainbed.scripts.train\
-       --algorithm SANDMask\
-       --dataset Spirals\
-       --test_env 0
+python3 -m domainbed.scripts.train\
+       --data_dir=./domainbed/data/MNIST/\
+       --algorithm IGA\
+       --dataset ColoredMNIST\
+       --test_env 2
 ```
 
 Launch a sweep:
@@ -91,10 +95,10 @@ python -m domainbed.scripts.sweep launch\
        --data_dir=/my/datasets/path\
        --output_dir=/my/sweep/output/path\
        --command_launcher MyLauncher\
-       --algorithms SANDMask\
-       --datasets Spirals\
-       --n_hparams 20\
-       --n_trials 3
+       --algorithms ERM DANN\
+       --datasets RotatedMNIST VLCS\
+       --n_hparams 5\
+       --n_trials 1
 ```
 
 After all jobs have either succeeded or failed, you can delete the data from failed jobs with ``python -m domainbed.scripts.sweep delete_incomplete`` and then re-launch them by running ``python -m domainbed.scripts.sweep launch`` again. Specify the same command-line arguments in all calls to `sweep` as you did the first time; this is how the sweep script knows which jobs were launched originally.
