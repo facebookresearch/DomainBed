@@ -2,7 +2,6 @@
 
 import os
 import torch
-import numpy as np
 from PIL import Image, ImageFile
 from torchvision import transforms
 import torchvision.datasets.folder
