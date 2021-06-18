@@ -33,7 +33,12 @@ class Job:
     DONE = 'Done'
 
     def __init__(self, train_args, sweep_output_dir):
-        args_str = json.dumps(train_args, sort_keys=True)
+
+        # Keep the data_dir out of the hash generating process, since directory can change when using on cluster
+        args_to_hash = copy.deepcopy(train_args)
+        args_to_hash.pop('data_dir', None)
+        args_str = json.dumps(args_to_hash, sort_keys=True)
+        
         args_hash = hashlib.md5(args_str.encode('utf-8')).hexdigest()
         self.output_dir = os.path.join(sweep_output_dir, args_hash)
 
