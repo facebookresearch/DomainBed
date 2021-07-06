@@ -944,30 +944,23 @@ class ANDMask(ERM):
         self.tau = hparams["tau"]
 
     def update(self, minibatches, unlabeled=None):
-        
-        total_loss = 0
+        mean_loss = 0
         param_gradients = [[] for _ in self.network.parameters()]
-        all_x = torch.cat([x for x,y in minibatches])
-        all_logits = self.network(all_x)
-        all_logits_idx = 0
         for i, (x, y) in enumerate(minibatches):
-            logits = all_logits[all_logits_idx:all_logits_idx + x.shape[0]]
-            all_logits_idx += x.shape[0]
+            logits = self.network(x)
             
             env_loss = F.cross_entropy(logits, y)
-            total_loss += env_loss
+            mean_loss += env_loss.item() / len(minibatches)
 
-            env_grads = autograd.grad(env_loss, self.network.parameters(), retain_graph=True)
+            env_grads = autograd.grad(env_loss, self.network.parameters())
             for grads, env_grad in zip(param_gradients, env_grads):
                 grads.append(env_grad)
-            
-        mean_loss = total_loss / len(minibatches)
 
         self.optimizer.zero_grad()
         self.mask_grads(self.tau, param_gradients, self.network.parameters())
         self.optimizer.step()
 
-        return {'loss': mean_loss.item()}
+        return {'loss': mean_loss}
 
     def mask_grads(self, tau, gradients, params):
 
@@ -994,17 +987,11 @@ class IGA(ERM):
         super(IGA, self).__init__(in_features, num_classes, num_domains, hparams)
 
     def update(self, minibatches, unlabeled=False):
-
-        all_x = torch.cat([x for x,y in minibatches])
-        all_logits = self.network(all_x)
-
         total_loss = 0
-        all_logits_idx = 0
         grads = []
         for i, (x, y) in enumerate(minibatches):
-            logits = all_logits[all_logits_idx:all_logits_idx + x.shape[0]]
-            all_logits_idx += x.shape[0]
-            
+            logits = self.network(x)
+
             env_loss = F.cross_entropy(logits, y)
             total_loss += env_loss
 
@@ -1015,7 +1002,7 @@ class IGA(ERM):
             
         mean_loss = total_loss / len(minibatches)
         mean_grad = autograd.grad(mean_loss, self.network.parameters(), 
-                                        create_graph=True)
+                                        retain_graph=True)
 
         # compute trace penalty
         penalty_value = 0
@@ -1144,22 +1131,16 @@ class SANDMask(ERM):
 
     def update(self, minibatches, unlabeled=None):
 
-        total_loss = 0
+        mean_loss = 0
         param_gradients = [[] for _ in self.network.parameters()]
-        all_x = torch.cat([x for x, y in minibatches])
-        all_logits = self.network(all_x)
-        all_logits_idx = 0
         for i, (x, y) in enumerate(minibatches):
-            logits = all_logits[all_logits_idx:all_logits_idx + x.shape[0]]
-            all_logits_idx += x.shape[0]
+            logits = self.network(x)
 
             env_loss = F.cross_entropy(logits, y)
-            total_loss += env_loss
+            mean_loss += env_loss.item() / len(minibatches)
             env_grads = autograd.grad(env_loss, self.network.parameters(), retain_graph=True)
             for grads, env_grad in zip(param_gradients, env_grads):
                 grads.append(env_grad)
-
-        mean_loss = total_loss / len(minibatches)
 
         self.optimizer.zero_grad()
         # gradient masking applied here
@@ -1167,7 +1148,7 @@ class SANDMask(ERM):
         self.optimizer.step()
         self.update_count += 1
 
-        return {'loss': mean_loss.item()}
+        return {'loss': mean_loss}
 
     def mask_grads(self, gradients, params):
         '''
