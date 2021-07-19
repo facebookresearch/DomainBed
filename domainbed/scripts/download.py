@@ -166,17 +166,19 @@ def download_domain_net(data_dir):
 
 def download_terra_incognita(data_dir):
     # Original URL: https://beerys.github.io/CaltechCameraTraps/
+    # New URL: http://lila.science/datasets/caltech-camera-traps
+
     full_path = stage_path(data_dir, "terra_incognita")
 
     download_and_extract(
-        "http://www.vision.caltech.edu/~sbeery/datasets/caltechcameratraps18/eccv_18_all_images_sm.tar.gz",
+        "https://lilablobssc.blob.core.windows.net/caltechcameratraps/eccv_18_all_images_sm.tar.gz",
         os.path.join(full_path, "terra_incognita_images.tar.gz"))
 
     download_and_extract(
-        "http://www.vision.caltech.edu/~sbeery/datasets/caltechcameratraps18/eccv_18_all_annotations.tar.gz",
-        os.path.join(full_path, "terra_incognita_annotations.tar.gz"))
+        "https://lilablobssc.blob.core.windows.net/caltechcameratraps/labels/caltech_camera_traps.json.zip",
+        os.path.join(full_path, "caltech_camera_traps.json.zip"))
 
-    include_locations = [38, 46, 100, 43]
+    include_locations = ["38", "46", "100", "43"]
 
     include_categories = [
         "bird", "bobcat", "cat", "coyote", "dog", "empty", "opossum", "rabbit",
@@ -184,7 +186,7 @@ def download_terra_incognita(data_dir):
     ]
 
     images_folder = os.path.join(full_path, "eccv_18_all_images_sm/")
-    annotations_file = os.path.join(full_path, "CaltechCameraTrapsECCV18.json")
+    annotations_file = os.path.join(full_path, "caltech_images_20210113.json")
     destination_folder = full_path
 
     stats = {}
@@ -266,7 +268,7 @@ if __name__ == "__main__":
     # download_office_home(args.data_dir)
     # download_domain_net(args.data_dir)
     # download_vlcs(args.data_dir)
-    # download_terra_incognita(args.data_dir)
+    download_terra_incognita(args.data_dir)
     # download_sviro(args.data_dir)
     # Camelyon17Dataset(root_dir=args.data_dir, download=True)
-    FMoWDataset(root_dir=args.data_dir, download=True)
+    # FMoWDataset(root_dir=args.data_dir, download=True)
