@@ -95,7 +95,7 @@ def _hparams(algorithm, dataset, random_seed):
 
     elif algorithm == "SANDMask":
         _hparam('tau', 1.0, lambda r: r.uniform(0.0, 1.))
-        _hparam('k', 1e+1, lambda r: int(10**r.uniform(-3, 5)))
+        _hparam('k', 1e+1, lambda r: 10**r.uniform(-3, 5))
 
     # Dataset-and-algorithm-specific hparam definitions. Each block of code
     # below corresponds to exactly one hparam. Avoid nested conditionals.
