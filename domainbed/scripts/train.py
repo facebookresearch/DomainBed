@@ -199,7 +199,7 @@ if __name__ == "__main__":
             "model_num_classes": dataset.num_classes,
             "model_num_domains": len(dataset) - len(args.test_envs),
             "model_hparams": hparams,
-            "model_dict": algorithm.cpu().state_dict()
+            "model_dict": algorithm.state_dict()
         }
         torch.save(save_dict, os.path.join(args.output_dir, filename))
 
