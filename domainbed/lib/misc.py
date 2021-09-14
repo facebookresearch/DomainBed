@@ -9,7 +9,7 @@ import json
 import os
 import sys
 from shutil import copyfile
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from numbers import Number
 import operator
 
@@ -17,6 +17,47 @@ import numpy as np
 import torch
 import tqdm
 from collections import Counter
+
+
+def l2_between_dicts(dict_1, dict_2):
+    assert len(dict_1) == len(dict_2)
+    dict_1_values = [dict_1[key] for key in sorted(dict_1.keys())]
+    dict_2_values = [dict_2[key] for key in sorted(dict_1.keys())]
+    return (
+        torch.cat(tuple([t.view(-1) for t in dict_1_values])) -
+        torch.cat(tuple([t.view(-1) for t in dict_2_values]))
+    ).pow(2).mean()
+
+class MovingAverage:
+
+    def __init__(self, ema, oneminusema_correction=True):
+        self.ema = ema
+        self.ema_data = {}
+        self._updates = 0
+        self._oneminusema_correction = oneminusema_correction
+
+    def update(self, dict_data):
+        ema_dict_data = {}
+        for name, data in dict_data.items():
+            data = data.view(1, -1)
+            if self._updates == 0:
+                previous_data = torch.zeros_like(data)
+            else:
+                previous_data = self.ema_data[name]
+
+            ema_data = self.ema * previous_data + (1 - self.ema) * data
+            if self._oneminusema_correction:
+                # correction by 1/(1 - self.ema)
+                # so that the gradients amplitude backpropagated in data is independent of self.ema
+                ema_dict_data[name] = ema_data / (1 - self.ema)
+            else:
+                ema_dict_data[name] = ema_data
+            self.ema_data[name] = ema_data.clone().detach()
+
+        self._updates += 1
+        return ema_dict_data
+
+
 
 def make_weights_for_balanced_classes(dataset):
     counts = Counter()

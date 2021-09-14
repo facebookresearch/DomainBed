@@ -1,5 +1,4 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
-
 import numpy as np
 from domainbed.lib import misc
 
@@ -96,6 +95,11 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == "SANDMask":
         _hparam('tau', 1.0, lambda r: r.uniform(0.0, 1.))
         _hparam('k', 1e+1, lambda r: 10**r.uniform(-3, 5))
+
+    elif algorithm == "Fishr":
+        _hparam('lambda', 1000., lambda r: 10**r.uniform(1., 4.))
+        _hparam('penalty_anneal_iters', 1500, lambda r: int(r.uniform(0., 5000.)))
+        _hparam('ema', 0.95, lambda r: r.uniform(0.90, 0.99))
 
     # Dataset-and-algorithm-specific hparam definitions. Each block of code
     # below corresponds to exactly one hparam. Avoid nested conditionals.
