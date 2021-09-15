@@ -1,0 +1,10 @@
+numpy==1.20.3
+wilds==1.2.2
+imageio==2.9.0
+gdown==3.13.0
+torchvision==0.8.2
+torch==1.7.1
+tqdm==4.62.2
+backpack==0.1
+parameterized==0.8.1
+Pillow==8.3.2
