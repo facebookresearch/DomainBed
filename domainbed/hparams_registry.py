@@ -101,6 +101,11 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('penalty_anneal_iters', 1500, lambda r: int(r.uniform(0., 5000.)))
         _hparam('ema', 0.95, lambda r: r.uniform(0.90, 0.99))
 
+    elif algorithm == "TRM":
+        hparams['cos_lambda'] = (1e-4, lambda r: 10 ** r.uniform(-5, 0))
+        hparams['iters'] = (200, lambda r: int(10 ** r.uniform(0, 4)))
+        hparams['groupdro_eta'] = (1e-2, lambda r: 10 ** r.uniform(-3, -1))
+
     # Dataset-and-algorithm-specific hparam definitions. Each block of code
     # below corresponds to exactly one hparam. Avoid nested conditionals.
 
