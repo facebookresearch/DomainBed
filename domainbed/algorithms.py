@@ -44,8 +44,8 @@ ALGORITHMS = [
     'SelfReg',
     "Fishr",
     'TRM',
-    'IB-ERM',
-    'IB-IRM',
+    'IB_ERM',
+    'IB_IRM',
 ]
 
 def get_algorithm_class(algorithm_name):
