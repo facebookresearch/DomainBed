@@ -118,6 +118,37 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('ib_lambda', 1e2, lambda r: 10**r.uniform(-1, 5))
         _hparam('ib_penalty_anneal_iters', 500,
                 lambda r: int(10**r.uniform(0, 4)))
+    elif algorithm == "DDG":
+        # hyperparameter for DDG, 0:train the gan, 1: train the model'
+        stage = 1
+        if 'MNIST' in dataset:
+            print('mnsit')
+            _hparam('steps', 10000, lambda r: 10000)
+            _hparam('stage', 1, lambda r: stage)
+            _hparam('margin', 0.025, lambda r: 0.025)
+            _hparam('recon_id_w', 0.5, lambda r: r.choice([0.1, 0.2, 0.5, 1.0]))
+            _hparam('recon_x_w', 0.5, lambda r: r.choice([1., 2., 5., 10.]))
+        elif stage ==  0:
+            _hparam('steps', 25000, lambda r: 25000)
+            _hparam('stage', stage, lambda r: stage)
+            _hparam('recon_id_w', 0.5, lambda r: r.choice([0.1, 0.2, 0.5, 1.0]))
+            _hparam('recon_x_w', 0.5, lambda r: r.choice([1., 2., 5., 10.]))
+        else:
+            _hparam('steps', 25000, lambda r: 25000)
+            _hparam('stage', stage, lambda r: stage)
+            _hparam('recon_id_w', 0.5, lambda r: r.choice([0.1, 0.2, 0.5, 1.0]))
+            _hparam('margin', 0.25, lambda r: r.choice([0.1, 0.25, 0.5, 0.75]))
+        _hparam('recon_xp_w', 0.5, lambda r: r.choice([1., 2., 5., 10.]))
+        _hparam('recon_xn_w', 0.5, lambda r: r.choice([1., 2., 5., 10.]))
+        _hparam('max_cyc_w', 2.0, lambda r: r.choice([1.0, 2.0, 4.0]))
+        _hparam('max_w', 2.0, lambda r: r.choice([0.5, 1.0, 2.0]))
+        _hparam('gan_w', 1.0, lambda r: r.choice([0.5, 1.0, 2.0]))
+        _hparam('dual_lambda', 0.01, lambda r: 0.05)
+        _hparam('recon_x_cyc_w', 0.0, lambda r: r.choice([0.1, 0.2, 0.5, 1.0]))
+        _hparam('warm_iter_r', .2, lambda r: r.choice([.1, .2, .3, .4, .5]))
+        _hparam('warm_scale', 5e-3, lambda r: 10**r.uniform(-5, -3))
+    else:
+        _hparam('is_ddg', False, lambda r: False)
 
     # Dataset-and-algorithm-specific hparam definitions. Each block of code
     # below corresponds to exactly one hparam. Avoid nested conditionals.
@@ -153,7 +184,7 @@ def _hparams(algorithm, dataset, random_seed):
 
     if algorithm in ['DANN', 'CDANN'] and dataset in SMALL_IMAGES:
         _hparam('weight_decay_g', 0., lambda r: 0.)
-    elif algorithm in ['DANN', 'CDANN']:
+    elif algorithm in ['DANN', 'CDANN', 'DDG']:
         _hparam('weight_decay_g', 0., lambda r: 10**r.uniform(-6, -2))
 
     return hparams
