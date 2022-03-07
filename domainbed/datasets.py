@@ -179,7 +179,7 @@ class RotatedMNIST(MultipleEnvironmentMNIST):
 class MultipleEnvironmentImageFolder(MultipleDomainDataset):
     def __init__(self, root, test_envs, augment, hparams):
         super().__init__()
-        environments = [f.name for f in os.scandir(root) if f.is_dir()]
+        environments = [f.name for f in os.scandir(root) if f.is_dir() and not f.name.startswith('.ipynb_')]
         environments = sorted(environments)
 
         transform = transforms.Compose([
