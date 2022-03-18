@@ -102,9 +102,9 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('ema', 0.95, lambda r: r.uniform(0.90, 0.99))
 
     elif algorithm == "TRM":
-        hparams['cos_lambda'] = (1e-4, lambda r: 10 ** r.uniform(-5, 0))
-        hparams['iters'] = (200, lambda r: int(10 ** r.uniform(0, 4)))
-        hparams['groupdro_eta'] = (1e-2, lambda r: 10 ** r.uniform(-3, -1))
+        _hparam('cos_lambda', 1e-4, lambda r: 10 ** r.uniform(-5, 0))
+        _hparam('iters', 200, lambda r: int(10 ** r.uniform(0, 4)))
+        _hparam('groupdro_eta', 1e-2, lambda r: 10 ** r.uniform(-3, -1))
 
     elif algorithm == "IB_ERM":
         _hparam('ib_lambda', 1e2, lambda r: 10**r.uniform(-1, 5))
