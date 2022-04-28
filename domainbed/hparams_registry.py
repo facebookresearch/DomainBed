@@ -74,6 +74,7 @@ def _hparams(algorithm, dataset, random_seed):
 
     elif algorithm == "MLDG":
         _hparam('mldg_beta', 1., lambda r: 10**r.uniform(-1, 1))
+        _hparam('n_meta_test', 2, lambda r:  r.choice([1, 2]))
 
     elif algorithm == "MTL":
         _hparam('mtl_ema', .99, lambda r: r.choice([0.5, 0.9, 0.99, 1.]))
