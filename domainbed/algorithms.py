@@ -483,7 +483,7 @@ class MLDG(ERM):
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(MLDG, self).__init__(input_shape, num_classes, num_domains,
                                    hparams)
-
+        self.num_meta_test = hparams['n_meta_test']
     def update(self, minibatches, unlabeled=None):
         """
         Terms being computed:
@@ -508,7 +508,7 @@ class MLDG(ERM):
             if p.grad is None:
                 p.grad = torch.zeros_like(p)
 
-        for (xi, yi), (xj, yj) in random_pairs_of_minibatches(minibatches):
+        for (xi, yi), (xj, yj) in split_meta_train_test(minibatches, self.num_meta_test):
             # fine tune clone-network on task "i"
             inner_net = copy.deepcopy(self.network)
 
