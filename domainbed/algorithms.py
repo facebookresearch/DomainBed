@@ -1791,7 +1791,7 @@ class CondCAD(AbstractCAD):
         
        
 class Transfer(Algorithm):
-    '''Algorithm 1 in our transferability work'''
+    '''Algorithm 1 in Quantifying and Improving Transferability in Domain Generalization (https://arxiv.org/abs/2106.03632)'''
     ''' tries to ensure transferability among source domains, and thus transferabiilty between source and target'''
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(Transfer, self).__init__(input_shape, num_classes, num_domains, hparams)
