@@ -48,6 +48,7 @@ ALGORITHMS = [
     'IB_IRM',
     'CAD',
     'CondCAD',
+    'Transfer', 
 ]
 
 def get_algorithm_class(algorithm_name):
@@ -1787,3 +1788,93 @@ class CondCAD(AbstractCAD):
     """
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(CondCAD, self).__init__(input_shape, num_classes, num_domains, hparams, is_conditional=True)
+        
+       
+class Transfer(Algorithm):
+    '''Algorithm 1 in our transferability work'''
+    ''' tries to ensure transferability among source domains, and thus transferabiilty between source and target'''
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(Transfer, self).__init__(input_shape, num_classes, num_domains, hparams)
+        self.register_buffer('update_count', torch.tensor([0]))
+        self.d_steps_per_g = hparams['d_steps_per_g']
+
+        # Architecture 
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = networks.Classifier(
+            self.featurizer.n_outputs,
+            num_classes,
+            self.hparams['nonlinear_classifier'])
+        self.adv_classifier = networks.Classifier(
+            self.featurizer.n_outputs,
+            num_classes,
+            self.hparams['nonlinear_classifier'])
+        self.adv_classifier.load_state_dict(self.classifier.state_dict())
+
+        # Optimizers
+        if self.hparams['gda']:
+            self.optimizer = torch.optim.SGD(self.adv_classifier.parameters(), lr=self.hparams['lr']) 
+        else:
+            self.optimizer = torch.optim.Adam(
+            (list(self.featurizer.parameters()) + list(self.classifier.parameters())),
+                lr=self.hparams["lr"],
+                weight_decay=self.hparams['weight_decay'])
+
+        self.adv_opt = torch.optim.SGD(self.adv_classifier.parameters(), lr=self.hparams['lr_d']) 
+
+
+
+    def update(self, minibatches, unlabeled=None):
+        device = "cuda" if minibatches[0][0].is_cuda else "cpu"
+        # outer loop
+        all_x = torch.cat([x for x,y in minibatches])
+        all_y = torch.cat([y for x,y in minibatches])
+        loss = F.cross_entropy(self.predict(all_x), all_y)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        del all_x, all_y
+        gap = self.hparams['t_lambda'] * loss_gap(minibatches, self, device)
+        self.optimizer.zero_grad()
+        gap.backward()
+        self.optimizer.step()
+        self.adv_classifier.load_state_dict(self.classifier.state_dict())
+        for _ in range(self.d_steps_per_g):
+            self.adv_opt.zero_grad()
+            gap = -self.hparams['t_lambda'] * loss_gap(minibatches, self, device)
+            gap.backward()
+            self.adv_opt.step()
+            self.adv_classifier = proj(self.hparams['delta'], self.adv_classifier, self.classifier)
+        return {'loss': loss.item(), 'gap': -gap.item()}
+
+    def update_second(self, minibatches, unlabeled=None):
+        device = "cuda" if minibatches[0][0].is_cuda else "cpu"
+        self.update_count = (self.update_count + 1) % (1 + self.d_steps_per_g)
+        if self.update_count.item() == 1:
+            all_x = torch.cat([x for x,y in minibatches])
+            all_y = torch.cat([y for x,y in minibatches])
+            loss = F.cross_entropy(self.predict(all_x), all_y)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            del all_x, all_y
+            gap = self.hparams['t_lambda'] * loss_gap(minibatches, self, device)
+            self.optimizer.zero_grad()
+            gap.backward()
+            self.optimizer.step()
+            self.adv_classifier.load_state_dict(self.classifier.state_dict())
+            return {'loss': loss.item(), 'gap': gap.item()}
+        else:
+            self.adv_opt.zero_grad()
+            gap = -self.hparams['t_lambda'] * loss_gap(minibatches, self, device)
+            gap.backward()
+            self.adv_opt.step()
+            self.adv_classifier = proj(self.hparams['delta'], self.adv_classifier, self.classifier)
+            return {'gap': -gap.item()}
+
+
+    def predict(self, x):
+        return self.classifier(self.featurizer(x))
+
+
