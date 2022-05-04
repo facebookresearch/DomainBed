@@ -149,6 +149,22 @@ def random_pairs_of_minibatches(minibatches):
 
     return pairs
 
+def split_meta_train_test(minibatches, num_meta_test=1):
+    n_domains = len(minibatches)
+    perm = torch.randperm(n_domains).tolist()
+    pairs = []
+    meta_train = perm[:(n_domains-num_meta_test)]
+    meta_test = perm[-num_meta_test:]
+
+    for i,j in zip(meta_train, cycle(meta_test)):
+         xi, yi = minibatches[i][0], minibatches[i][1]
+         xj, yj = minibatches[j][0], minibatches[j][1]
+
+         min_n = min(len(xi), len(xj))
+         pairs.append(((xi[:min_n], yi[:min_n]), (xj[:min_n], yj[:min_n])))
+
+    return pairs
+
 def accuracy(network, loader, weights, device):
     correct = 0
     total = 0
