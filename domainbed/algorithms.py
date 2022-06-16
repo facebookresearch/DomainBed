@@ -1000,7 +1000,7 @@ class IGA(ERM):
     def __init__(self, in_features, num_classes, num_domains, hparams):
         super(IGA, self).__init__(in_features, num_classes, num_domains, hparams)
 
-    def update(self, minibatches, unlabeled=False):
+    def update(self, minibatches, unlabeled=None):
         total_loss = 0
         grads = []
         for i, (x, y) in enumerate(minibatches):
@@ -1220,7 +1220,7 @@ class Fishr(Algorithm):
             weight_decay=self.hparams["weight_decay"],
         )
 
-    def update(self, minibatches, unlabeled=False):
+    def update(self, minibatches, unlabeled=None):
         assert len(minibatches) == self.num_domains
         all_x = torch.cat([x for x, y in minibatches])
         all_y = torch.cat([y for x, y in minibatches])
@@ -1384,7 +1384,7 @@ class TRM(Algorithm):
         model.train()
         return h_estimate.detach()
 
-    def update(self, minibatches):
+    def update(self, minibatches, unlabeled=None):
 
         loss_swap = 0.0
         trm = 0.0
