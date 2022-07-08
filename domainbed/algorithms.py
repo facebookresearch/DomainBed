@@ -1880,12 +1880,15 @@ class Transfer(Algorithm):
         return self.classifier(self.featurizer(x))
 
 
-class CausIRL_MMD(ERM):
-    '''Causality based invariant representation learning algorithm using the MMD distance from (https://arxiv.org/abs/2206.11646)'''
-    def __init__(self, input_shape, num_classes, num_domains, hparams):
-        super(CausIRL_MMD, self).__init__(input_shape, num_classes, num_domains,
+class AbstractCausIRL(ERM):
+    '''Abstract class for Causality based invariant representation learning algorithm from (https://arxiv.org/abs/2206.11646)'''
+    def __init__(self, input_shape, num_classes, num_domains, hparams, gaussian):
+        super(AbstractCausIRL, self).__init__(input_shape, num_classes, num_domains,
                                   hparams)
-
+        if gaussian:
+            self.kernel_type = "gaussian"
+        else:
+            self.kernel_type = "mean_cov"
 
     def my_cdist(self, x1, x2):
         x1_norm = x1.pow(2).sum(dim=-1, keepdim=True)
@@ -1906,11 +1909,23 @@ class CausIRL_MMD(ERM):
         return K
 
     def mmd(self, x, y):
-        Kxx = self.gaussian_kernel(x, x).mean()
-        Kyy = self.gaussian_kernel(y, y).mean()
-        Kxy = self.gaussian_kernel(x, y).mean()
-        return Kxx + Kyy - 2 * Kxy
-        
+        if self.kernel_type == "gaussian":
+            Kxx = self.gaussian_kernel(x, x).mean()
+            Kyy = self.gaussian_kernel(y, y).mean()
+            Kxy = self.gaussian_kernel(x, y).mean()
+            return Kxx + Kyy - 2 * Kxy
+        else:
+            mean_x = x.mean(0, keepdim=True)
+            mean_y = y.mean(0, keepdim=True)
+            cent_x = x - mean_x
+            cent_y = y - mean_y
+            cova_x = (cent_x.t() @ cent_x) / (len(x) - 1)
+            cova_y = (cent_y.t() @ cent_y) / (len(y) - 1)
+
+            mean_diff = (mean_x - mean_y).pow(2).mean()
+            cova_diff = (cova_x - cova_y).pow(2).mean()
+
+            return mean_diff + cova_diff
 
     def update(self, minibatches, unlabeled=None):
         objective = 0
@@ -1949,61 +1964,17 @@ class CausIRL_MMD(ERM):
         return {'loss': objective.item(), 'penalty': penalty}
 
 
-class CausIRL_CORAL(ERM):
+class CausIRL_MMD(AbstractCausIRL):
+    '''Causality based invariant representation learning algorithm using the MMD distance from (https://arxiv.org/abs/2206.11646)'''
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(CausIRL_MMD, self).__init__(input_shape, num_classes, num_domains,
+                                  hparams, gaussian=True)
+        
+
+class CausIRL_CORAL(AbstractCausIRL):
     '''Causality based invariant representation learning algorithm using the CORAL distance from (https://arxiv.org/abs/2206.11646)'''
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(CausIRL_CORAL, self).__init__(input_shape, num_classes, num_domains,
-                                  hparams)
-
-
-    def coral(self, x, y):
-        mean_x = x.mean(0, keepdim=True)
-        mean_y = y.mean(0, keepdim=True)
-        cent_x = x - mean_x
-        cent_y = y - mean_y
-        cova_x = (cent_x.t() @ cent_x) / (len(x) - 1)
-        cova_y = (cent_y.t() @ cent_y) / (len(y) - 1)
-
-        mean_diff = (mean_x - mean_y).pow(2).mean()
-        cova_diff = (cova_x - cova_y).pow(2).mean()
-
-        return mean_diff + cova_diff
-        
-    def update(self, minibatches, unlabeled=None):
-        objective = 0
-        penalty = 0
-        nmb = len(minibatches)
-        
-        features = [self.featurizer(xi) for xi, _ in minibatches]
-        targets = [yi for _, yi in minibatches]
-        classifs = [self.classifier(fi) for fi in features]
-        first = None
-        second = None
-
-        for i in range(nmb):
-            objective += F.cross_entropy(classifs[i] + 1e-16, targets[i])
-            slice = random.randint(1, len(features[i]))
-
-            if first is None:
-                first = features[i][:slice]
-                second = features[i][slice:]
-            else:
-                first = torch.cat((first, features[i][:slice]), 0)
-                second = torch.cat((second, features[i][slice:]), 0)
-        if len(first) > 1 and len(second) > 1:
-            penalty = torch.nan_to_num(self.coral(first, second))
-        else:
-            penalty = torch.tensor(0)
-
-        objective /= nmb
-
-        self.optimizer.zero_grad()
-        (objective + (self.hparams['mmd_gamma']*penalty)).backward()
-        self.optimizer.step()
-
-        if torch.is_tensor(penalty):
-            penalty = penalty.item()
-
-        return {'loss': objective.item(), 'penalty': penalty}
+                                  hparams, gaussian=False)
 
 
