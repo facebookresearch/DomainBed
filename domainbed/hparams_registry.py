@@ -69,7 +69,7 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == "GroupDRO":
         _hparam('groupdro_eta', 1e-2, lambda r: 10**r.uniform(-3, -1))
 
-    elif algorithm == "MMD" or algorithm == "CORAL":
+    elif algorithm == "MMD" or algorithm == "CORAL" or algorithm == "CausIRL_CORAL" or algorithm == "CausIRL_MMD":
         _hparam('mmd_gamma', 1., lambda r: 10**r.uniform(-1, 1))
 
     elif algorithm == "MLDG":
