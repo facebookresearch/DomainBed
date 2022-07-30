@@ -32,7 +32,7 @@ def multi_gpu_launcher(commands):
     try:
         # Get list of GPUs from env, split by ',' and remove empty string ''
         # To handle the case when there is one extra comma: `CUDA_VISIBLE_DEVICES=0,1,2,3, python3 ...`
-        available_gpus = [x for x in os.environ['CUDA_VISIBLE_DEVICES'].split(',') if x != '')
+        available_gpus = [x for x in os.environ['CUDA_VISIBLE_DEVICES'].split(',') if x != '']
     except Exception:
         # If the env variable is not set, we use all GPUs
         available_gpus = [str(x) for x in range(torch.cuda.device_count())]
