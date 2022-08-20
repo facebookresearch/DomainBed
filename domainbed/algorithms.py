@@ -1822,6 +1822,19 @@ class Transfer(Algorithm):
                 weight_decay=self.hparams['weight_decay'])
 
         self.adv_opt = torch.optim.SGD(self.adv_classifier.parameters(), lr=self.hparams['lr_d']) 
+    
+    
+    def loss_gap(self, minibatches, device):
+        ''' compute gap = max_i loss_i(h) - min_j loss_j(h), return i, j, and the gap for a single batch'''
+        max_env_loss, min_env_loss =  torch.tensor([-float('inf')], device=device), torch.tensor([float('inf')], device=device)
+        for x, y in minibatches:
+            p = self.adv_classifier(self.featurizer(x))
+            loss = F.cross_entropy(p, y)
+            if loss > max_env_loss:
+                max_env_loss = loss
+            if loss < min_env_loss:
+                min_env_loss = loss
+        return max_env_loss - min_env_loss
 
 
 
@@ -1836,7 +1849,7 @@ class Transfer(Algorithm):
         self.optimizer.step()
 
         del all_x, all_y
-        gap = self.hparams['t_lambda'] * loss_gap(minibatches, self, device)
+        gap = self.hparams['t_lambda'] * self.loss_gap(minibatches, device)
         self.optimizer.zero_grad()
         gap.backward()
         self.optimizer.step()
