@@ -18,6 +18,15 @@ import torch
 import tqdm
 from collections import Counter
 
+
+def distance(h1, h2):
+    ''' distance of two networks (h1, h2 are classifiers)'''
+    dist = 0.
+    for param in h1.state_dict():
+        h1_param, h2_param = h1.state_dict()[param], h2.state_dict()[param]
+        dist += torch.norm(h1_param - h2_param) ** 2  # use Frobenius norms for matrices
+    return torch.sqrt(dist)
+
 def proj(delta, adv_h, h):
     ''' return proj_{B(h, \delta)}(adv_h), Euclidean projection to Euclidean ball'''
     ''' adv_h and h are two classifiers'''
