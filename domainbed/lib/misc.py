@@ -19,24 +19,18 @@ import tqdm
 from collections import Counter
 
 
-def loss_gap(num_domains, env_loaders, model, device, whole=False):
-    ''' compute gap = max_i loss_i(h) - min_j loss_j(h), return i, j, and the gap for the whole dataset'''
-    ''' model = h, index are from 1 ... n'''
-    max_env_loss, min_env_loss = -np.inf, np.inf
-    max_index = min_index = 0
-    index = 0
-    for index, loader in enumerate(env_loaders):
-        loss = misc.loss(algorithm, loader, device)
-        # print("index: ", index, "loss: ", loss)
-        if index == 0 and not whole:
-            continue
+def loss_gap(minibatches, model, device):
+    ''' compute gap = max_i loss_i(h) - min_j loss_j(h), return i, j, and the gap for a single batch'''
+    max_env_loss, min_env_loss =  torch.tensor([-float('inf')], device=device), torch.tensor([float('inf')], device=device)
+    for x, y in minibatches:
+        p = model.adv_classifier(model.featurizer(x))
+        loss = F.cross_entropy(p, y)
         if loss > max_env_loss:
             max_env_loss = loss
-            max_index = index
         if loss < min_env_loss:
             min_env_loss = loss
-            min_index = index
-    return max_index, min_index, max_env_loss, min_env_loss
+    return max_env_loss - min_env_loss
+
 
 def l2_between_dicts(dict_1, dict_2):
     assert len(dict_1) == len(dict_2)
