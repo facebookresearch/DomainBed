@@ -18,7 +18,18 @@ import torch
 import tqdm
 from collections import Counter
 
-
+def proj(delta, adv_h, h):
+    ''' return proj_{B(h, \delta)}(adv_h), Euclidean projection to Euclidean ball'''
+    ''' adv_h and h are two classifiers'''
+    dist = distance(adv_h, h)
+    if dist <= delta:
+        return adv_h
+    else:
+        ratio = delta / dist
+        for param_h, param_adv_h in zip(h.parameters(), adv_h.parameters()):
+            param_adv_h.data = param_h + ratio * (param_adv_h - param_h)
+        # print("distance: ", distance(adv_h, h))
+        return adv_h
 
 def l2_between_dicts(dict_1, dict_2):
     assert len(dict_1) == len(dict_2)
