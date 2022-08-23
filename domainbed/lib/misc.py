@@ -19,6 +19,27 @@ import tqdm
 from collections import Counter
 
 
+def distance(h1, h2):
+    ''' distance of two networks (h1, h2 are classifiers)'''
+    dist = 0.
+    for param in h1.state_dict():
+        h1_param, h2_param = h1.state_dict()[param], h2.state_dict()[param]
+        dist += torch.norm(h1_param - h2_param) ** 2  # use Frobenius norms for matrices
+    return torch.sqrt(dist)
+
+def proj(delta, adv_h, h):
+    ''' return proj_{B(h, \delta)}(adv_h), Euclidean projection to Euclidean ball'''
+    ''' adv_h and h are two classifiers'''
+    dist = distance(adv_h, h)
+    if dist <= delta:
+        return adv_h
+    else:
+        ratio = delta / dist
+        for param_h, param_adv_h in zip(h.parameters(), adv_h.parameters()):
+            param_adv_h.data = param_h + ratio * (param_adv_h - param_h)
+        # print("distance: ", distance(adv_h, h))
+        return adv_h
+
 def l2_between_dicts(dict_1, dict_2):
     assert len(dict_1) == len(dict_2)
     dict_1_values = [dict_1[key] for key in sorted(dict_1.keys())]
