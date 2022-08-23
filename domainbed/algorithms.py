@@ -267,8 +267,8 @@ class AbstractDANN(Algorithm):
         else:
             disc_loss = F.cross_entropy(disc_out, disc_labels)
 
-        disc_softmax = F.softmax(disc_out, dim=1)
-        input_grad = autograd.grad(disc_softmax[:, disc_labels].sum(),
+        input_grad = autograd.grad(
+            F.cross_entropy(disc_out, disc_labels, reduction='sum'),
             [disc_input], create_graph=True)[0]
         grad_penalty = (input_grad**2).sum(dim=1).mean(dim=0)
         disc_loss += self.hparams['grad_penalty'] * grad_penalty
