@@ -9,6 +9,7 @@ which runs all commands serially on the local machine.
 import subprocess
 import time
 import torch
+import os
 
 def local_launcher(commands):
     """Launch commands serially on the local machine."""
@@ -28,18 +29,25 @@ def multi_gpu_launcher(commands):
     Launch commands on the local machine, using all GPUs in parallel.
     """
     print('WARNING: using experimental multi_gpu_launcher.')
-    n_gpus = torch.cuda.device_count()
+    try:
+        # Get list of GPUs from env, split by ',' and remove empty string ''
+        # To handle the case when there is one extra comma: `CUDA_VISIBLE_DEVICES=0,1,2,3, python3 ...`
+        available_gpus = [x for x in os.environ['CUDA_VISIBLE_DEVICES'].split(',') if x != '']
+    except Exception:
+        # If the env variable is not set, we use all GPUs
+        available_gpus = [str(x) for x in range(torch.cuda.device_count())]
+    n_gpus = len(available_gpus)
     procs_by_gpu = [None]*n_gpus
 
     while len(commands) > 0:
-        for gpu_idx in range(n_gpus):
-            proc = procs_by_gpu[gpu_idx]
+        for idx, gpu_idx in enumerate(available_gpus):
+            proc = procs_by_gpu[idx]
             if (proc is None) or (proc.poll() is not None):
                 # Nothing is running on this GPU; launch a command.
                 cmd = commands.pop(0)
                 new_proc = subprocess.Popen(
                     f'CUDA_VISIBLE_DEVICES={gpu_idx} {cmd}', shell=True)
-                procs_by_gpu[gpu_idx] = new_proc
+                procs_by_gpu[idx] = new_proc
                 break
         time.sleep(1)
 
