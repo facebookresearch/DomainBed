@@ -4,11 +4,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.autograd as autograd
-from torch.autograd import Variable
 
 import copy
 import numpy as np
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 try:
     from backpack import backpack, extend
     from backpack.extensions import BatchGrad
@@ -17,7 +16,8 @@ except:
 
 from domainbed import networks
 from domainbed.lib.misc import (
-    random_pairs_of_minibatches, ParamDict, MovingAverage, l2_between_dicts
+    random_pairs_of_minibatches, split_meta_train_test, ParamDict,
+    MovingAverage, l2_between_dicts, proj
 )
 
 
@@ -48,7 +48,7 @@ ALGORITHMS = [
     'IB_IRM',
     'CAD',
     'CondCAD',
-    'Transfer', 
+    'Transfer',
     'CausIRL_CORAL',
     'CausIRL_MMD',
 ]
@@ -105,8 +105,8 @@ class ERM(Algorithm):
         )
 
     def update(self, minibatches, unlabeled=None):
-        all_x = torch.cat([x for x,y in minibatches])
-        all_y = torch.cat([y for x,y in minibatches])
+        all_x = torch.cat([x for x, y in minibatches])
+        all_y = torch.cat([y for x, y in minibatches])
         loss = F.cross_entropy(self.predict(all_x), all_y)
 
         self.optimizer.zero_grad()
@@ -121,7 +121,7 @@ class ERM(Algorithm):
 
 class Fish(Algorithm):
     """
-    Implementation of Fish, as seen in Gradient Matching for Domain 
+    Implementation of Fish, as seen in Gradient Matching for Domain
     Generalization, Shi et al. 2021.
     """
 
@@ -335,7 +335,7 @@ class IRM(ERM):
         nll = 0.
         penalty = 0.
 
-        all_x = torch.cat([x for x,y in minibatches])
+        all_x = torch.cat([x for x, y in minibatches])
         all_logits = self.network(all_x)
         all_logits_idx = 0
         for i, (x, y) in enumerate(minibatches):
@@ -487,6 +487,7 @@ class MLDG(ERM):
         super(MLDG, self).__init__(input_shape, num_classes, num_domains,
                                    hparams)
         self.num_meta_test = hparams['n_meta_test']
+
     def update(self, minibatches, unlabeled=None):
         """
         Terms being computed:
@@ -934,8 +935,8 @@ class SD(ERM):
         self.sd_reg = hparams["sd_reg"]
 
     def update(self, minibatches, unlabeled=None):
-        all_x = torch.cat([x for x,y in minibatches])
-        all_y = torch.cat([y for x,y in minibatches])
+        all_x = torch.cat([x for x, y in minibatches])
+        all_y = torch.cat([y for x, y in minibatches])
         all_p = self.predict(all_x)
 
         loss = F.cross_entropy(all_p, all_y)
@@ -964,7 +965,7 @@ class ANDMask(ERM):
         param_gradients = [[] for _ in self.network.parameters()]
         for i, (x, y) in enumerate(minibatches):
             logits = self.network(x)
-            
+
             env_loss = F.cross_entropy(logits, y)
             mean_loss += env_loss.item() / len(minibatches)
 
@@ -1011,13 +1012,13 @@ class IGA(ERM):
             env_loss = F.cross_entropy(logits, y)
             total_loss += env_loss
 
-            env_grad = autograd.grad(env_loss, self.network.parameters(), 
+            env_grad = autograd.grad(env_loss, self.network.parameters(),
                                         create_graph=True)
 
             grads.append(env_grad)
-            
+
         mean_loss = total_loss / len(minibatches)
-        mean_grad = autograd.grad(mean_loss, self.network.parameters(), 
+        mean_grad = autograd.grad(mean_loss, self.network.parameters(),
                                         retain_graph=True)
 
         # compute trace penalty
@@ -1033,8 +1034,8 @@ class IGA(ERM):
         self.optimizer.step()
 
         return {'loss': mean_loss.item(), 'penalty': penalty_value.item()}
-    
-    
+
+
 class SelfReg(ERM):
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(SelfReg, self).__init__(input_shape, num_classes, num_domains,
@@ -1043,7 +1044,7 @@ class SelfReg(ERM):
         self.MSEloss = nn.MSELoss()
         input_feat_size = self.featurizer.n_outputs
         hidden_size = input_feat_size if input_feat_size==2048 else input_feat_size*2
-        
+
         self.cdpl = nn.Sequential(
                             nn.Linear(input_feat_size, hidden_size),
                             nn.BatchNorm1d(hidden_size),
@@ -1054,18 +1055,18 @@ class SelfReg(ERM):
                             nn.Linear(hidden_size, input_feat_size),
                             nn.BatchNorm1d(input_feat_size)
         )
-        
+
     def update(self, minibatches, unlabeled=None):
-        
+
         all_x = torch.cat([x for x, y in minibatches])
         all_y = torch.cat([y for _, y in minibatches])
 
         lam = np.random.beta(0.5, 0.5)
-        
+
         batch_size = all_y.size()[0]
-        
+
         # cluster and order features into same-class group
-        with torch.no_grad():   
+        with torch.no_grad():
             sorted_y, indices = torch.sort(all_y)
             sorted_x = torch.zeros_like(all_x)
             for idx, order in enumerate(indices):
@@ -1081,10 +1082,10 @@ class SelfReg(ERM):
 
             all_x = sorted_x
             all_y = sorted_y
-        
+
         feat = self.featurizer(all_x)
         proj = self.cdpl(feat)
-        
+
         output = self.classifier(feat)
 
         # shuffle
@@ -1102,8 +1103,8 @@ class SelfReg(ERM):
                 output_3[idx+ex] = output[shuffle_indices2[idx]]
                 feat_3[idx+ex] = proj[shuffle_indices2[idx]]
             ex = end
-        
-        # mixup 
+
+        # mixup
         output_3 = lam*output_2 + (1-lam)*output_3
         feat_3 = lam*feat_2 + (1-lam)*feat_3
 
@@ -1112,11 +1113,11 @@ class SelfReg(ERM):
         L_hdl_logit = self.MSEloss(output, output_3)
         L_ind_feat = 0.3 * self.MSEloss(feat, feat_2)
         L_hdl_feat = 0.3 * self.MSEloss(feat, feat_3)
-        
+
         cl_loss = F.cross_entropy(output, all_y)
         C_scale = min(cl_loss.item(), 1.)
         loss = cl_loss + C_scale*(lam*(L_ind_logit + L_ind_feat)+(1-lam)*(L_hdl_logit + L_hdl_feat))
-     
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -1398,7 +1399,7 @@ class TRM(Algorithm):
                 for classifier in self.clist:
                     classifier.weight.data = copy.deepcopy(self.classifier.weight.data)
             self.alpha /= self.alpha.sum(1, keepdim=True)
-            
+
             self.featurizer.train()
             all_x = torch.cat([x for x, y in minibatches])
             all_y = torch.cat([y for x, y in minibatches])
@@ -1509,7 +1510,7 @@ class IB_ERM(ERM):
         nll = 0.
         ib_penalty = 0.
 
-        all_x = torch.cat([x for x,y in minibatches])
+        all_x = torch.cat([x for x, y in minibatches])
         all_features = self.featurizer(all_x)
         all_logits = self.classifier(all_features)
         all_logits_idx = 0
@@ -1524,7 +1525,7 @@ class IB_ERM(ERM):
         ib_penalty /= len(minibatches)
 
         # Compile loss
-        loss = nll 
+        loss = nll
         loss += ib_penalty_weight * ib_penalty
 
         if self.update_count == self.hparams['ib_penalty_anneal_iters']:
@@ -1540,7 +1541,7 @@ class IB_ERM(ERM):
         self.optimizer.step()
 
         self.update_count += 1
-        return {'loss': loss.item(), 
+        return {'loss': loss.item(),
                 'nll': nll.item(),
                 'IB_penalty': ib_penalty.item()}
 
@@ -1581,7 +1582,7 @@ class IB_IRM(ERM):
         irm_penalty = 0.
         ib_penalty = 0.
 
-        all_x = torch.cat([x for x,y in minibatches])
+        all_x = torch.cat([x for x, y in minibatches])
         all_features = self.featurizer(all_x)
         all_logits = self.classifier(all_features)
         all_logits_idx = 0
@@ -1598,7 +1599,7 @@ class IB_IRM(ERM):
         ib_penalty /= len(minibatches)
 
         # Compile loss
-        loss = nll 
+        loss = nll
         loss += irm_penalty_weight * irm_penalty
         loss += ib_penalty_weight * ib_penalty
 
@@ -1615,9 +1616,9 @@ class IB_IRM(ERM):
         self.optimizer.step()
 
         self.update_count += 1
-        return {'loss': loss.item(), 
+        return {'loss': loss.item(),
                 'nll': nll.item(),
-                'IRM_penalty': irm_penalty.item(), 
+                'IRM_penalty': irm_penalty.item(),
                 'IB_penalty': ib_penalty.item()}
 
 
@@ -1790,8 +1791,8 @@ class CondCAD(AbstractCAD):
     """
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(CondCAD, self).__init__(input_shape, num_classes, num_domains, hparams, is_conditional=True)
-        
-       
+
+
 class Transfer(Algorithm):
     '''Algorithm 1 in Quantifying and Improving Transferability in Domain Generalization (https://arxiv.org/abs/2106.03632)'''
     ''' tries to ensure transferability among source domains, and thus transferabiilty between source and target'''
@@ -1800,7 +1801,7 @@ class Transfer(Algorithm):
         self.register_buffer('update_count', torch.tensor([0]))
         self.d_steps_per_g = hparams['d_steps_per_g']
 
-        # Architecture 
+        # Architecture
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
         self.classifier = networks.Classifier(
             self.featurizer.n_outputs,
@@ -1814,16 +1815,15 @@ class Transfer(Algorithm):
 
         # Optimizers
         if self.hparams['gda']:
-            self.optimizer = torch.optim.SGD(self.adv_classifier.parameters(), lr=self.hparams['lr']) 
+            self.optimizer = torch.optim.SGD(self.adv_classifier.parameters(), lr=self.hparams['lr'])
         else:
             self.optimizer = torch.optim.Adam(
             (list(self.featurizer.parameters()) + list(self.classifier.parameters())),
                 lr=self.hparams["lr"],
                 weight_decay=self.hparams['weight_decay'])
 
-        self.adv_opt = torch.optim.SGD(self.adv_classifier.parameters(), lr=self.hparams['lr_d']) 
-    
-    
+        self.adv_opt = torch.optim.SGD(self.adv_classifier.parameters(), lr=self.hparams['lr_d'])
+
     def loss_gap(self, minibatches, device):
         ''' compute gap = max_i loss_i(h) - min_j loss_j(h), return i, j, and the gap for a single batch'''
         max_env_loss, min_env_loss =  torch.tensor([-float('inf')], device=device), torch.tensor([float('inf')], device=device)
@@ -1836,13 +1836,11 @@ class Transfer(Algorithm):
                 min_env_loss = loss
         return max_env_loss - min_env_loss
 
-
-
     def update(self, minibatches, unlabeled=None):
         device = "cuda" if minibatches[0][0].is_cuda else "cpu"
         # outer loop
-        all_x = torch.cat([x for x,y in minibatches])
-        all_y = torch.cat([y for x,y in minibatches])
+        all_x = torch.cat([x for x, y in minibatches])
+        all_y = torch.cat([y for x, y in minibatches])
         loss = F.cross_entropy(self.predict(all_x), all_y)
         self.optimizer.zero_grad()
         loss.backward()
@@ -1856,7 +1854,7 @@ class Transfer(Algorithm):
         self.adv_classifier.load_state_dict(self.classifier.state_dict())
         for _ in range(self.d_steps_per_g):
             self.adv_opt.zero_grad()
-            gap = -self.hparams['t_lambda'] * loss_gap(minibatches, self, device)
+            gap = -self.hparams['t_lambda'] * self.loss_gap(minibatches, device)
             gap.backward()
             self.adv_opt.step()
             self.adv_classifier = proj(self.hparams['delta'], self.adv_classifier, self.classifier)
@@ -1866,15 +1864,15 @@ class Transfer(Algorithm):
         device = "cuda" if minibatches[0][0].is_cuda else "cpu"
         self.update_count = (self.update_count + 1) % (1 + self.d_steps_per_g)
         if self.update_count.item() == 1:
-            all_x = torch.cat([x for x,y in minibatches])
-            all_y = torch.cat([y for x,y in minibatches])
+            all_x = torch.cat([x for x, y in minibatches])
+            all_y = torch.cat([y for x, y in minibatches])
             loss = F.cross_entropy(self.predict(all_x), all_y)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
 
             del all_x, all_y
-            gap = self.hparams['t_lambda'] * loss_gap(minibatches, self, device)
+            gap = self.hparams['t_lambda'] * self.loss_gap(minibatches, device)
             self.optimizer.zero_grad()
             gap.backward()
             self.optimizer.step()
@@ -1882,7 +1880,7 @@ class Transfer(Algorithm):
             return {'loss': loss.item(), 'gap': gap.item()}
         else:
             self.adv_opt.zero_grad()
-            gap = -self.hparams['t_lambda'] * loss_gap(minibatches, self, device)
+            gap = -self.hparams['t_lambda'] * self.loss_gap(minibatches, device)
             gap.backward()
             self.adv_opt.step()
             self.adv_classifier = proj(self.hparams['delta'], self.adv_classifier, self.classifier)
@@ -1954,7 +1952,7 @@ class AbstractCausIRL(ERM):
 
         for i in range(nmb):
             objective += F.cross_entropy(classifs[i] + 1e-16, targets[i])
-            slice = random.randint(0, len(features[i]))
+            slice = np.random.randint(0, len(features[i]))
             if first is None:
                 first = features[i][:slice]
                 second = features[i][slice:]
@@ -1982,12 +1980,10 @@ class CausIRL_MMD(AbstractCausIRL):
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(CausIRL_MMD, self).__init__(input_shape, num_classes, num_domains,
                                   hparams, gaussian=True)
-        
+
 
 class CausIRL_CORAL(AbstractCausIRL):
     '''Causality based invariant representation learning algorithm using the CORAL distance from (https://arxiv.org/abs/2206.11646)'''
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(CausIRL_CORAL, self).__init__(input_shape, num_classes, num_domains,
                                   hparams, gaussian=False)
-
-
