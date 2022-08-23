@@ -156,8 +156,7 @@ if __name__ == "__main__":
         weights=env_weights,
         batch_size=hparams['batch_size'],
         num_workers=dataset.N_WORKERS)
-        for i, (env, env_weights) in enumerate(uda_splits)
-        if i in args.test_envs]
+        for i, (env, env_weights) in enumerate(uda_splits)]
 
     eval_loaders = [FastDataLoader(
         dataset=env,
