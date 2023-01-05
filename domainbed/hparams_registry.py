@@ -64,7 +64,7 @@ def _hparams(algorithm, dataset, random_seed):
                 lambda r: int(10**r.uniform(0, 4)))
 
     elif algorithm == "Mixup":
-        _hparam('mixup_alpha', 0.2, lambda r: 10**r.uniform(-1, -1))
+        _hparam('mixup_alpha', 0.2, lambda r: 10**r.uniform(-1, 1))
 
     elif algorithm == "GroupDRO":
         _hparam('groupdro_eta', 1e-2, lambda r: 10**r.uniform(-3, -1))
