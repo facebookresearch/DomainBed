@@ -29,7 +29,7 @@ class SelectionMethod:
         Given all records from a single (dataset, algorithm, test env) pair,
         return a sorted list of (run_acc, records) tuples.
         """
-        return (records.group('args.hparams_seed')
+        return (records.group('args.hparams_seed') # organize records by hparams
             .map(lambda _, run_records:
                 (
                     self.run_acc(run_records),
@@ -37,6 +37,8 @@ class SelectionMethod:
                 )
             ).filter(lambda x: x[0] is not None)
             .sorted(key=lambda x: x[0]['val_acc'])[::-1]
+            # organize hparam_seed results from highest to lowest based on
+            # val_acc calculated from self.run_acc
         )
 
     @classmethod
@@ -88,8 +90,8 @@ class IIDAccuracySelectionMethod(SelectionMethod):
                 val_env_keys.append(f'env{i}_out_acc')
         test_in_acc_key = 'env{}_in_acc'.format(test_env)
         return {
-            'val_acc': np.mean([record[key] for key in val_env_keys]),
-            'test_acc': record[test_in_acc_key]
+            'val_acc': np.mean([record[key] for key in val_env_keys]), # average of 20% split of train envs
+            'test_acc': record[test_in_acc_key] # 80% split of the test env
         }
 
     @classmethod
@@ -97,7 +99,8 @@ class IIDAccuracySelectionMethod(SelectionMethod):
         test_records = get_test_records(run_records)
         if not len(test_records):
             return None
-        return test_records.map(self._step_acc).argmax('val_acc')
+        return test_records.map(self._step_acc).argmax('val_acc') 
+        # return the record maximizing val_acc to represent the hparam group
 
 class LeaveOneOutSelectionMethod(SelectionMethod):
     """Picks (hparams, step) by leave-one-out cross validation."""
@@ -121,6 +124,7 @@ class LeaveOneOutSelectionMethod(SelectionMethod):
         for r in records.filter(lambda r: len(r['args']['test_envs']) == 2):
             val_env = (set(r['args']['test_envs']) - set([test_env])).pop()
             val_accs[val_env] = r['env{}_in_acc'.format(val_env)]
+        # grab all val_accs exluding test_env (around it)
         val_accs = list(val_accs[:test_env]) + list(val_accs[test_env+1:])
         if any([v==-1 for v in val_accs]):
             return None
@@ -135,6 +139,7 @@ class LeaveOneOutSelectionMethod(SelectionMethod):
         step_accs = records.group('step').map(lambda step, step_records:
             self._step_acc(step_records)
         ).filter_not_none()
+        # records.group('step') creates a seperate record for each step
         if len(step_accs):
             return step_accs.argmax('val_acc')
         else:
