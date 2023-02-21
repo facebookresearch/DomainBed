@@ -258,6 +258,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
                 env_dataset.is_test_env = True
                 env_dataset.allowed_classes = list(range(self.num_classes))
 
+            env_dataset.env_name = environment
             self.datasets.append(env_dataset)
 
         self.input_shape = (3, 224, 224,)

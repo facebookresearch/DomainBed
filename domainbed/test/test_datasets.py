@@ -76,5 +76,5 @@ class TestOverlapDatasets(unittest.TestCase):
 
         for env in dataset:
             targets = set(env.targets)
-            self.assertEqual(set(env.allowed_classes), targets)
+            self.assertEqual(set(env.allowed_classes), targets, f"env:{env.env_name}")
 
