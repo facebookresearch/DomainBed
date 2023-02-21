@@ -8,6 +8,7 @@ import torchvision.datasets.folder
 from torch.utils.data import TensorDataset, Subset
 from torchvision.datasets import MNIST, ImageFolder
 from torchvision.transforms.functional import rotate
+from typing import List, Tuple, Dict, Callable
 
 from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
 from wilds.datasets.fmow_dataset import FMoWDataset
@@ -177,10 +178,27 @@ class RotatedMNIST(MultipleEnvironmentMNIST):
 
 
 class MultipleEnvironmentImageFolder(MultipleDomainDataset):
-    def __init__(self, root, test_envs, augment, hparams):
+    def __init__(self, root, test_envs, augment, hparams, domain_class_filter: List[List[int]] = None):
         super().__init__()
         environments = [f.name for f in os.scandir(root) if f.is_dir()]
         environments = sorted(environments)
+        num_envs = len(environments) 
+
+        assert len(test_envs) == 1, "Not performing leave-one-domain-out validation"
+
+        # To convert filter idx to class names
+        self.idx_to_class = self.get_idx_to_class(os.path.join(root, environments[test_envs[0]]))
+
+        self.num_classes = len(self.idx_to_class)
+
+        if domain_class_filter is None:
+            domain_class_filter = [list(range(self.num_classes)) for _ in range(num_envs-1)]
+
+        # Dynamically associate a filter with a domain except for test_envs[0]
+        num_filters = len(domain_class_filter)
+        assert num_envs-1 == num_filters # b/c exempt first test env
+        shift_filter = list(range(num_filters)) + list(range(num_filters))
+        shift_filter = shift_filter[test_envs[0]: test_envs[0] + num_filters]
 
         transform = transforms.Compose([
             transforms.Resize((224,224)),
@@ -202,34 +220,98 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
         self.datasets = []
         for i, environment in enumerate(environments):
+        # TODO: If 100 then ignore class filtering all together
 
+            path = os.path.join(root, environment)
+
+            # setup augmentation
             if augment and (i not in test_envs):
                 env_transform = augment_transform
             else:
                 env_transform = transform
 
-            path = os.path.join(root, environment)
-            env_dataset = ImageFolder(path,
-                transform=env_transform)
+            # setup class filtering
+            if i not in test_envs:
+                filter = domain_class_filter[shift_filter[i]]
+                is_valid_file = self.get_is_valid_function(
+                    path, filter, self.idx_to_class)
+
+                env_dataset = ImageFolder(path,
+                    transform=env_transform, 
+                    is_valid_file=is_valid_file)
+
+                env_dataset.is_test_env = False
+                env_dataset.allowed_classes = filter
+            else:
+                env_dataset = ImageFolder(path,
+                    transform=env_transform, 
+                    is_valid_file=None)
+                env_dataset.is_test_env = True
+                env_dataset.allowed_classes = list(range(self.num_classes))
 
             self.datasets.append(env_dataset)
 
         self.input_shape = (3, 224, 224,)
-        self.num_classes = len(self.datasets[-1].classes)
+        assert self.num_classes == len(self.datasets[-1].classes)
+
+    @staticmethod
+    def get_is_valid_function(dataset_dir: str, class_filter: List[int], 
+        idx_to_class: Dict[int, str]) -> Callable[[str], bool]:
+
+        classes = set(list(idx_to_class.keys()))
+        class_filter = set(class_filter)
+
+        assert classes.issuperset(class_filter)
+
+        ommit_classes = []
+        for class_idx in classes.difference(class_filter):
+            ommit_classes.append(idx_to_class[class_idx])
+
+        def is_sample_from_ommitted_class(path: str):
+            for item in ommit_classes:
+                if item in path.replace(dataset_dir,''):
+                    return False
+            return True
+
+        return is_sample_from_ommitted_class 
+
+    def get_idx_to_class(self, data_dir: str) -> Dict[int, str]:
+        dataset = ImageFolder(data_dir)
+        idx_to_class = {}
+        for key, value in dataset.class_to_idx.items():
+            idx_to_class.update({value: key})
+
+        assert len(dataset.class_to_idx) == idx_to_class, "Class and labels are not one-to-one"
+
+        return idx_to_class
 
 class VLCS(MultipleEnvironmentImageFolder):
     CHECKPOINT_FREQ = 300
     ENVIRONMENTS = ["C", "L", "S", "V"]
-    def __init__(self, root, test_envs, hparams):
+    def __init__(self, root, test_envs, hparams, class_overlap_id: int = 100):
         self.dir = os.path.join(root, "VLCS/")
-        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
+        self.class_overlap = {
+            0: [[0, 1], [2, 3], [4]],
+            33: [[0, 1, 2], [2, 3], [3, 4]],
+            66: [[0, 1, 2], [2, 3, 4], [3, 4, 0]],
+            100: [list(range(5)), list(range(5)), list(range(5))],
+        }
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], 
+                         hparams, self.class_overlap[class_overlap_id])
 
 class PACS(MultipleEnvironmentImageFolder):
     CHECKPOINT_FREQ = 300
     ENVIRONMENTS = ["A", "C", "P", "S"]
-    def __init__(self, root, test_envs, hparams):
+    def __init__(self, root, test_envs, hparams, class_overlap_id: int = 100):
         self.dir = os.path.join(root, "PACS/")
-        super().__init__(self.dir, test_envs, hparams['data_augmentation'], hparams)
+        self.class_overlap = {
+            0: [[0, 1], [2, 3], [4, 5, 6]],
+            33: [[0, 1, 2], [2, 3, 4], [4, 5, 6]],
+            66: [[0, 1, 2, 3], [2, 3, 4, 5], [4, 5, 6, 0]],
+            100: [list(range(7)), list(range(7)), list(range(7))],
+        }
+        super().__init__(self.dir, test_envs, hparams['data_augmentation'], 
+                         hparams, self.class_overlap[class_overlap_id])
 
 class DomainNet(MultipleEnvironmentImageFolder):
     CHECKPOINT_FREQ = 1000

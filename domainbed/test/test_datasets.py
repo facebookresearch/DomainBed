@@ -11,6 +11,7 @@ import sys
 import time
 import unittest
 import uuid
+from typing import List, Tuple
 
 import torch
 
@@ -23,7 +24,18 @@ from parameterized import parameterized
 
 from domainbed.test import helpers
 
+def get_overlap_params() -> List[Tuple[str, str, int]]:
+    params = []
+    for dataset in ['PACS', 'VLCS']:
+        for overlap in [0, 33, 66, 100]:
+            id = dataset+str(overlap)
+            params.append((id, dataset, overlap))
+
+    return params
+
+
 class TestDatasets(unittest.TestCase):
+
 
     @parameterized.expand(itertools.product(datasets.DATASETS))
     @unittest.skipIf('DATA_DIR' not in os.environ, 'needs DATA_DIR environment '
@@ -47,3 +59,19 @@ class TestDatasets(unittest.TestCase):
             hparams).cuda()
         minibatches = helpers.make_minibatches(dataset, batch_size)
         algorithm.update(minibatches)
+
+    @parameterized.expand(get_overlap_params())
+    def test_overlap_datasets(self, _, dataset_name, class_overlap_id):
+        """
+        Test that class filters remove classes from enviroment datasets
+        """
+        hparams = hparams_registry.default_hparams('ERM', dataset_name)
+        dataset = datasets.get_dataset_class(dataset_name)(
+            os.environ['DATA_DIR'], [0], hparams, class_overlap_id)
+        self.assertEqual(datasets.num_environments(dataset_name),
+            len(dataset))
+
+        for env in dataset:
+            targets = set(env.targets)
+            self.assertEqual(set(env.allowed_classes), targets)
+
