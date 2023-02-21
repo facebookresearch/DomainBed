@@ -232,7 +232,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
             # setup class filtering
             if i not in test_envs:
-                filter = domain_class_filter[shift_filter[i]]
+                filter = domain_class_filter[shift_filter.pop()]
                 is_valid_file = self.get_is_valid_function(
                     path, filter, self.idx_to_class)
 
