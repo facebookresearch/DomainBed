@@ -236,16 +236,25 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
                 is_valid_file = self.get_is_valid_function(
                     path, filter, self.idx_to_class)
 
-                env_dataset = ImageFolder(path,
-                    transform=env_transform, 
-                    is_valid_file=is_valid_file)
+                try:
+                    env_dataset = ImageFolder(path,
+                        transform=env_transform, 
+                        is_valid_file=is_valid_file)
+                except FileNotFoundError as e:
+                    if "Found no valid file for the classes" not in str(e):
+                        raise e  
 
                 env_dataset.is_test_env = False
                 env_dataset.allowed_classes = filter
             else:
-                env_dataset = ImageFolder(path,
-                    transform=env_transform, 
-                    is_valid_file=None)
+                try:
+                    env_dataset = ImageFolder(path,
+                        transform=env_transform, 
+                        is_valid_file=None)
+                except FileNotFoundError as e:
+                    if "Found no valid file for the classes" not in str(e):
+                        raise e  
+
                 env_dataset.is_test_env = True
                 env_dataset.allowed_classes = list(range(self.num_classes))
 
