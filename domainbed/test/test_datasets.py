@@ -36,7 +36,6 @@ def get_overlap_params() -> List[Tuple[str, str, int]]:
 
 class TestDatasets(unittest.TestCase):
 
-
     @parameterized.expand(itertools.product(datasets.DATASETS))
     @unittest.skipIf('DATA_DIR' not in os.environ, 'needs DATA_DIR environment '
         'variable')
@@ -59,6 +58,8 @@ class TestDatasets(unittest.TestCase):
             hparams).cuda()
         minibatches = helpers.make_minibatches(dataset, batch_size)
         algorithm.update(minibatches)
+
+class TestOverlapDatasets(unittest.TestCase):
 
     @parameterized.expand(get_overlap_params())
     @unittest.skipIf('DATA_DIR' not in os.environ, 'needs DATA_DIR environment '
