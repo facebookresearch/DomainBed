@@ -281,7 +281,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
         for key, value in dataset.class_to_idx.items():
             idx_to_class.update({value: key})
 
-        assert len(dataset.class_to_idx) == idx_to_class, "Class and labels are not one-to-one"
+        assert len(dataset.class_to_idx) == len(idx_to_class), "Class and labels are not one-to-one"
 
         return idx_to_class
 
