@@ -61,6 +61,8 @@ class TestDatasets(unittest.TestCase):
         algorithm.update(minibatches)
 
     @parameterized.expand(get_overlap_params())
+    @unittest.skipIf('DATA_DIR' not in os.environ, 'needs DATA_DIR environment '
+        'variable')
     def test_overlap_datasets(self, _, dataset_name, class_overlap_id):
         """
         Test that class filters remove classes from enviroment datasets
