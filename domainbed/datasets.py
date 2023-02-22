@@ -246,7 +246,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
                 env_dataset.is_test_env = False
                 env_dataset.allowed_classes = filter
-                env_dataet.ommit_idxs = ommit_idxs
+                env_dataset.ommit_idxs = ommit_idxs
             else:
                 try:
                     env_dataset = ImageFolder(path,
@@ -258,7 +258,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
                 env_dataset.is_test_env = True
                 env_dataset.allowed_classes = list(range(self.num_classes))
-                env_dataet.ommit_idxs = []
+                env_dataset.ommit_idxs = []
 
             env_dataset.env_name = environment
             self.datasets.append(env_dataset)
