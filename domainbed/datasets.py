@@ -233,7 +233,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
             # setup class filtering
             if i not in test_envs:
                 filter = domain_class_filter[shift_filter.pop()]
-                is_valid_file = self.get_is_valid_function(
+                is_valid_file, ommit_idxs = self.get_is_valid_function(
                     path, filter, self.idx_to_class)
 
                 try:
@@ -246,6 +246,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
                 env_dataset.is_test_env = False
                 env_dataset.allowed_classes = filter
+                env_dataet.ommit_idxs = ommit_idxs
             else:
                 try:
                     env_dataset = ImageFolder(path,
@@ -257,6 +258,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
                 env_dataset.is_test_env = True
                 env_dataset.allowed_classes = list(range(self.num_classes))
+                env_dataet.ommit_idxs = []
 
             env_dataset.env_name = environment
             self.datasets.append(env_dataset)
@@ -266,7 +268,8 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
     @staticmethod
     def get_is_valid_function(dataset_dir: str, class_filter: List[int], 
-        idx_to_class: Dict[int, str]) -> Callable[[str], bool]:
+                              idx_to_class: Dict[int, str]):
+        # idx_to_class: Dict[int, str]) -> Callable[[str], bool]:
 
         classes = set(list(idx_to_class.keys()))
         class_filter = set(class_filter)
@@ -274,7 +277,8 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
         assert classes.issuperset(class_filter)
 
         ommit_classes = []
-        for class_idx in classes.difference(class_filter):
+        ommit_idxs = classes.difference(class_filter)
+        for class_idx in ommit_idxs:
             ommit_classes.append(idx_to_class[class_idx])
 
         def is_sample_from_ommitted_class(path: str):
@@ -283,7 +287,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
                     return False
             return True
 
-        return is_sample_from_ommitted_class 
+        return is_sample_from_ommitted_class, ommit_idxs
 
     def get_idx_to_class(self, data_dir: str) -> Dict[int, str]:
         dataset = ImageFolder(data_dir)
