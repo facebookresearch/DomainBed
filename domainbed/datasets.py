@@ -8,7 +8,7 @@ import torchvision.datasets.folder
 from torch.utils.data import TensorDataset, Subset
 from torchvision.datasets import MNIST, ImageFolder
 from torchvision.transforms.functional import rotate
-from typing import List, Tuple, Dict, Callable
+from typing import List, Tuple, Dict, Callable, Optional
 
 from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
 from wilds.datasets.fmow_dataset import FMoWDataset
@@ -33,6 +33,32 @@ DATASETS = [
     "WILDSCamelyon",
     "WILDSFMoW"
 ]
+
+class DomainBedImageFolder(ImageFolder):
+    """
+    Custom class to allow class filtering
+    """
+    def __init__(
+        self,
+        root: str,
+        transform: Optional[Callable] = None,
+        target_transform: Optional[Callable] = None,
+        remove_classes: List[int] = [],
+    ):
+        super().__init__(root, transform, target_transform)
+
+        # Remove specified classes
+        for idx, sample in enumerate(self.samples):
+            path, target = sample
+            
+            if target in remove_classes:
+                del self.samples[idx]
+                del self.targets[idx]
+
+        self.imgs = self.samples
+
+    def __len__(self) -> int:
+        return len(self.samples)
 
 def get_dataset_class(dataset_name):
     """Return the dataset class with the given name."""
@@ -186,9 +212,6 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
         assert len(test_envs) == 1, "Not performing leave-one-domain-out validation"
 
-        # To convert filter idx to class names
-        self.idx_to_class = self.get_idx_to_class(os.path.join(root, environments[test_envs[0]]))
-
         self.num_classes = len(self.idx_to_class)
 
         if domain_class_filter is None:
@@ -233,61 +256,31 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
             # setup class filtering
             if i not in test_envs:
                 filter = domain_class_filter[shift_filter.pop()]
-                is_valid_file, ommit_idxs = self.get_is_valid_function(
-                    path, filter, self.idx_to_class)
+                all_classes = set(list(self.get_idx_to_class.keys())) 
+                remove_classes = list(all_classes - set(filter))
 
-                try:
-                    env_dataset = ImageFolder(path,
-                        transform=env_transform, 
-                        is_valid_file=is_valid_file)
-                except FileNotFoundError as e:
-                    if "Found no valid file for the classes" not in str(e):
-                        raise e  
+                env_dataset = DomainBedImageFolder(
+                    path,
+                    transform=env_transform, 
+                    remove_classes=remove_classes)
 
                 env_dataset.is_test_env = False
                 env_dataset.allowed_classes = filter
-                env_dataset.ommit_idxs = ommit_idxs
+                env_dataset.remove_classes = remove_classes
             else:
-                try:
-                    env_dataset = ImageFolder(path,
-                        transform=env_transform, 
-                        is_valid_file=None)
-                except FileNotFoundError as e:
-                    if "Found no valid file for the classes" not in str(e):
-                        raise e  
+                env_dataset = ImageFolder(
+                    path,
+                    transform=env_transform)
 
                 env_dataset.is_test_env = True
                 env_dataset.allowed_classes = list(range(self.num_classes))
-                env_dataset.ommit_idxs = []
+                env_dataset.remove_classes = []
 
             env_dataset.env_name = environment
             self.datasets.append(env_dataset)
 
         self.input_shape = (3, 224, 224,)
         assert self.num_classes == len(self.datasets[-1].classes)
-
-    @staticmethod
-    def get_is_valid_function(dataset_dir: str, class_filter: List[int], 
-                              idx_to_class: Dict[int, str]):
-        # idx_to_class: Dict[int, str]) -> Callable[[str], bool]:
-
-        classes = set(list(idx_to_class.keys()))
-        class_filter = set(class_filter)
-
-        assert classes.issuperset(class_filter)
-
-        ommit_classes = []
-        ommit_idxs = classes.difference(class_filter)
-        for class_idx in ommit_idxs:
-            ommit_classes.append(idx_to_class[class_idx])
-
-        def is_sample_from_ommitted_class(path: str):
-            for item in ommit_classes:
-                if item in path.replace(dataset_dir,''):
-                    return False
-            return True
-
-        return is_sample_from_ommitted_class, ommit_idxs
 
     def get_idx_to_class(self, data_dir: str) -> Dict[int, str]:
         dataset = ImageFolder(data_dir)
