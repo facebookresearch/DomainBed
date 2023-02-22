@@ -80,7 +80,7 @@ class TestOverlapDatasets(unittest.TestCase):
                 (
                     f"env:{env.env_name}, test:{env.is_test_env}, "
                     f"allowed:{env.allowed_classes}, tar:{targets}, "
-                    f"ommit_idx: {env.ommit_idx}"
+                    f"ommit_idxs: {env.ommit_idxs}"
                 )
             )
 
