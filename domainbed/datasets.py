@@ -257,7 +257,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
             # setup class filtering
             if i not in test_envs:
                 filter = domain_class_filter[shift_filter.pop()]
-                all_classes = set(list(self.get_idx_to_class.keys())) 
+                all_classes = set(list(self.idx_to_class.keys())) 
                 remove_classes = list(all_classes - set(filter))
 
                 env_dataset = DomainBedImageFolder(
