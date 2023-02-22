@@ -212,6 +212,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
         assert len(test_envs) == 1, "Not performing leave-one-domain-out validation"
 
+        self.idx_to_class = self.get_idx_to_class(os.path.join(root, environments[test_envs[0]]))
         self.num_classes = len(self.idx_to_class)
 
         if domain_class_filter is None:
