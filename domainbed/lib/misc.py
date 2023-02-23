@@ -12,21 +12,23 @@ import operator
 
 import numpy as np
 import torch
+import torchmetrics
 from collections import Counter
 from itertools import cycle
 
 
 def distance(h1, h2):
-    ''' distance of two networks (h1, h2 are classifiers)'''
-    dist = 0.
+    """distance of two networks (h1, h2 are classifiers)"""
+    dist = 0.0
     for param in h1.state_dict():
         h1_param, h2_param = h1.state_dict()[param], h2.state_dict()[param]
         dist += torch.norm(h1_param - h2_param) ** 2  # use Frobenius norms for matrices
     return torch.sqrt(dist)
 
+
 def proj(delta, adv_h, h):
-    ''' return proj_{B(h, \delta)}(adv_h), Euclidean projection to Euclidean ball'''
-    ''' adv_h and h are two classifiers'''
+    """return proj_{B(h, \delta)}(adv_h), Euclidean projection to Euclidean ball"""
+    """ adv_h and h are two classifiers"""
     dist = distance(adv_h, h)
     if dist <= delta:
         return adv_h
@@ -37,17 +39,22 @@ def proj(delta, adv_h, h):
         # print("distance: ", distance(adv_h, h))
         return adv_h
 
+
 def l2_between_dicts(dict_1, dict_2):
     assert len(dict_1) == len(dict_2)
     dict_1_values = [dict_1[key] for key in sorted(dict_1.keys())]
     dict_2_values = [dict_2[key] for key in sorted(dict_1.keys())]
     return (
-        torch.cat(tuple([t.view(-1) for t in dict_1_values])) -
-        torch.cat(tuple([t.view(-1) for t in dict_2_values]))
-    ).pow(2).mean()
+        (
+            torch.cat(tuple([t.view(-1) for t in dict_1_values]))
+            - torch.cat(tuple([t.view(-1) for t in dict_2_values]))
+        )
+        .pow(2)
+        .mean()
+    )
+
 
 class MovingAverage:
-
     def __init__(self, ema, oneminusema_correction=True):
         self.ema = ema
         self.ema_data = {}
@@ -76,7 +83,6 @@ class MovingAverage:
         return ema_dict_data
 
 
-
 def make_weights_for_balanced_classes(dataset):
     counts = Counter()
     classes = []
@@ -97,11 +103,14 @@ def make_weights_for_balanced_classes(dataset):
 
     return weights
 
+
 def pdb():
     sys.stdout = sys.__stdout__
     import pdb
+
     print("Launching PDB, enter 'n' to step to parent function.")
     pdb.set_trace()
+
 
 def seed_hash(*args):
     """
@@ -110,8 +119,10 @@ def seed_hash(*args):
     args_str = str(args)
     return int(hashlib.md5(args_str.encode("utf-8")).hexdigest(), 16) % (2**31)
 
+
 def print_separator():
-    print("="*80)
+    print("=" * 80)
+
 
 def print_row(row, colwidth=10, latex=False):
     if latex:
@@ -125,18 +136,24 @@ def print_row(row, colwidth=10, latex=False):
         if np.issubdtype(type(x), np.floating):
             x = "{:.10f}".format(x)
         return str(x).ljust(colwidth)[:colwidth]
+
     print(sep.join([format_val(x) for x in row]), end_)
+
 
 class _SplitDataset(torch.utils.data.Dataset):
     """Used by split_dataset"""
+
     def __init__(self, underlying_dataset, keys):
         super(_SplitDataset, self).__init__()
         self.underlying_dataset = underlying_dataset
         self.keys = keys
+
     def __getitem__(self, key):
         return self.underlying_dataset[self.keys[key]]
+
     def __len__(self):
         return len(self.keys)
+
 
 def split_dataset(dataset, n, seed=0):
     """
@@ -144,12 +161,13 @@ def split_dataset(dataset, n, seed=0):
     dataset, with n datapoints in the first dataset and the rest in the last,
     using the given random seed
     """
-    assert(n <= len(dataset))
+    assert n <= len(dataset)
     keys = list(range(len(dataset)))
     np.random.RandomState(seed).shuffle(keys)
     keys_1 = keys[:n]
     keys_2 = keys[n:]
     return _SplitDataset(dataset, keys_1), _SplitDataset(dataset, keys_2)
+
 
 def random_pairs_of_minibatches(minibatches):
     perm = torch.randperm(len(minibatches)).tolist()
@@ -167,26 +185,45 @@ def random_pairs_of_minibatches(minibatches):
 
     return pairs
 
+
 def split_meta_train_test(minibatches, num_meta_test=1):
     n_domains = len(minibatches)
     perm = torch.randperm(n_domains).tolist()
     pairs = []
-    meta_train = perm[:(n_domains-num_meta_test)]
+    meta_train = perm[: (n_domains - num_meta_test)]
     meta_test = perm[-num_meta_test:]
 
-    for i,j in zip(meta_train, cycle(meta_test)):
-         xi, yi = minibatches[i][0], minibatches[i][1]
-         xj, yj = minibatches[j][0], minibatches[j][1]
+    for i, j in zip(meta_train, cycle(meta_test)):
+        xi, yi = minibatches[i][0], minibatches[i][1]
+        xj, yj = minibatches[j][0], minibatches[j][1]
 
-         min_n = min(len(xi), len(xj))
-         pairs.append(((xi[:min_n], yi[:min_n]), (xj[:min_n], yj[:min_n])))
+        min_n = min(len(xi), len(xj))
+        pairs.append(((xi[:min_n], yi[:min_n]), (xj[:min_n], yj[:min_n])))
 
     return pairs
 
-def accuracy(network, loader, weights, device):
+
+def accuracy(network, loader, weights, device, dataset):
     correct = 0
     total = 0
     weights_offset = 0
+
+    overlapping_classes = dataset.overlapping_classes
+    num_classes = dataset.num_classes
+
+    f1_score = torchmetrics.F1Score(
+        task="multitask", num_classes=num_classes, average="macro"
+    )
+    per_class_accuracy = torchmetrics.Accuracy(
+        task="multitask",
+        num_classes=num_classes,
+        average=None,
+    )
+    accuracy = torchmetrics.Accuracy(
+        task="multitask",
+        num_classes=num_classes,
+        average="micro",
+    )
 
     network.eval()
     with torch.no_grad():
@@ -201,13 +238,48 @@ def accuracy(network, loader, weights, device):
                 weights_offset += len(x)
             batch_weights = batch_weights.to(device)
             if p.size(1) == 1:
-                correct += (p.gt(0).eq(y).float() * batch_weights.view(-1, 1)).sum().item()
+                correct += (
+                    (p.gt(0).eq(y).float() * batch_weights.view(-1, 1)).sum().item()
+                )
             else:
                 correct += (p.argmax(1).eq(y).float() * batch_weights).sum().item()
             total += batch_weights.sum().item()
+
+            # update metrics
+            accuracy.update(p, y)
+            f1_score.update(p, y)
+            per_class_accuracy.update(p, y)
     network.train()
 
-    return correct / total
+    compute_acc = accuracy.compute()
+    compute_f1 = f1_score.compute()
+    compute_per_class_acc = per_class_accuracy.compute()
+
+    overlap_class_acc = []
+    non_overlap_class_acc = []
+
+    for i in range(num_classes):
+        if i in overlapping_classes:
+            overlap_class_acc.append(compute_per_class_acc[i])
+        else:
+            non_overlap_class_acc.append(compute_per_class_acc[i])
+
+    if len(non_overlap_class_acc) == 0:
+        non_overlap_class_acc = -1
+    else:
+        non_overlap_class_acc = np.mean(non_overlap_class_acc)
+
+    if len(overlap_class_acc) == 0:
+        overlap_class_acc = -1
+    else:
+        overlap_class_acc = np.mean(overlap_class_acc)
+
+    other_acc = correct / total
+
+    assert other_acc == compute_acc
+
+    return compute_acc, compute_f1, overlap_class_acc, non_overlap_class_acc
+
 
 class Tee:
     def __init__(self, fname, mode="a"):
@@ -222,6 +294,7 @@ class Tee:
     def flush(self):
         self.stdout.flush()
         self.file.flush()
+
 
 class ParamDict(OrderedDict):
     """Code adapted from https://github.com/Alok/rl_implementations/tree/master/reptile.

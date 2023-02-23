@@ -48,6 +48,9 @@ if __name__ == "__main__":
         help="For domain adaptation, % of test to use unlabeled for training.")
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
+
+    parser.add_argument('--overlap', type=int, default=100)
+
     args = parser.parse_args()
 
     # If we ever want to implement checkpointing, just persist these values
@@ -97,7 +100,7 @@ if __name__ == "__main__":
 
     if args.dataset in vars(datasets):
         dataset = vars(datasets)[args.dataset](args.data_dir,
-            args.test_envs, hparams)
+            args.test_envs, hparams, overlap_class_id = args.overlap)
     else:
         raise NotImplementedError
 
@@ -230,8 +233,12 @@ if __name__ == "__main__":
 
             evals = zip(eval_loader_names, eval_loaders, eval_weights)
             for name, loader, weights in evals:
-                acc = misc.accuracy(algorithm, loader, weights, device)
+                metric_values = misc.accuracy(algorithm, loader, weights, device, dataset)
+                acc, f1, overlap_class_acc, non_overlap_class_acc = metric_values
                 results[name+'_acc'] = acc
+                results[name+'_f1'] = f1
+                results[name+'_non_overlap_acc'] = non_overlap_class_acc
+                results[name+'_overlap_acc'] = overlap_class_acc
 
             results['mem_gb'] = torch.cuda.max_memory_allocated() / (1024.*1024.*1024.)
 

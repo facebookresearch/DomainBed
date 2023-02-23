@@ -2,6 +2,7 @@
 
 import os
 import torch
+import numpy as np
 from PIL import Image, ImageFile
 from torchvision import transforms
 import torchvision.datasets.folder
@@ -221,6 +222,8 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
         if domain_class_filter is None:
             domain_class_filter = [list(range(self.num_classes)) for _ in range(num_envs-1)]
 
+        self.overlapping_classes = self.get_overlapping_classes(domain_class_filter, self.num_classes)
+
         # Dynamically associate a filter with a domain except for test_envs[0]
         num_filters = len(domain_class_filter)
         assert num_envs-1 == num_filters # b/c exempt first test env
@@ -284,6 +287,18 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
         self.input_shape = (3, 224, 224,)
         assert self.num_classes == len(self.datasets[-1].classes)
+
+    def get_overlapping_classes(self, class_split: List[List[int]], num_classes: int) -> List[int]:
+        """ 
+        Return the classes in multiple domains.
+        """
+        overlap = np.zeros(num_classes)
+        for data in class_split:
+            np.add.at(overlap, data, 1)
+
+        overlapping_classes = list(np.where(overlap>1)[0])
+
+        return overlapping_classes
 
     def get_idx_to_class(self, data_dir: str) -> Dict[int, str]:
         dataset = ImageFolder(data_dir)
