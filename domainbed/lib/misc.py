@@ -255,7 +255,7 @@ def accuracy(network, loader, weights, device, dataset):
 
     compute_acc = accuracy.compute()
     compute_f1 = f1_score.compute()
-    compute_per_class_acc = per_class_accuracy.compute()
+    compute_per_class_acc = per_class_accuracy.compute().cpu().numpy()
 
     overlap_class_acc = []
     non_overlap_class_acc = []
