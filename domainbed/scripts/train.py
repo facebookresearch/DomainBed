@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
     if args.dataset in vars(datasets):
         dataset = vars(datasets)[args.dataset](args.data_dir,
-            args.test_envs, hparams, overlap_class_id = args.overlap)
+            args.test_envs, hparams, class_overlap_id = args.overlap)
     else:
         raise NotImplementedError
 
