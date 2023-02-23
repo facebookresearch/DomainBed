@@ -213,17 +213,19 @@ def accuracy(network, loader, weights, device, dataset):
 
     f1_score = torchmetrics.F1Score(
         task="multiclass", num_classes=num_classes, average="macro"
-    )
+    ).to(device)
+
     per_class_accuracy = torchmetrics.Accuracy(
         task="multiclass",
         num_classes=num_classes,
         average=None,
-    )
+    ).to(device)
+
     accuracy = torchmetrics.Accuracy(
         task="multiclass",
         num_classes=num_classes,
         average="micro",
-    )
+    ).to(device)
 
     network.eval()
     with torch.no_grad():
