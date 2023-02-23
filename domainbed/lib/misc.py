@@ -253,8 +253,8 @@ def accuracy(network, loader, weights, device, dataset):
             per_class_accuracy.update(p, y)
     network.train()
 
-    compute_acc = accuracy.compute()
-    compute_f1 = f1_score.compute()
+    compute_acc = accuracy.compute().item()
+    compute_f1 = f1_score.compute().item()
     compute_per_class_acc = per_class_accuracy.compute().cpu().numpy()
 
     overlap_class_acc = []

@@ -237,8 +237,8 @@ if __name__ == "__main__":
                 acc, f1, overlap_class_acc, non_overlap_class_acc = metric_values
                 results[name+'_acc'] = acc
                 results[name+'_f1'] = f1
-                results[name+'_non_overlap_acc'] = non_overlap_class_acc
-                results[name+'_overlap_acc'] = overlap_class_acc
+                results[name+'_nacc'] = non_overlap_class_acc
+                results[name+'_oacc'] = overlap_class_acc
 
             results['mem_gb'] = torch.cuda.max_memory_allocated() / (1024.*1024.*1024.)
 
