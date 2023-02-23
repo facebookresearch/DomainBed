@@ -153,6 +153,7 @@ if __name__ == "__main__":
     parser.add_argument('--holdout_fraction', type=float, default=0.2)
     parser.add_argument('--single_test_envs', action='store_true')
     parser.add_argument('--skip_confirmation', action='store_true')
+    parser.add_argument('--overlap', type=int, default=100)
     args = parser.parse_args()
 
     args_list = make_args_list(
