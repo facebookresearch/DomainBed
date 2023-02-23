@@ -212,15 +212,15 @@ def accuracy(network, loader, weights, device, dataset):
     num_classes = dataset.num_classes
 
     f1_score = torchmetrics.F1Score(
-        task="multitask", num_classes=num_classes, average="macro"
+        task="multiclass", num_classes=num_classes, average="macro"
     )
     per_class_accuracy = torchmetrics.Accuracy(
-        task="multitask",
+        task="multiclass",
         num_classes=num_classes,
         average=None,
     )
     accuracy = torchmetrics.Accuracy(
-        task="multitask",
+        task="multiclass",
         num_classes=num_classes,
         average="micro",
     )
