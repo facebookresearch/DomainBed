@@ -280,7 +280,7 @@ def accuracy(network, loader, weights, device, dataset):
 
     assert np.isclose(other_acc, compute_acc, atol=1e-06), f"{other_acc}, {compute_acc}"
 
-    return compute_acc, compute_f1, overlap_class_acc, non_overlap_class_acc
+    return float(compute_acc), float(compute_f1), float(overlap_class_acc), float(non_overlap_class_acc)
 
 
 class Tee:
