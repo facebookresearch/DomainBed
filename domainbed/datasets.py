@@ -48,12 +48,15 @@ class DomainBedImageFolder(ImageFolder):
         super().__init__(root, transform, target_transform)
 
         # Remove specified classes
-        for idx, sample in enumerate(self.samples):
-            path, target = sample
+        old_samples = self.samples
+        self.samples = []
+        self.targets = []
+        for sample in old_samples:
+            _, target = sample
             
-            if target in remove_classes:
-                del self.samples[idx]
-                del self.targets[idx]
+            if target not in remove_classes:
+                self.samples.append(sample)
+                self.targets.append(target)
 
         self.imgs = self.samples
 
@@ -244,7 +247,6 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
 
         self.datasets = []
         for i, environment in enumerate(environments):
-        # TODO: If 100 then ignore class filtering all together
 
             path = os.path.join(root, environment)
 
@@ -269,7 +271,7 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
                 env_dataset.allowed_classes = filter
                 env_dataset.remove_classes = remove_classes
             else:
-                env_dataset = ImageFolder(
+                env_dataset = DomainBedImageFolder(
                     path,
                     transform=env_transform)
 
