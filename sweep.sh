@@ -7,6 +7,7 @@ algorithm=ERM
 n_hparams=5
 steps=5001
 trial=3
+gpu=2
 
 jobid=$(date +"%y%m%d%H%M%S")
 overlap=100
@@ -15,7 +16,7 @@ current_output_dir=${outputdir}/${jobid}_${algorithm}_${datasets}_o${overlap}_h$
 echo starting ${current_output_dir}
 mkdir current_output_dir
 
-CUDA_VISIBLE_DEVICES=2 python -m domainbed.scripts.sweep launch\
+CUDA_VISIBLE_DEVICES=${gpu} python -m domainbed.scripts.sweep launch\
        --data_dir=${datadir} \
        --output_dir=${current_output_dir} \
        --command_launcher local \
