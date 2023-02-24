@@ -5,7 +5,7 @@ outputdir=/pub2/podg
 datadir=/pub2/data
 algorithm=ERM
 n_hparams=5
-steps=2100
+steps=5001
 trial=3
 
 jobid=$(date +"%y%m%d%H%M%S")
