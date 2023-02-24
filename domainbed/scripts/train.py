@@ -234,6 +234,13 @@ if __name__ == "__main__":
             evals = zip(eval_loader_names, eval_loaders, eval_weights)
             for name, loader, weights in evals:
                 metric_values = misc.accuracy(algorithm, loader, weights, device, dataset)
+                # TSNE PLOT generalization
+                # 1) Where will this be stored "name"_tsne_step -> ouputdir
+                # 2) How many points? 
+                # 3) Determine the labelling scheme (other papers) (e.g. color vs symbol)
+                # 4) Which latent features?? (featurizer vs classifier)
+                #       4.2) Papers document this for their plots
+                #
                 acc, f1, overlap_class_acc, non_overlap_class_acc = metric_values
                 results[name+'_acc'] = acc
                 results[name+'_f1'] = f1

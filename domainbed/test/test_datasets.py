@@ -25,16 +25,19 @@ from parameterized import parameterized
 from domainbed.test import helpers
 
 
-def get_overlap_params() -> List[Tuple[str, str, int]]:
+def get_overlap_params() -> List[Tuple[str, str, int, List[int]]]:
     overlapping_classes = {
         "PACS": {0: [], 33: [2, 4], 66: [0, 2, 3, 4, 5], 100: list(range(7))},
         "VLCS": {0: [], 33: [2, 3], 66: [0, 2, 3, 4], 100: list(range(5))},
     }
+    num_domains = {"PACS": 4, "VLCS": 4}
+
     params = []
     for dataset in ["PACS", "VLCS"]:
         for overlap in [0, 33, 66, 100]:
-            id = dataset + str(overlap)
-            params.append((id, dataset, overlap, overlapping_classes[dataset][overlap]))
+            for test_env in range(num_domains[dataset]):
+                id = dataset + str(overlap)+f"_test_{test_env}"
+                params.append((id, dataset, overlap, test_env, overlapping_classes[dataset][overlap]))
 
     return params
 
@@ -69,14 +72,14 @@ class TestOverlapDatasets(unittest.TestCase):
         "DATA_DIR" not in os.environ, "needs DATA_DIR environment " "variable"
     )
     def test_overlap_datasets(
-        self, _, dataset_name, class_overlap_id, overlapping_classes
+        self, _, dataset_name, class_overlap_id, test_env, overlapping_classes
     ):
         """
         Test that class filters remove classes from enviroment datasets
         """
         hparams = hparams_registry.default_hparams("ERM", dataset_name)
         dataset = datasets.get_dataset_class(dataset_name)(
-            os.environ["DATA_DIR"], [0], hparams, class_overlap_id
+            os.environ["DATA_DIR"], [test_env], hparams, class_overlap_id
         )
         self.assertEqual(datasets.num_environments(dataset_name), len(dataset))
         self.assertEqual(set(dataset.overlapping_classes), set(overlapping_classes))
