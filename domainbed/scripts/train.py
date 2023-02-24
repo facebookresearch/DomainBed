@@ -236,8 +236,10 @@ if __name__ == "__main__":
                 metric_values = misc.accuracy(algorithm, loader, weights, device, dataset)
                 # TSNE PLOT generalization
                 # 1) Where will this be stored "name"_tsne_step -> ouputdir
-                # 2) How many points? 
-                # 3) Determine the labelling scheme (other papers) (e.g. color vs symbol)
+                # 2) How many points? (all) 
+                # 3) Determine the labelling scheme (other papers) (e.g. color)
+                #       3.1) class = color (consistent)
+                #       3.2) store 2d points, class, domain ("name")
                 # 4) Which latent features?? (featurizer vs classifier)
                 #       4.2) Papers document this for their plots
                 #
