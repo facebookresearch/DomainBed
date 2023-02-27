@@ -49,7 +49,7 @@ if __name__ == "__main__":
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
 
-    parser.add_argument('--overlap', type=int, default=100)
+    parser.add_argument('--overlap', type=int)
 
     args = parser.parse_args()
 

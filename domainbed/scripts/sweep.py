@@ -59,7 +59,8 @@ class Job:
         job_info = (self.train_args['dataset'],
             self.train_args['algorithm'],
             self.train_args['test_envs'],
-            self.train_args['hparams_seed'])
+            self.train_args['hparams_seed'],
+            self.train_args["overlap"])
         return '{}: {} {}'.format(
             self.state,
             self.output_dir,
@@ -96,7 +97,7 @@ def all_test_env_combinations(n):
             yield [i, j]
 
 def make_args_list(n_trials, dataset_names, algorithms, n_hparams_from, n_hparams, steps,
-    data_dir, task, holdout_fraction, single_test_envs, hparams):
+    data_dir, task, holdout_fraction, single_test_envs, hparams, overlap):
     args_list = []
     for trial_seed in range(n_trials):
         for dataset in dataset_names:
@@ -124,6 +125,7 @@ def make_args_list(n_trials, dataset_names, algorithms, n_hparams_from, n_hparam
                             train_args['steps'] = steps
                         if hparams is not None:
                             train_args['hparams'] = hparams
+                        train_args["overlap"] = overlap
                         args_list.append(train_args)
     return args_list
 
@@ -153,7 +155,7 @@ if __name__ == "__main__":
     parser.add_argument('--holdout_fraction', type=float, default=0.2)
     parser.add_argument('--single_test_envs', action='store_true')
     parser.add_argument('--skip_confirmation', action='store_true')
-    parser.add_argument('--overlap', type=int, default=100)
+    parser.add_argument('--overlap', type=int)
     args = parser.parse_args()
 
     args_list = make_args_list(
@@ -167,7 +169,8 @@ if __name__ == "__main__":
         task=args.task,
         holdout_fraction=args.holdout_fraction,
         single_test_envs=args.single_test_envs,
-        hparams=args.hparams
+        hparams=args.hparams,
+        overlap=args.overlap
     )
 
     jobs = [Job(train_args, args.output_dir) for train_args in args_list]
