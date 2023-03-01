@@ -3,20 +3,20 @@
 # local variables
 outputdir=/pub2/podg
 datadir=/pub2/data
-algorithm=ERM
+datasets=PACS
 n_hparams=5
 steps=5001
 trial=3
-gpu=2
+gpu=0
+overlap=0
 
 jobid=$(date +"%y%m%d%H%M%S")
-overlap=100
-datasets=VLCS
-current_output_dir=${outputdir}/${jobid}_${algorithm}_${datasets}_o${overlap}_h${n_hparams}_s${steps}_t${trial}
+algorithm=ERM
+current_output_dir=${outputdir}/${overlap}/${algorithm}_${datasets}_o${overlap}_h${n_hparams}_s${steps}_t${trial}_${jobid}
 echo starting ${current_output_dir}
-mkdir current_output_dir
+mkdir -p current_output_dir
 
-CUDA_VISIBLE_DEVICES=${gpu} echo 'y' | python -m domainbed.scripts.sweep launch\
+echo 'y' |CUDA_VISIBLE_DEVICES=${gpu} python -m domainbed.scripts.sweep launch\
        --data_dir=${datadir} \
        --output_dir=${current_output_dir} \
        --command_launcher local \
@@ -27,3 +27,4 @@ CUDA_VISIBLE_DEVICES=${gpu} echo 'y' | python -m domainbed.scripts.sweep launch\
        --datasets ${datasets} \
        --n_hparams ${n_hparams} \
        --n_trials ${trial}
+
