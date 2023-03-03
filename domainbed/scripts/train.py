@@ -10,6 +10,7 @@ import time
 import uuid
 
 import numpy as np
+import pandas as pd
 import PIL
 import torch
 import torchvision
@@ -50,6 +51,8 @@ if __name__ == "__main__":
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
 
     parser.add_argument('--overlap', type=int)
+    parser.add_argument('--tsne_data_lim', type=int, default=100,
+        help='number of datapoints per domain for tsne plots')
 
     args = parser.parse_args()
 
@@ -231,10 +234,14 @@ if __name__ == "__main__":
             for key, val in checkpoint_vals.items():
                 results[key] = np.mean(val)
 
+            tsne_dfs = []
             evals = zip(eval_loader_names, eval_loaders, eval_weights)
             for name, loader, weights in evals:
                 metric_values = misc.accuracy(algorithm, loader, weights, device, dataset)
                 # TSNE PLOT generalization
+                df_domain = misc.get_tsne_data(algorithm, loader, device, 
+                                        name, n=args.tsne_data_lim)
+                tsne_dfs.append(df_domain)
                 # 1) Where will this be stored "name"_tsne_step -> ouputdir
                 # 2) How many points? (all) 
                 # 3) Determine the labelling scheme (other papers) (e.g. color)
@@ -248,6 +255,12 @@ if __name__ == "__main__":
                 results[name+'_f1'] = f1
                 results[name+'_nacc'] = non_overlap_class_acc
                 results[name+'_oacc'] = overlap_class_acc
+            
+            # tsne data gen, plotting and saving done here
+            tsne_df = pd.concat(tsne_dfs)
+            tsne_fig = misc.get_tsne_plot(tsne_df)
+            tsne_df.to_csv(os.path.join(args.output_dir, f'tsne_data_{step}.csv'))
+            tsne_fig.savefig(os.path.join(args.output_dir, f'tsne_plot_{step}.png'))
 
             results['mem_gb'] = torch.cuda.max_memory_allocated() / (1024.*1024.*1024.)
 

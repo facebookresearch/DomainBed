@@ -16,6 +16,12 @@ import torchmetrics
 from collections import Counter
 from itertools import cycle
 
+import pandas as pd
+from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+
 
 def distance(h1, h2):
     """distance of two networks (h1, h2 are classifiers)"""
@@ -282,6 +288,62 @@ def accuracy(network, loader, weights, device, dataset):
     assert np.isclose(other_acc, compute_acc, atol=1e-06), f"{other_acc}, {compute_acc}"
 
     return float(compute_acc), float(compute_f1), float(overlap_class_acc), float(non_overlap_class_acc)
+
+def get_tsne_data(network, loader, device, domain, n=100):
+    df = pd.DataFrame({'latent_vector' : [], 'prediction' : [], 
+                       'class' : [], 'domain' : []})
+
+    zs = []
+    ps = []
+    ys = []
+
+    network.eval()
+    with torch.no_grad():
+        i = 0
+        for x, y in loader:
+            x = x.to(device)
+            y = y.to(device)
+            z = network.featurizer(x) # SAGNet uses .network_f for featurizer
+            p = network.predict(x)
+
+            [zs.append(z_i) for z_i in torch.flatten(z, 1)]
+            [ps.append(p_i) for p_i in p]
+            [ys.append(y_i) for y_i in y]
+
+            i += x.shape[0]
+            if i > n:
+                break
+
+    df['latent_vector'] = np.array(zs)
+    df['prediction'] = np.array(ps)
+    df['class'] = np.array(ys)
+    df['domain'] = np.array([domain for _ in ys])
+
+    return df
+
+def get_tsne_plot(df):
+
+    # reduce dimensionality of featurized latent vectors
+    pca = PCA(n_components=48) 
+    pca.fit(df['latent_vector'])
+    df['pca_latent_vector']= pca.transform(source_zs[:n_samples])
+
+    tsne = TSNE(n_components=2, perplexity=10)
+    df['tsne_embeddings'] = tsne.fit_transform(df['pca_latent_vector'])
+
+    all_colours = list(mcolors.CSS4_COLORS.keys())
+
+    fig = plt.figure()
+    ax = plt.subplot(111)
+
+    for i, label in enumerate(df['class'].unique()):
+        ax.scatter(x=df[df['class']==label]['tsne_embeddings'][:, 0].tolist(), 
+                   y=df[df['class']==label]['tsne_embeddings'][:, 1].tolist(), 
+                    s = 2, c = all_colours[i], label=label)
+
+    ax.legend()
+
+    return fig
 
 
 class Tee:
