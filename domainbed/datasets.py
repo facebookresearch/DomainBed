@@ -5,7 +5,7 @@ import torch
 from PIL import Image, ImageFile
 from torchvision import transforms
 import torchvision.datasets.folder
-from torch.utils.data import TensorDataset, Subset
+from torch.utils.data import TensorDataset, Subset, ConcatDataset
 from torchvision.datasets import MNIST, ImageFolder
 from torchvision.transforms.functional import rotate
 
@@ -365,6 +365,7 @@ class WILDSFMoW(WILDSDataset):
 
 ## Spawrious base class
 class SpawriousBenchmark(MultipleDomainDataset):
+    ENVIRONMENTS = ["Test","SC_group_1","SC_group_2"]
     def __init__(self, train_combinations, test_combinations, root_dir, augment=True, type1=False):
         self.input_shape = (3,224,224)
         self.num_classes = 4
@@ -493,20 +494,11 @@ class SpawriousBenchmark(MultipleDomainDataset):
                         two.dataset.samples[idx][1]
                     ) 
 
-
-## Spawrious classes for each Spawrious dataset 
-class SpuriousLocationType1_1(SpawriousBenchmark):
-    ENVIRONMENTS = ["Test","SC_group_1","SC_group_2"]
-    def __init__(self, root_dir, test_envs, hparams):
+    def build_type1_combination(self,group,test,filler):
         total = 3168
         counts = [int(0.97*total),int(0.87*total)]
-
-        group = ["desert","jungle","dirt","snow"]
-        test = ["dirt","snow","desert","jungle"]
-        filler = "beach"
-
-        exp1_TI = {}
-        exp1_TI['train_combinations'] = {
+        combinations = {}
+        combinations['train_combinations'] = {
             ## correlated class
             ("bulldog",):[(group[0],counts[0]),(group[0],counts[1])],
             ("dachshund",):[(group[1],counts[0]),(group[1],counts[1])],
@@ -516,151 +508,88 @@ class SpuriousLocationType1_1(SpawriousBenchmark):
             ("bulldog","dachshund","labrador","corgi"):[(filler,total-counts[0]),(filler,total-counts[1])],
         }
         ## TEST
-        exp1_TI['test_combinations'] = {
+        combinations['test_combinations'] = {
             ("bulldog",):[test[0], test[0]],
             ("dachshund",):[test[1], test[1]],
             ("labrador",):[test[2], test[2]],
             ("corgi",):[test[3], test[3]],
         }
-        super().__init__(exp1_TI['train_combinations'], exp1_TI['test_combinations'], root_dir, hparams["data_augmentation"], type1=True)
+        return combinations
+
+    def build_type2_combinations(self,group,test):
+        total = 3168
+        counts = [total,total]
+        combinations = {}
+        combinations['train_combinations'] = {
+            ## correlated class
+            ("bulldog",):[(group[0],counts[0]),(group[1],counts[1])],
+            ("dachshund",):[(group[1],counts[0]),(group[0],counts[1])],
+            ("labrador",):[(group[2],counts[0]),(group[3],counts[1])],
+            ("corgi",):[(group[3],counts[0]),(group[2],counts[1])],
+        }
+        combinations['test_combinations'] = {
+            ("bulldog",):[test[0], test[1]],
+            ("dachshund",):[test[1], test[0]],
+            ("labrador",):[test[2], test[3]],
+            ("corgi",):[test[3], test[2]],
+        }
+        return combinations
+
+
+## Spawrious classes for each Spawrious dataset 
+class SpuriousLocationType1_1(SpawriousBenchmark):
+    def __init__(self, root_dir, test_envs, hparams):
+        group = ["desert","jungle","dirt","snow"]
+        test = ["dirt","snow","desert","jungle"]
+        filler = "beach"
+        combinations = self.build_type1_combination(group,test,filler)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams["data_augmentation"], type1=True)
 
 
 class SpuriousLocationType1_2(SpawriousBenchmark):
     ENVIRONMENTS = ["Test","SC_group_1","SC_group_2"]
     def __init__(self, root_dir, test_envs, hparams):
-        total = 3168
-        counts = [int(0.97*total),int(0.87*total)]
-
         group = ['mountain', 'beach', 'dirt', 'jungle']
         test = ['jungle', 'dirt', 'beach', 'snow']
         filler = "desert"
-
-        exp1_TI = {}
-        exp1_TI['train_combinations'] = {
-            ## correlated class
-            ("bulldog",):[(group[0],counts[0]),(group[0],counts[1])],
-            ("dachshund",):[(group[1],counts[0]),(group[1],counts[1])],
-            ("labrador",):[(group[2],counts[0]),(group[2],counts[1])],
-            ("corgi",):[(group[3],counts[0]),(group[3],counts[1])],
-            ## filler
-            ("bulldog","dachshund","labrador","corgi"):[(filler,total-counts[0]),(filler,total-counts[1])],
-        }
-        ## TEST
-        exp1_TI['test_combinations'] = {
-            ("bulldog",):[test[0], test[0]],
-            ("dachshund",):[test[1], test[1]],
-            ("labrador",):[test[2], test[2]],
-            ("corgi",):[test[3], test[3]],
-        }
-        super().__init__(exp1_TI['train_combinations'], exp1_TI['test_combinations'], root_dir, hparams["data_augmentation"], type1=True)
+        combinations = self.build_type1_combination(group,test,filler)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams["data_augmentation"], type1=True)
 
 
 class SpuriousLocationType1_3(SpawriousBenchmark):
     ENVIRONMENTS = ["Test","SC_group_1","SC_group_2"]
     def __init__(self, root_dir, test_envs, hparams):
-        total = 3168
-        counts = [int(0.97*total),int(0.87*total)]
-
         group = ['jungle', 'mountain', 'snow', 'desert']
         test = ['mountain', 'snow', 'desert', 'jungle']
         filler = "beach"
-
-        exp1_TI = {}
-        exp1_TI['train_combinations'] = {
-            ## correlated class
-            ("bulldog",):[(group[0],counts[0]),(group[0],counts[1])],
-            ("dachshund",):[(group[1],counts[0]),(group[1],counts[1])],
-            ("labrador",):[(group[2],counts[0]),(group[2],counts[1])],
-            ("corgi",):[(group[3],counts[0]),(group[3],counts[1])],
-            ## filler
-            ("bulldog","dachshund","labrador","corgi"):[(filler,total-counts[0]),(filler,total-counts[1])],
-        }
-        ## TEST
-        exp1_TI['test_combinations'] = {
-            ("bulldog",):[test[0], test[0]],
-            ("dachshund",):[test[1], test[1]],
-            ("labrador",):[test[2], test[2]],
-            ("corgi",):[test[3], test[3]],
-        }
-        super().__init__(exp1_TI['train_combinations'], exp1_TI['test_combinations'], root_dir, hparams["data_augmentation"], type1=True)
-
+        combinations = self.build_type1_combination(group,test,filler)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams["data_augmentation"], type1=True)
 
 
 class SpuriousLocationType2_1(SpawriousBenchmark):
     ENVIRONMENTS = ["Test","SC_group_1","SC_group_2"]
     def __init__(self, root_dir, test_envs, hparams):
-        total = 3168
-        counts = [total,total]
-
         group = ["dirt","jungle","snow","beach"]
         test = ["snow","beach","dirt","jungle"]
-
-        exp1_TI = {}
-        exp1_TI['train_combinations'] = {
-            ## correlated class
-            ("bulldog",):[(group[0],counts[0]),(group[1],counts[1])],
-            ("dachshund",):[(group[1],counts[0]),(group[0],counts[1])],
-            ("labrador",):[(group[2],counts[0]),(group[3],counts[1])],
-            ("corgi",):[(group[3],counts[0]),(group[2],counts[1])],
-        }
-        exp1_TI['test_combinations'] = {
-            ("bulldog",):[test[0], test[1]],
-            ("dachshund",):[test[1], test[0]],
-            ("labrador",):[test[2], test[3]],
-            ("corgi",):[test[3], test[2]],
-        }
-        super().__init__(exp1_TI['train_combinations'], exp1_TI['test_combinations'], root_dir, hparams["data_augmentation"])
+        combinations = self.build_type2_combination(group,test)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams["data_augmentation"])
 
 class SpuriousLocationType2_2(SpawriousBenchmark):
     ENVIRONMENTS = ["Test","SC_group_1","SC_group_2"]
     def __init__(self, root_dir, test_envs, hparams):
-        total = 3168
-        counts = [total,total]
-
         group = ['desert', 'mountain', 'dirt', 'jungle']
         test = ['dirt', 'jungle', 'mountain', 'desert']
-
-        exp1_TI = {}
-        exp1_TI['train_combinations'] = {
-            ## correlated class
-            ("bulldog",):[(group[0],counts[0]),(group[1],counts[1])],
-            ("dachshund",):[(group[1],counts[0]),(group[0],counts[1])],
-            ("labrador",):[(group[2],counts[0]),(group[3],counts[1])],
-            ("corgi",):[(group[3],counts[0]),(group[2],counts[1])],
-        }
-        exp1_TI['test_combinations'] = {
-            ("bulldog",):[test[0], test[1]],
-            ("dachshund",):[test[1], test[0]],
-            ("labrador",):[test[2], test[3]],
-            ("corgi",):[test[3], test[2]],
-        }
-        super().__init__(exp1_TI['train_combinations'], exp1_TI['test_combinations'], root_dir, hparams["data_augmentation"])
+        combinations = self.build_type2_combination(group,test)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams["data_augmentation"]) 
 
 
 class SpuriousLocationType2_3(SpawriousBenchmark):
     ENVIRONMENTS = ["Test","SC_group_1","SC_group_2"]
     def __init__(self, root_dir, test_envs, hparams):
-        total = 3168
-        counts = [total,total]
-
         group = ['beach', 'snow', 'mountain', 'desert']
         test = ['desert', 'mountain', 'beach', 'snow']
-
-        exp1_TI = {}
-        exp1_TI['train_combinations'] = {
-            ## correlated class
-            ("bulldog",):[(group[0],counts[0]),(group[1],counts[1])],
-            ("dachshund",):[(group[0],counts[0]),(group[1],counts[1])],
-            ("labrador",):[(group[2],counts[0]),(group[3],counts[1])],
-            ("corgi",):[(group[2],counts[0]),(group[3],counts[1])],
-        }
-        exp1_TI['test_combinations'] = {
-            ("bulldog",):[test[0], test[1]],
-            ("dachshund",):[test[1], test[0]],
-            ("labrador",):[test[2], test[3]],
-            ("corgi",):[test[3], test[2]],
-        }
-        super().__init__(exp1_TI['train_combinations'], exp1_TI['test_combinations'], root_dir, hparams["data_augmentation"])
+        combinations = self.build_type2_combination(group,test)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams["data_augmentation"])
 
 
 ## List of functions that load pytorch dataset files to save the time from building the dataset everytime (part of the dataset files downloaded)

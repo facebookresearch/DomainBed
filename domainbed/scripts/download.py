@@ -10,6 +10,7 @@ import gdown
 import uuid
 import json
 import os
+import urllib
 
 from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
 from wilds.datasets.fmow_dataset import FMoWDataset
