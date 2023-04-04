@@ -263,7 +263,7 @@ def download_sviro(data_dir):
 
 def download_spawrious(data_dir, remove=True):
     dst = os.path.join(data_dir, "spawrious.tar.gz")
-    urllib.request.urlretrieve('https://www.dropbox.com/s/wc9mwza5yk66i83/spawrious224.tar.gz?dl=1', dst)
+    urllib.request.urlretrieve('https://www.dropbox.com/s/e40j553480h3f3s/spawrious224.tar.gz?dl=1', dst)
     tar = tarfile.open(dst, "r:gz")
     tar.extractall(os.path.dirname(dst))
     tar.close()

@@ -488,7 +488,7 @@ class SpawriousBenchmark(MultipleDomainDataset):
         return combinations
 
     # Buils combination dictionary for m2m datasets
-    def build_type2_combinations(self,group,test):
+    def build_type2_combination(self,group,test):
         total = 3168
         counts = [total,total]
         combinations = {}
