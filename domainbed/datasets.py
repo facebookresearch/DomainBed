@@ -5,7 +5,7 @@ import torch
 from PIL import Image, ImageFile
 from torchvision import transforms
 import torchvision.datasets.folder
-from torch.utils.data import TensorDataset, Subset
+from torch.utils.data import TensorDataset, Subset, ConcatDataset, Dataset
 from torchvision.datasets import MNIST, ImageFolder
 from torchvision.transforms.functional import rotate
 
@@ -30,7 +30,14 @@ DATASETS = [
     "SVIRO",
     # WILDS datasets
     "WILDSCamelyon",
-    "WILDSFMoW"
+    "WILDSFMoW",
+    # Spawrious datasets
+    "SpawriousO2O_easy",
+    "SpawriousO2O_medium",
+    "SpawriousO2O_hard",
+    "SpawriousM2M_easy",
+    "SpawriousM2M_medium",
+    "SpawriousM2M_hard",
 ]
 
 def get_dataset_class(dataset_name):
@@ -355,3 +362,194 @@ class WILDSFMoW(WILDSDataset):
         super().__init__(
             dataset, "region", test_envs, hparams['data_augmentation'], hparams)
 
+
+## Spawrious base classes
+class CustomImageFolder(Dataset):
+    """
+    A class that takes one folder at a time and loads a set number of images in a folder and assigns them a specific class
+    """
+    def __init__(self, folder_path, class_index, limit=None, transform=None):
+        self.folder_path = folder_path
+        self.class_index = class_index
+        self.image_paths = [os.path.join(folder_path, img) for img in os.listdir(folder_path) if img.endswith(('.png', '.jpg', '.jpeg'))]
+        if limit:
+            self.image_paths = self.image_paths[:limit]
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, index):
+        img_path = self.image_paths[index]
+        img = Image.open(img_path).convert('RGB')
+        
+        if self.transform:
+            img = self.transform(img)
+        
+        label = torch.tensor(self.class_index, dtype=torch.long)
+        return img, label
+
+class SpawriousBenchmark(MultipleDomainDataset):
+    ENVIRONMENTS = ["Test", "SC_group_1", "SC_group_2"]
+    input_shape = (3, 224, 224)
+    num_classes = 4
+    class_list = ["bulldog", "corgi", "dachshund", "labrador"]
+
+    def __init__(self, train_combinations, test_combinations, root_dir, augment=True, type1=False):
+        self.type1 = type1
+        train_datasets, test_datasets = self._prepare_data_lists(train_combinations, test_combinations, root_dir, augment)
+        self.datasets = [ConcatDataset(test_datasets)] + train_datasets
+
+    # Prepares the train and test data lists by applying the necessary transformations.
+    def _prepare_data_lists(self, train_combinations, test_combinations, root_dir, augment):
+        test_transforms = transforms.Compose([
+            transforms.Resize((self.input_shape[1], self.input_shape[2])),
+            transforms.transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+        
+        if augment:
+            train_transforms = transforms.Compose([
+                transforms.Resize((self.input_shape[1], self.input_shape[2])),
+                transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(0.3, 0.3, 0.3, 0.3),
+                transforms.RandomGrayscale(),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+        else:
+            train_transforms = test_transforms
+
+        train_data_list = self._create_data_list(train_combinations, root_dir, train_transforms)
+        test_data_list = self._create_data_list(test_combinations, root_dir, test_transforms)
+
+        return train_data_list, test_data_list
+
+    # Creates a list of datasets based on the given combinations and transformations.
+    def _create_data_list(self, combinations, root_dir, transforms):
+        data_list = []
+        if isinstance(combinations, dict):
+            
+            # Build class groups for a given set of combinations, root directory, and transformations.
+            for_each_class_group = []
+            cg_index = 0
+            for classes, comb_list in combinations.items():
+                for_each_class_group.append([])
+                for ind, location_limit in enumerate(comb_list):
+                    if isinstance(location_limit, tuple):
+                        location, limit = location_limit
+                    else:
+                        location, limit = location_limit, None
+                    cg_data_list = []
+                    for cls in classes:
+                        path = os.path.join(root_dir, f"{0 if not self.type1 else ind}/{location}/{cls}")
+                        data = CustomImageFolder(folder_path=path, class_index=self.class_list.index(cls), limit=limit, transform=transforms)
+                        cg_data_list.append(data)
+                    
+                    for_each_class_group[cg_index].append(ConcatDataset(cg_data_list))
+                cg_index += 1
+
+            for group in range(len(for_each_class_group[0])):
+                data_list.append(
+                    ConcatDataset(
+                        [for_each_class_group[k][group] for k in range(len(for_each_class_group))]
+                    )
+                )
+        else:
+            for location in combinations:
+                path = os.path.join(root_dir, f"{0}/{location}/")
+                data = ImageFolder(root=path, transform=transforms)
+                data_list.append(data)
+
+        return data_list
+    
+    
+    # Buils combination dictionary for o2o datasets
+    def build_type1_combination(self,group,test,filler):
+        total = 3168
+        counts = [int(0.97*total),int(0.87*total)]
+        combinations = {}
+        combinations['train_combinations'] = {
+            ## correlated class
+            ("bulldog",):[(group[0],counts[0]),(group[0],counts[1])],
+            ("dachshund",):[(group[1],counts[0]),(group[1],counts[1])],
+            ("labrador",):[(group[2],counts[0]),(group[2],counts[1])],
+            ("corgi",):[(group[3],counts[0]),(group[3],counts[1])],
+            ## filler
+            ("bulldog","dachshund","labrador","corgi"):[(filler,total-counts[0]),(filler,total-counts[1])],
+        }
+        ## TEST
+        combinations['test_combinations'] = {
+            ("bulldog",):[test[0], test[0]],
+            ("dachshund",):[test[1], test[1]],
+            ("labrador",):[test[2], test[2]],
+            ("corgi",):[test[3], test[3]],
+        }
+        return combinations
+
+    # Buils combination dictionary for m2m datasets
+    def build_type2_combination(self,group,test):
+        total = 3168
+        counts = [total,total]
+        combinations = {}
+        combinations['train_combinations'] = {
+            ## correlated class
+            ("bulldog",):[(group[0],counts[0]),(group[1],counts[1])],
+            ("dachshund",):[(group[1],counts[0]),(group[0],counts[1])],
+            ("labrador",):[(group[2],counts[0]),(group[3],counts[1])],
+            ("corgi",):[(group[3],counts[0]),(group[2],counts[1])],
+        }
+        combinations['test_combinations'] = {
+            ("bulldog",):[test[0], test[1]],
+            ("dachshund",):[test[1], test[0]],
+            ("labrador",):[test[2], test[3]],
+            ("corgi",):[test[3], test[2]],
+        }
+        return combinations
+
+## Spawrious classes for each Spawrious dataset 
+class SpawriousO2O_easy(SpawriousBenchmark):
+    def __init__(self, root_dir, test_envs, hparams):
+        group = ["desert","jungle","dirt","snow"]
+        test = ["dirt","snow","desert","jungle"]
+        filler = "beach"
+        combinations = self.build_type1_combination(group,test,filler)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation'], type1=True)
+
+class SpawriousO2O_medium(SpawriousBenchmark):
+    def __init__(self, root_dir, test_envs, hparams):
+        group = ['mountain', 'beach', 'dirt', 'jungle']
+        test = ['jungle', 'dirt', 'beach', 'snow']
+        filler = "desert"
+        combinations = self.build_type1_combination(group,test,filler)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation'], type1=True)
+
+class SpawriousO2O_hard(SpawriousBenchmark):
+    def __init__(self, root_dir, test_envs, hparams):
+        group = ['jungle', 'mountain', 'snow', 'desert']
+        test = ['mountain', 'snow', 'desert', 'jungle']
+        filler = "beach"
+        combinations = self.build_type1_combination(group,test,filler)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation'], type1=True)
+
+class SpawriousM2M_easy(SpawriousBenchmark):
+    def __init__(self, root_dir, test_envs, hparams):
+        group = ['desert', 'mountain', 'dirt', 'jungle']
+        test = ['dirt', 'jungle', 'mountain', 'desert']
+        combinations = self.build_type2_combination(group,test)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation']) 
+
+class SpawriousM2M_medium(SpawriousBenchmark):
+    def __init__(self, root_dir, test_envs, hparams):
+        group = ['beach', 'snow', 'mountain', 'desert']
+        test = ['desert', 'mountain', 'beach', 'snow']
+        combinations = self.build_type2_combination(group,test)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation'])
+        
+class SpawriousM2M_hard(SpawriousBenchmark):
+    ENVIRONMENTS = ["Test","SC_group_1","SC_group_2"]
+    def __init__(self, root_dir, test_envs, hparams):
+        group = ["dirt","jungle","snow","beach"]
+        test = ["snow","beach","dirt","jungle"]
+        combinations = self.build_type2_combination(group,test)
+        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation'])
