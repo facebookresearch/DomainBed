@@ -152,14 +152,31 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == 'ERMPlusPlus':
         _hparam('linear_lr', 5e-5, lambda r: 10**r.uniform(-5, -3.5))
 
+    if algorithm == "ADRMX":
+        _hparam('cnt_lambda', 1.0, lambda r: r.choice([1.0]))
+        _hparam('dclf_lambda', 1.0, lambda r: r.choice([1.0]))
+        _hparam('disc_lambda', 0.75, lambda r: r.choice([0.75]))
+        _hparam('rmxd_lambda', 1.0, lambda r: r.choice([1.0]))
+        _hparam('d_steps_per_g_step', 2, lambda r: r.choice([2]))
+        _hparam('beta1', 0.5, lambda r: r.choice([0.5]))
+        _hparam('mlp_width', 256, lambda r: r.choice([256]))
+        _hparam('mlp_depth', 9, lambda r: int(r.choice([8, 9, 10])))
+        _hparam('mlp_dropout', 0., lambda r: r.choice([0]))
+
 
     # Dataset-and-algorithm-specific hparam definitions. Each block of code
     # below corresponds to exactly one hparam. Avoid nested conditionals.
 
     if dataset in SMALL_IMAGES:
-        _hparam('lr', 1e-3, lambda r: 10**r.uniform(-4.5, -2.5))
+        if algorithm == "ADRMX":
+            _hparam('lr', 3e-3, lambda r: r.choice([5e-4, 1e-3, 2e-3, 3e-3]))
+        else:
+            _hparam('lr', 1e-3, lambda r: 10**r.uniform(-4.5, -2.5))
     else:
-        _hparam('lr', 5e-5, lambda r: 10**r.uniform(-5, -3.5))
+        if algorithm == "ADRMX":
+            _hparam('lr', 3e-5, lambda r: r.choice([2e-5, 3e-5, 4e-5, 5e-5]))
+        else:
+            _hparam('lr', 5e-5, lambda r: 10**r.uniform(-5, -3.5))
 
     if dataset in SMALL_IMAGES:
         _hparam('weight_decay', 0., lambda r: 0.)
