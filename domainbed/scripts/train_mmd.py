@@ -271,8 +271,8 @@ if __name__ == "__main__":
                 for x,_ in next(uda_minibatches_iterator)]
         else:
             uda_device = None
-        step_vals = algorithm.update(minibatches_device ,unlabeled = uda_device)
-                                    # ,array1=a1, array2=a2, array3=a3, array4=a4) #p_y_align带来的爆改
+        step_vals = algorithm.update(minibatches_device ,unlabeled = uda_device
+                                    ,array1=a1, array2=a2, array3=a3, array4=a4) #p_y_align带来的爆改
         checkpoint_vals['step_time'].append(time.time() - step_start_time)
 
         for key, val in step_vals.items():

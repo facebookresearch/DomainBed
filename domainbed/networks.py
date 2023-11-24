@@ -180,11 +180,54 @@ class ContextNet(nn.Module):
     def forward(self, x):
         return self.context_net(x)
 
+class ContextNet1d(nn.Module):
+    def __init__(self, input_shape):
+        super(ContextNet1d, self).__init__()
+        self.n_inputs = input_shape[0]
+        # Keep same dimensions
+        padding = (5 - 1) // 2
+        self.context_net = nn.Sequential(
+            nn.Conv1d(1, 64, 5, padding=padding),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Conv1d(64, 64, 5, padding=padding),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Conv1d(64, 1, 5, padding=padding),
+        )
+
+    def forward(self, x):
+        x = x.view(-1,1,self.n_inputs)
+        return self.context_net(x)
+    
+class ContextNet1d_for_condARM(nn.Module):
+    def __init__(self, input_shape):
+        super(ContextNet1d, self).__init__()
+        self.n_inputs = input_shape[0]
+        # Keep same dimensions
+        padding = (5 - 1) // 2
+        self.context_net = nn.Sequential(
+            nn.Conv1d(1, 64, 5, padding=padding),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Conv1d(64, 64, 5, padding=padding),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Conv1d(64, 1, 5, padding=padding),
+        )
+
+    def forward(self, x):
+        x = x.view(-1,1,self.n_inputs)
+        return self.context_net(x)
 
 def Featurizer(input_shape, hparams):
     """Auto-select an appropriate featurizer for the given input shape."""
     if len(input_shape) == 1:
-        return MLP(input_shape[0], hparams["mlp_width"], hparams)
+        #return MLP(input_shape[0], hparams["mlp_width"], hparams)
+        return MLCNN(input_shape[0])
+    elif len(input_shape) == 2:
+        return MLCNN_multichannel(input_shape[1],input_shape[0])
+
     elif input_shape[1:3] == (28, 28):
         return MNIST_CNN(input_shape)
     elif input_shape[1:3] == (32, 32):
@@ -226,3 +269,71 @@ class WholeFish(nn.Module):
 
     def forward(self, x):
         return self.net(x)
+
+class MLCNN(nn.Module):
+    def __init__(self, n_inputs):
+        super(MLCNN, self).__init__()
+        self.feature = nn.Sequential()
+        self.feature.add_module('f_conv1', nn.Conv1d(in_channels=1,out_channels = 20, kernel_size = 3))
+        #变为batch*20*11
+        self.feature.add_module('f_bn1', nn.BatchNorm1d(20))
+        #变为batch*20*11
+        self.feature.add_module('f_relu1', nn.ReLU(True))
+        self.feature.add_module('f_conv2', nn.Conv1d(in_channels=20,out_channels = 50, kernel_size = 3))
+        #变为batch*50*9
+        self.feature.add_module('f_bn2', nn.BatchNorm1d(50))
+        self.feature.add_module('f_drop1', nn.Dropout())
+        self.feature.add_module('f_relu2', nn.ReLU(True))
+
+        self.feature.add_module('f_conv3', nn.Conv1d(in_channels=50,out_channels = 100, kernel_size = 3))
+        #变为batch*100*7
+        self.feature.add_module('f_bn3', nn.BatchNorm1d(100))
+        self.feature.add_module('f_drop2', nn.Dropout())
+        self.feature.add_module('f_relu3', nn.ReLU(True))
+
+        self.n_inputs = n_inputs
+        self.n_outputs = 100*(n_inputs-6)#****暂时没想好怎么得到n_outputs
+
+    def forward(self, input_data):
+        input_data = input_data.view(-1,1,self.n_inputs)
+        input_data = input_data.type(torch.FloatTensor).cuda()
+        #feature = input_data.permute(0,2,1)
+        feature = self.feature(input_data)
+        n_outputs = feature.shape[1]*feature.shape[2]
+        feature = feature.view(-1, n_outputs)
+
+        return feature
+    
+class MLCNN_multichannel(nn.Module):
+    def __init__(self, n_inputs, channels):
+        super(MLCNN_multichannel, self).__init__()
+        self.feature = nn.Sequential()
+        self.feature.add_module('f_conv1', nn.Conv1d(in_channels = channels,out_channels = 20, kernel_size = 3))
+        #变为batch*20*11
+        self.feature.add_module('f_bn1', nn.BatchNorm1d(20))
+        #变为batch*20*11
+        self.feature.add_module('f_relu1', nn.ReLU(True))
+        self.feature.add_module('f_conv2', nn.Conv1d(in_channels=20,out_channels = 50, kernel_size = 3))
+        #变为batch*50*9
+        self.feature.add_module('f_bn2', nn.BatchNorm1d(50))
+        self.feature.add_module('f_drop1', nn.Dropout())
+        self.feature.add_module('f_relu2', nn.ReLU(True))
+
+        self.feature.add_module('f_conv3', nn.Conv1d(in_channels=50,out_channels = 100, kernel_size = 3))
+        #变为batch*100*7
+        self.feature.add_module('f_bn3', nn.BatchNorm1d(100))
+        self.feature.add_module('f_drop2', nn.Dropout())
+        self.feature.add_module('f_relu3', nn.ReLU(True))
+
+        self.n_inputs = n_inputs
+        self.n_outputs = 100*(n_inputs-6)#****暂时没想好怎么得到n_outputs
+
+    def forward(self, input_data):
+        input_data = input_data.view(-1,1,self.n_inputs)
+        input_data = input_data.type(torch.FloatTensor).cuda()
+        #feature = input_data.permute(0,2,1)
+        feature = self.feature(input_data)
+        n_outputs = feature.shape[1]*feature.shape[2]
+        feature = feature.view(-1, n_outputs)
+
+        return feature

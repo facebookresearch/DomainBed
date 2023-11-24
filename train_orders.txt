@@ -1,0 +1,15 @@
+1.train:
+(for MMD GLS CondMMD):
+python -m domainbed.scripts.train_mmd --data_dir=./domainbed/data/Eurocrops_0 --algorithm MMD --dataset Eurocrops_0 --test_env 2
+python -m domainbed.scripts.train_mmd --data_dir=./domainbed/data/Pavia --algorithm MMD --dataset Pavia_nonespatial --test_env 2  --holdout_fraction 0.95
+python -m domainbed.scripts.train_mmd --data_dir=./domainbed/data/PaviaU --algorithm MMD --dataset PaviaU_nonespatial --test_env 2  --holdout_fraction 0.8
+python -m domainbed.scripts.train_mmd --data_dir=./domainbed/data/Rit18 --algorithm MMD --dataset rit18 --test_env 2  --holdout_fraction 0.95
+python -m domainbed.scripts.train_mmd --data_dir=./domainbed/data/Salinas --algorithm MMD --dataset Salinas_nonespatial --test_env 2  --holdout_fraction 0.8
+python -m domainbed.scripts.train_mmd --data_dir=./domainbed/data/Indian_pines --algorithm MMD --dataset Indian_pines_nonespatial --test_env 2  --holdout_fraction 0.5
+python -m domainbed.scripts.train_mmd --data_dir=./domainbed/data/KSC --algorithm ARM --dataset KSC_nonespatial --test_env 2  --holdout_fraction 0.5
+(for other methods)
+python -m domainbed.scripts.train --data_dir=./domainbed/data/Eurocrops_0 --algorithm ERM --dataset Eurocrops_0 --test_env 2
+2.sweep:
+python -m domainbed.scripts.sweep launch --data_dir=./domainbed/data/Eurocrops_0 --output_dir=my/sweep/output/path --command_launcher local --algorithms MMD --datasets Eurocrops_0 --n_hparams 10 --n_trials 1
+3.visualize:
+python -m domainbed.scripts.hyperspectral_draw --algorithm_dict=./train_output/model-ip-lica.pkl

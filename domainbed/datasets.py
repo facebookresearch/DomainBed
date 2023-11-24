@@ -1,16 +1,22 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import os
+from random import shuffle
+
+from numpy import dtype, int64
 import torch
 from PIL import Image, ImageFile
 from torchvision import transforms
 import torchvision.datasets.folder
-from torch.utils.data import TensorDataset, Subset, ConcatDataset, Dataset
+from torch.utils.data import TensorDataset, Subset
 from torchvision.datasets import MNIST, ImageFolder
 from torchvision.transforms.functional import rotate
 
-from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
-from wilds.datasets.fmow_dataset import FMoWDataset
+import numpy as np
+import scipy.io as scio
+
+#from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
+#from wilds.datasets.fmow_dataset import FMoWDataset
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -30,14 +36,7 @@ DATASETS = [
     "SVIRO",
     # WILDS datasets
     "WILDSCamelyon",
-    "WILDSFMoW",
-    # Spawrious datasets
-    "SpawriousO2O_easy",
-    "SpawriousO2O_medium",
-    "SpawriousO2O_hard",
-    "SpawriousM2M_easy",
-    "SpawriousM2M_medium",
-    "SpawriousM2M_hard",
+    "WILDSFMoW"
 ]
 
 def get_dataset_class(dataset_name):
@@ -54,7 +53,7 @@ def num_environments(dataset_name):
 class MultipleDomainDataset:
     N_STEPS = 5001           # Default, subclasses may override
     CHECKPOINT_FREQ = 100    # Default, subclasses may override
-    N_WORKERS = 8            # Default, subclasses may override
+    N_WORKERS = 0            # Default, subclasses may override
     ENVIRONMENTS = None      # Subclasses should override
     INPUT_SHAPE = None       # Subclasses should override
 
@@ -112,13 +111,12 @@ class MultipleEnvironmentMNIST(MultipleDomainDataset):
         self.datasets = []
 
         for i in range(len(environments)):
-            images = original_images[i::len(environments)]
+            images = original_images[i::len(environments)]#隔着取
             labels = original_labels[i::len(environments)]
             self.datasets.append(dataset_transform(images, labels, environments[i]))
 
         self.input_shape = input_shape
         self.num_classes = num_classes
-
 
 class ColoredMNIST(MultipleEnvironmentMNIST):
     ENVIRONMENTS = ['+90%', '+80%', '-90%']
@@ -159,7 +157,6 @@ class ColoredMNIST(MultipleEnvironmentMNIST):
     def torch_xor_(self, a, b):
         return (a - b).abs()
 
-
 class RotatedMNIST(MultipleEnvironmentMNIST):
     ENVIRONMENTS = ['0', '15', '30', '45', '60', '75']
 
@@ -180,7 +177,7 @@ class RotatedMNIST(MultipleEnvironmentMNIST):
 
         y = labels.view(-1)
 
-        return TensorDataset(x, y)
+        return TensorDataset(x, y)#返回一个dataset类型的数据
 
 
 class MultipleEnvironmentImageFolder(MultipleDomainDataset):
@@ -345,211 +342,164 @@ class WILDSDataset(MultipleDomainDataset):
         return sorted(list(set(metadata_vals.view(-1).tolist())))
 
 
-class WILDSCamelyon(WILDSDataset):
-    ENVIRONMENTS = [ "hospital_0", "hospital_1", "hospital_2", "hospital_3",
-            "hospital_4"]
-    def __init__(self, root, test_envs, hparams):
-        dataset = Camelyon17Dataset(root_dir=root)
-        super().__init__(
-            dataset, "hospital", test_envs, hparams['data_augmentation'], hparams)
+#class WILDSCamelyon(WILDSDataset):
+#    ENVIRONMENTS = [ "hospital_0", "hospital_1", "hospital_2", "hospital_3",
+#            "hospital_4"]
+#    def __init__(self, root, test_envs, hparams):
+#        dataset = Camelyon17Dataset(root_dir=root)
+#        super().__init__(
+#            dataset, "hospital", test_envs, hparams['data_augmentation'], hparams)
 
 
-class WILDSFMoW(WILDSDataset):
-    ENVIRONMENTS = [ "region_0", "region_1", "region_2", "region_3",
-            "region_4", "region_5"]
-    def __init__(self, root, test_envs, hparams):
-        dataset = FMoWDataset(root_dir=root)
-        super().__init__(
-            dataset, "region", test_envs, hparams['data_augmentation'], hparams)
+#class WILDSFMoW(WILDSDataset):
+#    ENVIRONMENTS = [ "region_0", "region_1", "region_2", "region_3",
+#            "region_4", "region_5"]
+#    def __init__(self, root, test_envs, hparams):
+#        dataset = FMoWDataset(root_dir=root)
+#        super().__init__(
+#            dataset, "region", test_envs, hparams['data_augmentation'], hparams)
 
+class Eurocrops(MultipleDomainDataset):
+    def __init__(self, root, environments, domain_select_dictionary ,domain_to_label_dictionary ,num_classes):
+        super().__init__()
+        self.input_shape = self.INPUT_SHAPE
+        self.num_classes = num_classes
+        self.datasets = []
 
-## Spawrious base classes
-class CustomImageFolder(Dataset):
-    """
-    A class that takes one folder at a time and loads a set number of images in a folder and assigns them a specific class
-    """
-    def __init__(self, folder_path, class_index, limit=None, transform=None):
-        self.folder_path = folder_path
-        self.class_index = class_index
-        self.image_paths = [os.path.join(folder_path, img) for img in os.listdir(folder_path) if img.endswith(('.png', '.jpg', '.jpeg'))]
-        if limit:
-            self.image_paths = self.image_paths[:limit]
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.image_paths)
-
-    def __getitem__(self, index):
-        img_path = self.image_paths[index]
-        img = Image.open(img_path).convert('RGB')
-        
-        if self.transform:
-            img = self.transform(img)
-        
-        label = torch.tensor(self.class_index, dtype=torch.long)
-        return img, label
-
-class SpawriousBenchmark(MultipleDomainDataset):
-    ENVIRONMENTS = ["Test", "SC_group_1", "SC_group_2"]
-    input_shape = (3, 224, 224)
-    num_classes = 4
-    class_list = ["bulldog", "corgi", "dachshund", "labrador"]
-
-    def __init__(self, train_combinations, test_combinations, root_dir, augment=True, type1=False):
-        self.type1 = type1
-        train_datasets, test_datasets = self._prepare_data_lists(train_combinations, test_combinations, root_dir, augment)
-        self.datasets = [ConcatDataset(test_datasets)] + train_datasets
-
-    # Prepares the train and test data lists by applying the necessary transformations.
-    def _prepare_data_lists(self, train_combinations, test_combinations, root_dir, augment):
-        test_transforms = transforms.Compose([
-            transforms.Resize((self.input_shape[1], self.input_shape[2])),
-            transforms.transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-        
-        if augment:
-            train_transforms = transforms.Compose([
-                transforms.Resize((self.input_shape[1], self.input_shape[2])),
-                transforms.RandomHorizontalFlip(),
-                transforms.ColorJitter(0.3, 0.3, 0.3, 0.3),
-                transforms.RandomGrayscale(),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ])
-        else:
-            train_transforms = test_transforms
-
-        train_data_list = self._create_data_list(train_combinations, root_dir, train_transforms)
-        test_data_list = self._create_data_list(test_combinations, root_dir, test_transforms)
-
-        return train_data_list, test_data_list
-
-    # Creates a list of datasets based on the given combinations and transformations.
-    def _create_data_list(self, combinations, root_dir, transforms):
-        data_list = []
-        if isinstance(combinations, dict):
-            
-            # Build class groups for a given set of combinations, root directory, and transformations.
-            for_each_class_group = []
-            cg_index = 0
-            for classes, comb_list in combinations.items():
-                for_each_class_group.append([])
-                for ind, location_limit in enumerate(comb_list):
-                    if isinstance(location_limit, tuple):
-                        location, limit = location_limit
-                    else:
-                        location, limit = location_limit, None
-                    cg_data_list = []
-                    for cls in classes:
-                        path = os.path.join(root_dir, f"{0 if not self.type1 else ind}/{location}/{cls}")
-                        data = CustomImageFolder(folder_path=path, class_index=self.class_list.index(cls), limit=limit, transform=transforms)
-                        cg_data_list.append(data)
-                    
-                    for_each_class_group[cg_index].append(ConcatDataset(cg_data_list))
-                cg_index += 1
-
-            for group in range(len(for_each_class_group[0])):
-                data_list.append(
-                    ConcatDataset(
-                        [for_each_class_group[k][group] for k in range(len(for_each_class_group))]
-                    )
+        #读取原始数据
+        # np.array类型
+        for i in  range(len(environments)):
+            data_from_domain_i_list = []
+            label_from_domain_i_list = []
+            for j in domain_select_dictionary[i]:
+                data_i = scio.loadmat(os.path.join(root, 'data_{}.mat'.format(j)))['A'].astype(np.float32)
+                lenth_i = data_i.shape[0]
+                data_from_domain_i_list.append(data_i)
+                label_from_domain_i_list.append(np.ones(lenth_i,dtype=np.int64)*domain_to_label_dictionary[j])
+            data = np.vstack(data_from_domain_i_list)
+            label = np.hstack(label_from_domain_i_list)
+            lenth = data.shape[0]
+            data_tensor = torch.from_numpy(data)
+            label_tensor = torch.from_numpy(label)
+            #shuffle = torch.randperm(lenth)
+            self.datasets.append(
+                TensorDataset(
+                    data_tensor,
+                    label_tensor
                 )
-        else:
-            for location in combinations:
-                path = os.path.join(root_dir, f"{0}/{location}/")
-                data = ImageFolder(root=path, transform=transforms)
-                data_list.append(data)
+            )
 
-        return data_list
-    
-    
-    # Buils combination dictionary for o2o datasets
-    def build_type1_combination(self,group,test,filler):
-        total = 3168
-        counts = [int(0.97*total),int(0.87*total)]
-        combinations = {}
-        combinations['train_combinations'] = {
-            ## correlated class
-            ("bulldog",):[(group[0],counts[0]),(group[0],counts[1])],
-            ("dachshund",):[(group[1],counts[0]),(group[1],counts[1])],
-            ("labrador",):[(group[2],counts[0]),(group[2],counts[1])],
-            ("corgi",):[(group[3],counts[0]),(group[3],counts[1])],
-            ## filler
-            ("bulldog","dachshund","labrador","corgi"):[(filler,total-counts[0]),(filler,total-counts[1])],
-        }
-        ## TEST
-        combinations['test_combinations'] = {
-            ("bulldog",):[test[0], test[0]],
-            ("dachshund",):[test[1], test[1]],
-            ("labrador",):[test[2], test[2]],
-            ("corgi",):[test[3], test[3]],
-        }
-        return combinations
+class Eurocrops_0(Eurocrops):
+    ENVIRONMENTS = ['0', '1', '2']
+    INPUT_SHAPE = (13,)#改为tupel更合适
+    N_STEPS = 405001
 
-    # Buils combination dictionary for m2m datasets
-    def build_type2_combination(self,group,test):
-        total = 3168
-        counts = [total,total]
-        combinations = {}
-        combinations['train_combinations'] = {
-            ## correlated class
-            ("bulldog",):[(group[0],counts[0]),(group[1],counts[1])],
-            ("dachshund",):[(group[1],counts[0]),(group[0],counts[1])],
-            ("labrador",):[(group[2],counts[0]),(group[3],counts[1])],
-            ("corgi",):[(group[3],counts[0]),(group[2],counts[1])],
-        }
-        combinations['test_combinations'] = {
-            ("bulldog",):[test[0], test[1]],
-            ("dachshund",):[test[1], test[0]],
-            ("labrador",):[test[2], test[3]],
-            ("corgi",):[test[3], test[2]],
-        }
-        return combinations
+    def __init__(self, root, test_envs, hparams):
+        super().__init__(root, [0, 1, 2],self.domain_select_dictionary,self.domain_to_label_dictionary,2)
 
-## Spawrious classes for each Spawrious dataset 
-class SpawriousO2O_easy(SpawriousBenchmark):
-    def __init__(self, root_dir, test_envs, hparams):
-        group = ["desert","jungle","dirt","snow"]
-        test = ["dirt","snow","desert","jungle"]
-        filler = "beach"
-        combinations = self.build_type1_combination(group,test,filler)
-        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation'], type1=True)
+    domain_to_label_dictionary = {
+                                  0:0,
+                                  1:0,
+                                  2:0,
+                                  3:1,
+                                  4:1,
+                                  5:0,
+                                  6:0,
+                                  7:1
+                                 }
+    domain_select_dictionary = {
+                                0:[0,4],
+                                1:[1,3],
+                                2:[2],
+                                #3:[7]
+                                }
 
-class SpawriousO2O_medium(SpawriousBenchmark):
-    def __init__(self, root_dir, test_envs, hparams):
-        group = ['mountain', 'beach', 'dirt', 'jungle']
-        test = ['jungle', 'dirt', 'beach', 'snow']
-        filler = "desert"
-        combinations = self.build_type1_combination(group,test,filler)
-        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation'], type1=True)
+class Pavia(MultipleDomainDataset):
+    #由于MultipleDomainDataset里啥也没定义,所以得这样干
+    def __init__(self, root, environments, num_classes):
+        super().__init__()
+        self.input_shape = self.INPUT_SHAPE
+        self.num_classes = num_classes
+        self.datasets = []
 
-class SpawriousO2O_hard(SpawriousBenchmark):
-    def __init__(self, root_dir, test_envs, hparams):
-        group = ['jungle', 'mountain', 'snow', 'desert']
-        test = ['mountain', 'snow', 'desert', 'jungle']
-        filler = "beach"
-        combinations = self.build_type1_combination(group,test,filler)
-        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation'], type1=True)
+        #读取原始数据
+        # np.array类型
+        for i in  range(len(environments)):
+            data_i = scio.loadmat(os.path.join(root, 'Pavia_domain{}_nonespatial'.format(i+1)))['pavia'].astype(np.float32)
+            label_i = scio.loadmat(os.path.join(root, 'Pavia_domain{}_nonespatial_gt'.format(i+1)))['pavia_gt'].astype(np.int64).reshape(-1,)
+            lenth_i = data_i.shape[0]
+            data_tensor = torch.from_numpy(data_i)
+            label_tensor = torch.from_numpy(label_i)
+            #shuffle = torch.randperm(lenth)
+            self.datasets.append(
+                TensorDataset(
+                    data_tensor,
+                    label_tensor
+                )
+            )
 
-class SpawriousM2M_easy(SpawriousBenchmark):
-    def __init__(self, root_dir, test_envs, hparams):
-        group = ['desert', 'mountain', 'dirt', 'jungle']
-        test = ['dirt', 'jungle', 'mountain', 'desert']
-        combinations = self.build_type2_combination(group,test)
-        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation']) 
+class Pavia_nonespatial(Pavia):
+    ENVIRONMENTS = ['0', '1', '2']
+    INPUT_SHAPE = (102,)#改为tupel更合适
+    N_STEPS = 701
 
-class SpawriousM2M_medium(SpawriousBenchmark):
-    def __init__(self, root_dir, test_envs, hparams):
-        group = ['beach', 'snow', 'mountain', 'desert']
-        test = ['desert', 'mountain', 'beach', 'snow']
-        combinations = self.build_type2_combination(group,test)
-        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation'])
-        
-class SpawriousM2M_hard(SpawriousBenchmark):
-    ENVIRONMENTS = ["Test","SC_group_1","SC_group_2"]
-    def __init__(self, root_dir, test_envs, hparams):
-        group = ["dirt","jungle","snow","beach"]
-        test = ["snow","beach","dirt","jungle"]
-        combinations = self.build_type2_combination(group,test)
-        super().__init__(combinations['train_combinations'], combinations['test_combinations'], root_dir, hparams['data_augmentation'])
+    def __init__(self, root, test_envs, hparams):
+        super().__init__(root,[0, 1, 2], 4)
+
+class PaviaU(MultipleDomainDataset):
+    #由于MultipleDomainDataset里啥也没定义,所以得这样干
+    def __init__(self, root, environments, num_classes):
+        super().__init__()
+        self.input_shape = self.INPUT_SHAPE
+        self.num_classes = num_classes
+        self.datasets = []
+
+        #读取原始数据
+        # np.array类型
+        for i in  range(len(environments)):
+            data_i = scio.loadmat(os.path.join(root, 'PaviaU_domain{}_nonespatial'.format(i+1)))['paviaU'].astype(np.float32)
+            label_i = scio.loadmat(os.path.join(root, 'PaviaU_domain{}_nonespatial_gt'.format(i+1)))['paviaU_gt'].astype(np.int64).reshape(-1,)
+            lenth_i = data_i.shape[0]
+            data_tensor = torch.from_numpy(data_i)
+            label_tensor = torch.from_numpy(label_i)
+            #shuffle = torch.randperm(lenth)
+            self.datasets.append(
+                TensorDataset(
+                    data_tensor,
+                    label_tensor
+                )
+            )
+
+class PaviaU_nonespatial(PaviaU):
+    ENVIRONMENTS = ['0', '1', '2']
+    INPUT_SHAPE = (103,)#改为tupel更合适
+    N_STEPS = 9501
+
+    def __init__(self, root, test_envs, hparams):
+        super().__init__(root,[0, 1, 2], 5)
+
+class Indian_Pines(MultipleDomainDataset):
+    def __init__(self, root, environments, num_classes):
+        super().__init__()
+        self.input_shape = self.INPUT_SHAPE
+        self.num_classes = num_classes
+        self.datasets = []
+
+        for i in  range(len(environments)):
+            data_i = scio.loadmat(os.path.join(root, 'Indian_Pines_domain{}_nonespatial'.format(i+1)))['indian_pines'].astype(np.float32)
+            label_i = scio.loadmat(os.path.join(root, 'Indian_Pines_domain{}_nonespatial_gt'.format(i+1)))['indian_pines_gt'].astype(np.int64).reshape(-1,)
+            lenth_i = data_i.shape[0]
+            data_tensor = torch.from_numpy(data_i)
+            label_tensor = torch.from_numpy(label_i)
+            #shuffle = torch.randperm(lenth)
+            self.datasets.append(
+                TensorDataset(
+                    data_tensor,
+                    label_tensor
+                )
+            )
+
+class Indian_Pines_nonespatial(Indian_Pines):
+    ENVIRONMENTS = ['0', '1', '2']
+    INPUT_SHAPE = (204,)
+    N_STEPS = 23001
