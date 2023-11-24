@@ -102,11 +102,11 @@ def make_args_list(n_trials, dataset_names, algorithms, n_hparams_from, n_hparam
         for dataset in dataset_names:
             for algorithm in algorithms:
                 if single_test_envs:
-                    all_test_envs = [
-                        [i] for i in range(datasets.num_environments(dataset))]
+                    all_test_envs = [[2]]#Eurocrops
+                        #[i] for i in range(datasets.num_environments(dataset))]
                 else:
-                    all_test_envs = all_test_env_combinations(
-                        datasets.num_environments(dataset))
+                    all_test_envs = [[2]]#all_test_env_combinations(
+                        #datasets.num_environments(dataset))
                 for test_envs in all_test_envs:
                     for hparams_seed in range(n_hparams_from, n_hparams):
                         train_args = {}
