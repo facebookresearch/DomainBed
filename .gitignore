@@ -3,3 +3,5 @@ domainbed/facebook.py
 
 domainbed/data/*
 train_output/*
+
+.env
