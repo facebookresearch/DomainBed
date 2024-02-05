@@ -98,7 +98,7 @@ if __name__ == "__main__":
     if args.dataset in vars(datasets):
         dataset = vars(datasets)[args.dataset](args.data_dir,
             args.test_envs, hparams)
-        print(dataset)
+        print("dataset")
     else:
         raise NotImplementedError
 
