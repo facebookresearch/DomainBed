@@ -98,7 +98,6 @@ if __name__ == "__main__":
     if args.dataset in vars(datasets):
         dataset = vars(datasets)[args.dataset](args.data_dir,
             args.test_envs, hparams)
-        print(args.test_envs)
     else:
         raise NotImplementedError
 
@@ -118,6 +117,7 @@ if __name__ == "__main__":
     out_splits = []
     uda_splits = []
     for env_i, env in enumerate(dataset):
+        print("Splitting env", env_i)
         uda = []
 
         out, in_ = misc.split_dataset(env,
