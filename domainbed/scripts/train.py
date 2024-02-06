@@ -205,7 +205,7 @@ if __name__ == "__main__":
         step_start_time = time.time()
         minibatches_device = [(x.to(device), y.to(device))
             for x,y in next(train_minibatches_iterator)]
-        arr = np.array(train_minibatches_iterator)
+        arr = np.array(minibatches_device)
         shape = arr.shape
         print(shape)
         if args.task == "domain_adaptation":
