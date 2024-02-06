@@ -139,7 +139,8 @@ if __name__ == "__main__":
         out_splits.append((out, out_weights))
         if len(uda):
             uda_splits.append((uda, uda_weights))
-
+    print("Number of in_splits: ", len(in_splits))
+    print("Number of out_splits: ", len(out_splits))
     if args.task == "domain_adaptation" and len(uda_splits) == 0:
         raise ValueError("Not enough unlabeled samples for domain adaptation.")
 
