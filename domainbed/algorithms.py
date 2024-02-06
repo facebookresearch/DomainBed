@@ -106,7 +106,9 @@ class ERM(Algorithm):
         )
 
     def update(self, minibatches, unlabeled=None):
+        print(len(minibatches))
         all_x = torch.cat([x for x, y in minibatches])
+        print(all_x.shape)
         all_y = torch.cat([y for x, y in minibatches])
         loss = F.cross_entropy(self.predict(all_x), all_y)
 
