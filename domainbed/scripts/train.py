@@ -148,7 +148,7 @@ if __name__ == "__main__":
         num_workers=dataset.N_WORKERS)
         for i, (env, env_weights) in enumerate(in_splits)
         if i not in args.test_envs]
-
+    print(train_loaders)
     uda_loaders = [InfiniteDataLoader(
         dataset=env,
         weights=env_weights,
