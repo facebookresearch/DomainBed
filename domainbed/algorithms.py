@@ -187,7 +187,7 @@ class CAG(Algorithm):
     """
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
-        super(Fish, self).__init__(input_shape, num_classes, num_domains,
+        super(CAG, self).__init__(input_shape, num_classes, num_domains,
                                    hparams)
         self.input_shape = input_shape
         self.num_classes = num_classes
