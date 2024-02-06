@@ -118,7 +118,6 @@ if __name__ == "__main__":
     uda_splits = []
     for env_i, env in enumerate(dataset):
         uda = []
-        print(env_i, env)
         out, in_ = misc.split_dataset(env,
             int(len(env)*args.holdout_fraction),
             misc.seed_hash(args.trial_seed, env_i))
@@ -139,8 +138,6 @@ if __name__ == "__main__":
         out_splits.append((out, out_weights))
         if len(uda):
             uda_splits.append((uda, uda_weights))
-    print("Number of in_splits: ", len(in_splits))
-    print("Number of out_splits: ", len(out_splits))
     if args.task == "domain_adaptation" and len(uda_splits) == 0:
         raise ValueError("Not enough unlabeled samples for domain adaptation.")
 
