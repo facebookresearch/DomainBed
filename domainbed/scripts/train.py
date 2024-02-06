@@ -118,15 +118,18 @@ if __name__ == "__main__":
     uda_splits = []
     for env_i, env in enumerate(dataset):
         uda = []
-        print(env_i, env)
+        print(f"len(env): {len(env)}")
         out, in_ = misc.split_dataset(env,
             int(len(env)*args.holdout_fraction),
             misc.seed_hash(args.trial_seed, env_i))
-
+        print(f"len(out): {len(out)}")
+        print(f"len(in_): {len(in_)}")
         if env_i in args.test_envs:
             uda, in_ = misc.split_dataset(in_,
                 int(len(in_)*args.uda_holdout_fraction),
                 misc.seed_hash(args.trial_seed, env_i))
+        print(f"len(uda): {len(uda)}")
+        print(f"len(in_): {len(in_)}")
 
         if hparams['class_balanced']:
             in_weights = misc.make_weights_for_balanced_classes(in_)
