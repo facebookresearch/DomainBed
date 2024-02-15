@@ -261,13 +261,14 @@ class CAG(Algorithm):
                 inner_weights=self.network_inner,
                 lr_meta=self.hparams["meta_lr"]
             )
+            self.network.reset_weights(meta_weights)
             # Update the self.optimizer_inner_state[i_domain] for all i_domain = self.network_inner[i_domain]
             # Update the self.network_inner_state[i_domain] for all i_domain with CAG network model (newly updated)
         else:
             # Update the self.optimizer_inner_state[i_domain] for all i_domain = self.network_inner[i_domain]
             # Update the self.network_inner_state[i_domain] for all i_domain with domain model (not updated with CAG)
             pass
-        self.network.reset_weights(meta_weights)
+        
         self.u_count += 1
         return {'loss': loss.item()}
 
