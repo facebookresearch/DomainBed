@@ -197,7 +197,8 @@ class CAG(Algorithm):
             lr=self.hparams["lr"],
             weight_decay=self.hparams['weight_decay']
         )
-        self.optimizer_inner_state = None
+        for i in range(num_domains):
+            self.optimizer_inner_state[i] = None
         
         # new parameters
         # self.lkd_epoch = self.hparams["cag_epoch"]
@@ -227,21 +228,14 @@ class CAG(Algorithm):
                 lr=self.hparams["lr"],
                 weight_decay=self.hparams['weight_decay']
             ))
-            if self.optimizer_inner_state is not None:
+            if self.optimizer_inner_state[i_domain] is not None:
                 self.optimizer_inner[i_domain].load_state_dict(self.optimizer_inner_state[i_domain])
 
-
-    def fish(self, meta_weights, inner_weights, lr_meta):
-        meta_weights = ParamDict(meta_weights)
-        inner_weights = ParamDict(inner_weights)
-        meta_weights += lr_meta * (inner_weights - meta_weights)
-        return meta_weights
-    
     def cag(self, meta_weights, inner_weights, lr_meta):
         meta_weights = ParamDict(meta_weights.state_dict())
         for i_domain in range(self.num_domains):
-            meta_weights += inner_weights[i_domain].state_dict()
-        return meta_weights / (self.num_domains+1)
+            meta_weights += lr_meta * (inner_weights[i_domain].state_dict() - meta_weights)
+        return meta_weights 
 
     def update(self, minibatches, unlabeled=None):
         if (self.u_count % self.lkd_update) == 0:
@@ -253,6 +247,7 @@ class CAG(Algorithm):
             loss.backward()
             self.optimizer_inner[i_domain].step()
             # print(f"domain: {i_domain}|before: {loss}|after: {F.cross_entropy(self.network_inner[i_domain](x), y)}")
+            self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
 
         # After certain rounds, we lkd once
         if (self.u_count % self.lkd_update) == (self.lkd_update - 1):
