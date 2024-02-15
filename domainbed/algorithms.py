@@ -203,6 +203,7 @@ class CAG(Algorithm):
         # self.lkd_epoch = self.hparams["cag_epoch"]
         # self.alpha = self.hparams['alpha']
         self.lkd_update = self.hparams['cag_update']
+        self.lkd_update = 300
         self.network_inner = []
         self.optimizer_inner = []
         self.u_count = 0
