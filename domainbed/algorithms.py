@@ -93,7 +93,6 @@ class ERM(Algorithm):
     def __init__(self, input_shape, num_classes, num_domains, hparams):
         super(ERM, self).__init__(input_shape, num_classes, num_domains,
                                   hparams)
-        print(num_classes, num_domains, hparams)
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
         self.classifier = networks.Classifier(
             self.featurizer.n_outputs,
@@ -256,6 +255,7 @@ class CAG(Algorithm):
         self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
         print(self.num_domains)
         for i_domain, (x, y) in enumerate(minibatches):
+            print(i_domain)
             loss = F.cross_entropy(self.network_inner[i_domain](x), y)
             self.optimizer_inner[i_domain].zero_grad()
             loss.backward()
