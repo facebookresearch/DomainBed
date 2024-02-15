@@ -239,12 +239,8 @@ class CAG(Algorithm):
     
     def cag(self, meta_weights, inner_weights, lr_meta):
         meta_weights = ParamDict(meta_weights.state_dict())
-        sum_weigth = meta_weights * 0
-        for i_domain in range(self.num_domains):
-            in_weights = ParamDict(inner_weights[i_domain].state_dict())
-            sum_weigth += in_weights
-        
-        meta_weights = sum_weigth / self.num_domains
+        inner_weights_list = [ParamDict(inner_weights[i_domain].state_dict()) for i_domain in range(self.num_domains)]
+        meta_weights = sum(inner_weights_list) / self.num_domains
         return meta_weights
 
     def update(self, minibatches, unlabeled=None):
