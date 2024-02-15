@@ -52,7 +52,7 @@ ALGORITHMS = [
     'CausIRL_CORAL',
     'CausIRL_MMD',
     'EQRM',
-    'CAG' ,
+    'CAG' , #CA Grad
 ]
 
 def get_algorithm_class(algorithm_name):
@@ -182,8 +182,7 @@ class Fish(Algorithm):
 
 class CAG(Algorithm):
     """
-    Implementation of Fish, as seen in Gradient Matching for Domain
-    Generalization, Shi et al. 2021.
+    Implementation of CA Grad, as seen in Gradient Matching for Domain
     """
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
@@ -191,7 +190,7 @@ class CAG(Algorithm):
                                    hparams)
         self.input_shape = input_shape
         self.num_classes = num_classes
-
+        self.num_domains = num_domains
         self.network = networks.WholeFish(input_shape, num_classes, hparams)
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
@@ -199,41 +198,84 @@ class CAG(Algorithm):
             weight_decay=self.hparams['weight_decay']
         )
         self.optimizer_inner_state = None
+        
+        # new parameters
+        self.lkd_epoch = self.hparams["cag_epoch"]
+        self.alpha = self.hparams['alpha']
+        self.lkd_update = self.hparams['cag_update']
+        self.network_inner = []
+        self.optimizer_inner = []
+        self.u_count = 0
+        self.w_count = 0
+        self.lkd_bs = 64
+        self.all_x = None
+        self.all_y = None
 
-    def create_clone(self, device):
-        self.network_inner = networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
-                                            weights=self.network.state_dict()).to(device)
-        self.optimizer_inner = torch.optim.Adam(
-            self.network_inner.parameters(),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams['weight_decay']
-        )
-        if self.optimizer_inner_state is not None:
-            self.optimizer_inner.load_state_dict(self.optimizer_inner_state)
+    def create_clone(self, device, n_domain):
+        
+        # #fish
+        # self.network_inner = networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
+        #                                     weights=self.network.state_dict()).to(device)
+        # self.optimizer_inner = torch.optim.Adam(
+        #     self.network_inner.parameters(),
+        #     lr=self.hparams["lr"],
+        #     weight_decay=self.hparams['weight_decay']
+        # )
+        # if self.optimizer_inner_state is not None:
+        #     self.optimizer_inner.load_state_dict(self.optimizer_inner_state)
+        
+        self.network_inner = []
+        self.optimizer_inner = []
+        for i_domain in range(n_domain):
+            # We only want to load with network.state_dict() when CAG is applied.
+            # Otherwise, we set the weights with self.network_inner_state[i_domain].state_dict (these state_dict
+            # is saved every round)
+            # Or i think, we synchronize with network_inner_state.state_dict
+            self.network_inner.append(networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
+                                                         weights=self.network.state_dict()).to(device))
+            self.optimizer_inner.append(torch.optim.Adam(
+                self.network_inner[i_domain].parameters(),
+                lr=self.hparams["lr"],
+                weight_decay=self.hparams['weight_decay']
+            ))
+            if self.optimizer_inner_state is not None:
+                self.optimizer_inner[i_domain].load_state_dict(self.optimizer_inner_state[i_domain])
+
 
     def fish(self, meta_weights, inner_weights, lr_meta):
         meta_weights = ParamDict(meta_weights)
         inner_weights = ParamDict(inner_weights)
         meta_weights += lr_meta * (inner_weights - meta_weights)
         return meta_weights
+    
+    def cag(self, minibatch, network_inner, lr_meta):
+        pass
 
     def update(self, minibatches, unlabeled=None):
-        self.create_clone(minibatches[0][0].device)
-
-        for x, y in minibatches:
-            loss = F.cross_entropy(self.network_inner(x), y)
-            self.optimizer_inner.zero_grad()
+        self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
+        print(self.u_count)
+        for i_domain, (x, y) in enumerate(minibatches):
+            print(f"domain: {i_domain}|before: {F.cross_entropy(self.network_inner[i_domain](x), y)}")
+            loss = F.cross_entropy(self.network_inner[i_domain](x), y)
+            self.optimizer_inner[i_domain].zero_grad()
             loss.backward()
-            self.optimizer_inner.step()
+            self.optimizer_inner[i_domain].step()
+            print(f"domain: {i_domain}|before: {loss}|after: {F.cross_entropy(self.network_inner[i_domain](x), y)}")
 
-        self.optimizer_inner_state = self.optimizer_inner.state_dict()
-        meta_weights = self.fish(
-            meta_weights=self.network.state_dict(),
-            inner_weights=self.network_inner.state_dict(),
-            lr_meta=self.hparams["meta_lr"]
-        )
-        self.network.reset_weights(meta_weights)
-
+        # After certain rounds, we lkd once
+        if (self.u_count % self.lkd_update) == (self.lkd_update - 1):
+            self.cag(
+                minibatches=minibatches,
+                network_inner=self.network_inner,
+                lr_meta=self.hparams["meta_lr"],
+            )
+            # Update the self.optimizer_inner_state[i_domain] for all i_domain = self.network_inner[i_domain]
+            # Update the self.network_inner_state[i_domain] for all i_domain with CAG network model (newly updated)
+        else:
+            # Update the self.optimizer_inner_state[i_domain] for all i_domain = self.network_inner[i_domain]
+            # Update the self.network_inner_state[i_domain] for all i_domain with domain model (not updated with CAG)
+            pass
+        self.u_count += 1
         return {'loss': loss.item()}
 
     def predict(self, x):
