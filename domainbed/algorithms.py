@@ -253,7 +253,7 @@ class CAG(Algorithm):
 
     def update(self, minibatches, unlabeled=None):
         self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
-        print(self.u_count)
+        print(self.num_domains)
         for i_domain, (x, y) in enumerate(minibatches):
             loss = F.cross_entropy(self.network_inner[i_domain](x), y)
             self.optimizer_inner[i_domain].zero_grad()
