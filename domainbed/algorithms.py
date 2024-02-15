@@ -204,13 +204,13 @@ class CAG(Algorithm):
         # self.alpha = self.hparams['alpha']
         self.lkd_update = self.hparams['cag_update']
         # self.lkd_update = 300
-        self.network_inner = []
-        self.optimizer_inner = []
-        self.u_count = 0
-        self.w_count = 0
-        self.lkd_bs = 64
-        self.all_x = None
-        self.all_y = None
+        # self.network_inner = []
+        # self.optimizer_inner = []
+        # self.u_count = 0
+        # self.w_count = 0
+        # self.lkd_bs = 64
+        # self.all_x = None
+        # self.all_y = None
 
     def create_clone(self, device, n_domain):
         self.network_inner = []
@@ -239,9 +239,9 @@ class CAG(Algorithm):
     
     def cag(self, meta_weights, inner_weights, lr_meta):
         meta_weights = ParamDict(meta_weights.state_dict())
-        inner_weights_list = [ParamDict(inner_weights[i_domain].state_dict()) for i_domain in range(self.num_domains)]
-        meta_weights = sum(inner_weights_list) / self.num_domains
-        return meta_weights
+        for i_domain in range(self.num_domains):
+            meta_weights += inner_weights[i_domain].state_dict()
+        return meta_weights / (self.num_domains+1)
 
     def update(self, minibatches, unlabeled=None):
         if (self.u_count % self.lkd_update) == 0:
