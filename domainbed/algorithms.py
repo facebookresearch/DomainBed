@@ -212,18 +212,6 @@ class CAG(Algorithm):
         self.all_y = None
 
     def create_clone(self, device, n_domain):
-        
-        # #fish
-        # self.network_inner = networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
-        #                                     weights=self.network.state_dict()).to(device)
-        # self.optimizer_inner = torch.optim.Adam(
-        #     self.network_inner.parameters(),
-        #     lr=self.hparams["lr"],
-        #     weight_decay=self.hparams['weight_decay']
-        # )
-        # if self.optimizer_inner_state is not None:
-        #     self.optimizer_inner.load_state_dict(self.optimizer_inner_state)
-        
         self.network_inner = []
         self.optimizer_inner = []
         for i_domain in range(n_domain):
@@ -248,14 +236,18 @@ class CAG(Algorithm):
         meta_weights += lr_meta * (inner_weights - meta_weights)
         return meta_weights
     
-    def cag(self, minibatch, network_inner, lr_meta):
-        pass
+    def cag(self, meta_weights, inner_weights, lr_meta):
+        meta_weights = ParamDict(meta_weights.state_dict())
+        for i_domain in range(self.num_domains):
+            in_weights = ParamDict(inner_weights[i_domain].state_dict())
+            meta_weights += lr_meta * (in_weights - meta_weights)
+            return meta_weights
 
     def update(self, minibatches, unlabeled=None):
-        self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
-        print(self.num_domains)
+        if (self.u_count % self.lkd_update) == 0:
+            self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
+            
         for i_domain, (x, y) in enumerate(minibatches):
-            print(i_domain)
             loss = F.cross_entropy(self.network_inner[i_domain](x), y)
             self.optimizer_inner[i_domain].zero_grad()
             loss.backward()
@@ -264,10 +256,10 @@ class CAG(Algorithm):
 
         # After certain rounds, we lkd once
         if (self.u_count % self.lkd_update) == (self.lkd_update - 1):
-            self.cag(
-                minibatches=minibatches,
-                network_inner=self.network_inner,
-                lr_meta=self.hparams["meta_lr"],
+            meta_weights = self.cag(
+                meta_weights=self.network,
+                inner_weights=self.network_inner,
+                lr_meta=self.hparams["meta_lr"]
             )
             # Update the self.optimizer_inner_state[i_domain] for all i_domain = self.network_inner[i_domain]
             # Update the self.network_inner_state[i_domain] for all i_domain with CAG network model (newly updated)
@@ -275,6 +267,7 @@ class CAG(Algorithm):
             # Update the self.optimizer_inner_state[i_domain] for all i_domain = self.network_inner[i_domain]
             # Update the self.network_inner_state[i_domain] for all i_domain with domain model (not updated with CAG)
             pass
+        self.network.reset_weights(meta_weights)
         self.u_count += 1
         return {'loss': loss.item()}
 
