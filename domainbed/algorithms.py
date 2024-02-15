@@ -252,7 +252,7 @@ class CAG(Algorithm):
             self.optimizer_inner[i_domain].zero_grad()
             loss.backward()
             self.optimizer_inner[i_domain].step()
-            print(f"domain: {i_domain}|before: {loss}|after: {F.cross_entropy(self.network_inner[i_domain](x), y)}")
+            # print(f"domain: {i_domain}|before: {loss}|after: {F.cross_entropy(self.network_inner[i_domain](x), y)}")
 
         # After certain rounds, we lkd once
         if (self.u_count % self.lkd_update) == (self.lkd_update - 1):
