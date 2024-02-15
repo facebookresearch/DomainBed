@@ -206,7 +206,7 @@ class CAG(Algorithm):
         # self.lkd_update = 300
         # self.network_inner = []
         # self.optimizer_inner = []
-        # self.u_count = 0
+        self.u_count = 0
         # self.w_count = 0
         # self.lkd_bs = 64
         # self.all_x = None
