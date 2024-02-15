@@ -197,13 +197,7 @@ class CAG(Algorithm):
             lr=self.hparams["lr"],
             weight_decay=self.hparams['weight_decay']
         )
-        self.optimizer_inner_state = None
-        # for i in range(num_domains):
-        #     self.optimizer_inner_state[i] = None
-        
-        # new parameters
-        # self.lkd_epoch = self.hparams["cag_epoch"]
-        # self.alpha = self.hparams['alpha']
+        self.optimizer_inner_state = [None] * num_domains
         self.lkd_update = self.hparams['cag_update']
         # self.lkd_update = 300
         # self.network_inner = []
