@@ -225,12 +225,16 @@ class CAG(Algorithm):
                 self.optimizer_inner[i_domain].load_state_dict(self.optimizer_inner_state[i_domain])
 
     def cag(self, meta_weights, inner_weights, lr_meta):
-        # meta_weights = ParamDict(meta_weights.state_dict())
-        # meta_weights = meta_weights*0
-        # for i_domain in range(self.num_domains):
-        #     in_weight = ParamDict(inner_weights[i_domain].state_dict())
-        #     meta_weights += in_weight
-        meta_weights = ParamDict(inner_weights[1].state_dict())
+        
+        #average the weights
+        meta_weights = ParamDict(inner_weights[0].state_dict())
+        for i_domain in range(1, self.num_domains):
+            in_weight = ParamDict(inner_weights[i_domain].state_dict())
+            meta_weights += in_weight
+        meta_weights = meta_weights / self.num_domains
+        
+        
+        
         return meta_weights 
 
     def update(self, minibatches, unlabeled=None):
