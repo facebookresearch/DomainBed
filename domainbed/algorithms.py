@@ -254,6 +254,7 @@ class CAG(Algorithm):
 
             # Now domain_grad_vector is a tensor containing all the differences for the current domain
             print(domain_grad_vector.shape)
+            print(sum(p.numel() for p in self.network.parameters()))
             
         return meta_weights
     
