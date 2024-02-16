@@ -244,11 +244,10 @@ class CAG(Algorithm):
         # meta_weights += in_grad
         
         # #cag
-        meta_weights = ParamDict(meta_weights.state_dict())
         
         for i_domain in range(self.num_domains):
             # Compute differences between corresponding parameters and flatten them
-            domain_grad_diffs = [torch.flatten(inner_param - meta_param) for inner_param, meta_param in zip(inner_weights[i_domain].parameters(), meta_weights)]
+            domain_grad_diffs = [torch.flatten(inner_param - meta_param) for inner_param, meta_param in zip(inner_weights[i_domain].parameters(), meta_weights.parameters())]
 
             # Concatenate all flattened differences into a single tensor
             domain_grad_vector = torch.cat(domain_grad_diffs)
