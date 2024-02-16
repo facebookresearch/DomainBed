@@ -254,7 +254,7 @@ class CAG(Algorithm):
         print(all_domains_grad_tensor.shape)
             
             
-            
+        meta_weights = ParamDict(meta_weights.state_dict())
         return meta_weights
     
 
