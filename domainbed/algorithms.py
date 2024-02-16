@@ -251,10 +251,44 @@ class CAG(Algorithm):
             domain_grad_vector = torch.cat(domain_grad_diffs)
             all_domain_grads.append(domain_grad_vector)
             
-        all_domains_grad_tensor = torch.stack(all_domain_grads)
+        grads = torch.stack(all_domain_grads)
+        num_tasks = self.num_domains
         
-        cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
-        print(cagrad.shape)
+        GG = grads.mm(grads.t()).cpu()
+        scale = (torch.diag(GG)+1e-4).sqrt().mean()
+        GG = GG / scale.pow(2)
+        Gg = GG.mean(1, keepdims=True)
+        gg = Gg.mean(0, keepdims=True)
+
+        w = torch.zeros(num_tasks, 1, requires_grad=True)
+        if num_tasks == 50:
+            w_opt = torch.optim.SGD([w], lr=50, momentum=0.5)
+        else:
+            w_opt = torch.optim.SGD([w], lr=25, momentum=0.5)
+
+        c = (gg+1e-4).sqrt() * self.cagrad_c
+
+        w_best = None
+        obj_best = np.inf
+        for i in range(21):
+            w_opt.zero_grad()
+            ww = torch.softmax(w, 0)
+            obj = ww.t().mm(Gg) + c * (ww.t().mm(GG).mm(ww) + 1e-4).sqrt()
+            if obj.item() < obj_best:
+                obj_best = obj.item()
+                w_best = w.clone()
+            if i < 20:
+                obj.backward()
+                w_opt.step()
+
+        ww = torch.softmax(w_best, 0)
+        gw_norm = (ww.t().mm(GG).mm(ww)+1e-4).sqrt()
+
+        lmbda = c.view(-1) / (gw_norm+1e-4)
+        g = ((1/num_tasks + ww * lmbda).view(
+            -1, 1).to(grads.device) * grads).sum(0) / (1 + self.cagrad_c**2)
+        
+        print(g.shape)
             
             
         meta_weights = ParamDict(meta_weights.state_dict())
