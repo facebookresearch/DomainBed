@@ -238,7 +238,7 @@ class CAG(Algorithm):
         if (self.u_count % self.lkd_update) == 0:
             self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
             
-        print(len(minibatches), len(minibatches[0]), len(minibatches[0][0]), len(minibatches[0][1]),len(minibatches[0][0][0]), len(minibatches[0][0][1])) 
+        print(len(minibatches), len(minibatches[0]), len(minibatches[0][0]),len(minibatches[0][0][0]), len(minibatches[0][0][0][0]), len(minibatches[0][0][0][0][0])) 
         
         for i_domain, (x, y) in enumerate(minibatches):
             # print(i_domain, (x,y))
