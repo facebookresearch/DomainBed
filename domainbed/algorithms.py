@@ -256,7 +256,7 @@ class CAG(Algorithm):
         meta_weights = ParamDict(meta_weights.state_dict())
         for i_domain in range (self.num_domains):
             domain_grad[i_domain] = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
-        print(len(domain_grad))
+        print(len(domain_grad), len(domain_grad[0]))
         return meta_weights 
     
     def cagrad(self, grad_vec, num_tasks):
