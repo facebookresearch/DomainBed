@@ -230,7 +230,7 @@ class CAG(Algorithm):
         # for i_domain in range(self.num_domains):
         #     in_weight = ParamDict(inner_weights[i_domain].state_dict())
         #     meta_weights += in_weight
-        meta_weights = ParamDict(inner_weights[0].state_dict())
+        meta_weights = ParamDict(inner_weights[1].state_dict())
         return meta_weights 
 
     def update(self, minibatches, unlabeled=None):
