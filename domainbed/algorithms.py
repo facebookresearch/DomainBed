@@ -199,8 +199,8 @@ class CAG(Algorithm):
         self.optimizer_inner_state = [None] * num_domains
         self.lkd_update = self.hparams['cag_update']
         # self.lkd_update = 300
-        # self.network_inner = []
-        # self.optimizer_inner = []
+        self.network_inner = []
+        self.optimizer_inner = []
         self.u_count = 0
         # self.w_count = 0
         # self.lkd_bs = 64
@@ -215,8 +215,7 @@ class CAG(Algorithm):
             # Otherwise, we set the weights with self.network_inner_state[i_domain].state_dict (these state_dict
             # is saved every round)
             # Or i think, we synchronize with network_inner_state.state_dict
-            self.network_inner.append(networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
-                                                         weights=self.network.state_dict()).to(device))
+            self.network_inner.append(networks.WholeFish(self.input_shape, self.num_classes, self.hparams, weights=self.network.state_dict()).to(device))
             self.optimizer_inner.append(torch.optim.Adam(
                 self.network_inner[i_domain].parameters(),
                 lr=self.hparams["lr"],
@@ -226,27 +225,25 @@ class CAG(Algorithm):
                 self.optimizer_inner[i_domain].load_state_dict(self.optimizer_inner_state[i_domain])
 
     def cag(self, meta_weights, inner_weights, lr_meta):
-        meta_weights = ParamDict(meta_weights.state_dict())
-        meta_weights = meta_weights*0
-        for i_domain in range(self.num_domains):
-            in_weight = ParamDict(inner_weights[i_domain].state_dict())
-            meta_weights += in_weight
-        return meta_weights / self.num_domains
+        # meta_weights = ParamDict(meta_weights.state_dict())
+        # meta_weights = meta_weights*0
+        # for i_domain in range(self.num_domains):
+        #     in_weight = ParamDict(inner_weights[i_domain].state_dict())
+        #     meta_weights += in_weight
+        meta_weights = ParamDict(inner_weights[0].state_dict())
+        return meta_weights 
 
     def update(self, minibatches, unlabeled=None):
         if (self.u_count % self.lkd_update) == 0:
             self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
             
-        count = 0
         for i_domain, (x, y) in enumerate(minibatches):
-            count += 1
             loss = F.cross_entropy(self.network_inner[i_domain](x), y)
             self.optimizer_inner[i_domain].zero_grad()
             loss.backward()
             self.optimizer_inner[i_domain].step()
             # print(f"domain: {i_domain}|before: {loss}|after: {F.cross_entropy(self.network_inner[i_domain](x), y)}")
             self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
-        print(count)
         # After certain rounds, we lkd once
         if (self.u_count % self.lkd_update) == (self.lkd_update - 1):
             meta_weights = self.cag(
