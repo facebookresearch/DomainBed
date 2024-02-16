@@ -256,7 +256,8 @@ class CAG(Algorithm):
         
         cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
         flatten_meta_weights += cagrad
-        print(flatten_meta_weights.shape)
+        
+        vector_to_parameters(flatten_meta_weights, self.network.parameters())
             
             
         meta_weights = ParamDict(meta_weights.state_dict())
@@ -323,7 +324,7 @@ class CAG(Algorithm):
                 inner_weights=self.network_inner,
                 lr_meta=self.hparams["meta_lr"]
             )
-            self.network.reset_weights(meta_weights)
+            # self.network.reset_weights(meta_weights)
             # Update the self.optimizer_inner_state[i_domain] for all i_domain = self.network_inner[i_domain]
             # Update the self.network_inner_state[i_domain] for all i_domain with CAG network model (newly updated)
         else:
