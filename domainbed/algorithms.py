@@ -242,7 +242,12 @@ class CAG(Algorithm):
         in_grad = in_grad / self.num_domains
         meta_weights += in_grad
         
-        #cag
+        # #fish
+        # meta_weights = ParamDict(meta_weights)
+        # inner_weights = ParamDict(inner_weights)
+        # meta_weights += lr_meta * (inner_weights - meta_weights)
+        # return meta_weights
+        # #cag
         
         return meta_weights 
 
