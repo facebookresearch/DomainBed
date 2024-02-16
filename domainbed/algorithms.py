@@ -160,12 +160,15 @@ class Fish(Algorithm):
 
     def update(self, minibatches, unlabeled=None):
         self.create_clone(minibatches[0][0].device)
+        count = 0
         for x, y in minibatches:
-            print(len(x[0]), y[0])
+            # print(len(x[0]), y[0])
+            count += 1
             loss = F.cross_entropy(self.network_inner(x), y)
             self.optimizer_inner.zero_grad()
             loss.backward()
             self.optimizer_inner.step()
+        print(count)
 
         self.optimizer_inner_state = self.optimizer_inner.state_dict()
         meta_weights = self.fish(
