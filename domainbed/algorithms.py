@@ -160,15 +160,11 @@ class Fish(Algorithm):
 
     def update(self, minibatches, unlabeled=None):
         self.create_clone(minibatches[0][0].device)
-        count = 0
         for x, y in minibatches:
-            # print(len(x[0]), y[0])
-            count += 1
             loss = F.cross_entropy(self.network_inner(x), y)
             self.optimizer_inner.zero_grad()
             loss.backward()
             self.optimizer_inner.step()
-        print(count)
 
         self.optimizer_inner_state = self.optimizer_inner.state_dict()
         meta_weights = self.fish(
@@ -241,18 +237,16 @@ class CAG(Algorithm):
         if (self.u_count % self.lkd_update) == 0:
             self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
             
-        print(len(minibatches), len(minibatches[0]), len(minibatches[0][0]),len(minibatches[0][0][0]), len(minibatches[0][0][0][0]), len(minibatches[0][0][0][0][0]), len(minibatches[0][0][0][0][1]))
-        print(minibatches[0][1]) 
-        
+        count = 0
         for i_domain, (x, y) in enumerate(minibatches):
-            # print(i_domain, (x,y))
+            count += 1
             loss = F.cross_entropy(self.network_inner[i_domain](x), y)
             self.optimizer_inner[i_domain].zero_grad()
             loss.backward()
             self.optimizer_inner[i_domain].step()
             # print(f"domain: {i_domain}|before: {loss}|after: {F.cross_entropy(self.network_inner[i_domain](x), y)}")
             self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
-
+        print(count)
         # After certain rounds, we lkd once
         if (self.u_count % self.lkd_update) == (self.lkd_update - 1):
             meta_weights = self.cag(
