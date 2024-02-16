@@ -238,9 +238,10 @@ class CAG(Algorithm):
         if (self.u_count % self.lkd_update) == 0:
             self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
             
-        # print(minibatches[0].shape)   
+        print(len(minibatches), len(minibatches[0]), len(minibatches[0][0]), len(minibatches[0][1]))  
+        
         for i_domain, (x, y) in enumerate(minibatches):
-            print(i_domain, (x,y))
+            # print(i_domain, (x,y))
             loss = F.cross_entropy(self.network_inner[i_domain](x), y)
             self.optimizer_inner[i_domain].zero_grad()
             loss.backward()
