@@ -251,7 +251,9 @@ class CAG(Algorithm):
             all_domain_grads.append(domain_grad_vector)
             
         all_domains_grad_tensor = torch.stack(all_domain_grads)
-        print(all_domains_grad_tensor.shape)
+        
+        cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
+        print(cagrad.shape)
             
             
         meta_weights = ParamDict(meta_weights.state_dict())
