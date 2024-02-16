@@ -256,11 +256,16 @@ class CAG(Algorithm):
         meta_weights = ParamDict(meta_weights.state_dict())
         for i_domain in range (self.num_domains):
             domain_grad[i_domain] = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
-        print(domain_grad)    
         # meta_grad = self.cagrad(domain_grad, self.num_domains)
         # meta_weights += lr_meta * meta_grad
         return meta_weights 
     
+    def grad2vec2(m, grads, task):
+        grads[:, task].fill_(0.0)
+        all_params = torch.cat([param.detach().view(-1) for param in m.parameters()])
+        # print(all_params.size())
+        grads[:, task].copy_(all_params)
+        
     def cagrad(self, grad_vec, num_tasks):
         """
         grad_vec: [num_tasks, dim]
@@ -305,7 +310,8 @@ class CAG(Algorithm):
     def update(self, minibatches, unlabeled=None):
         if (self.u_count % self.lkd_update) == 0:
             self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
-            
+        
+        print(sum(p.numel() for p in self.network.parameters()))
         for i_domain, (x, y) in enumerate(minibatches):
             loss = F.cross_entropy(self.network_inner[i_domain](x), y)
             self.optimizer_inner[i_domain].zero_grad()
