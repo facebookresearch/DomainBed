@@ -19,7 +19,7 @@ from domainbed.lib.misc import (
     random_pairs_of_minibatches, split_meta_train_test, ParamDict,
     MovingAverage, l2_between_dicts, proj, Nonparametric
 )
-
+from torch.nn.utils import parameters_to_vector
 
 ALGORITHMS = [
     'ERM',
@@ -244,10 +244,9 @@ class CAG(Algorithm):
         # meta_weights += in_grad
         
         # #cag
-        domain_grad = [None] * self.num_domains
-        meta_weights = ParamDict(meta_weights.state_dict())
+        meta_weights = [p for p in meta_weights.parameters()]
         for i_domain in range (self.num_domains):
-            domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
+            domain_grad = [p for p in inner_weights[i_domain].parameters()] - meta_weights
             print(domain_grad)
         # meta_grad = self.cagrad(domain_grad, self.num_domains)
         # meta_weights += lr_meta * meta_grad
