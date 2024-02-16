@@ -232,7 +232,7 @@ class CAG(Algorithm):
             in_weight = ParamDict(inner_weights[i_domain].state_dict())
             meta_weights += in_weight
         meta_weights = meta_weights / self.num_domains
-        
+        print(self.num_domains)
         
         
         return meta_weights 
