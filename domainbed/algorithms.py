@@ -1353,7 +1353,7 @@ class Fishr(Algorithm):
     "Invariant Gradients variances for Out-of-distribution Generalization"
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
-        assert backpack is not None, "Install backpack with: 'pip install backpack-for-pytorch==1.3.0'"
+        # assert backpack is not None, "Install backpack with: 'pip install backpack-for-pytorch==1.3.0'"
         super(Fishr, self).__init__(input_shape, num_classes, num_domains, hparams)
         self.num_domains = num_domains
 
