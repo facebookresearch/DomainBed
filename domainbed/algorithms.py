@@ -257,7 +257,7 @@ class CAG(Algorithm):
         
         cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
         # print(cagrad)
-        print("----------------")
+        # print("----------------")
         flatten_meta_weights += cagrad
         
         vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
