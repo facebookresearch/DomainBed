@@ -228,21 +228,21 @@ class CAG(Algorithm):
 
     def cag(self, meta_weights, inner_weights, lr_meta):
         
-        #average the weights
-        meta_weights = ParamDict(inner_weights[0].state_dict())
-        for i_domain in range(1, self.num_domains):
-            in_weight = ParamDict(inner_weights[i_domain].state_dict())
-            meta_weights += in_weight
-        meta_weights = meta_weights / self.num_domains
-        
-        # # average gradient
-        # meta_weights = ParamDict(meta_weights.state_dict())
-        # in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
+        # #average the weights
+        # meta_weights = ParamDict(inner_weights[0].state_dict())
         # for i_domain in range(1, self.num_domains):
-        #     domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
-        #     in_grad += domain_grad
-        # in_grad = in_grad / self.num_domains
-        # meta_weights += in_grad
+        #     in_weight = ParamDict(inner_weights[i_domain].state_dict())
+        #     meta_weights += in_weight
+        # meta_weights = meta_weights / self.num_domains
+        
+        # average gradient
+        meta_weights = ParamDict(meta_weights.state_dict())
+        in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
+        for i_domain in range(1, self.num_domains):
+            domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
+            in_grad += domain_grad
+        in_grad = in_grad / self.num_domains
+        meta_weights += in_grad
         
         # #cag
         # all_domain_grads = []
