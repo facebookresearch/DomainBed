@@ -1418,11 +1418,13 @@ class Fishr(Algorithm):
     def _get_grads(self, logits, y):
         self.optimizer.zero_grad()
         loss = self.bce_extended(logits, y).sum()
-        with backpack(BatchGrad()):
-            loss.backward(
+        # with backpack(BatchGrad()):
+        #     loss.backward(
+        #         inputs=list(self.classifier.parameters()), retain_graph=True, create_graph=True
+        #     )
+        loss.backward(
                 inputs=list(self.classifier.parameters()), retain_graph=True, create_graph=True
             )
-
         # compute individual grads for all samples across all domains simultaneously
         dict_grads = OrderedDict(
             [
