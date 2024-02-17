@@ -260,8 +260,8 @@ class CAG(Algorithm):
         # # print("----------------")
         # flatten_meta_weights += cagrad
         
-        vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
-        meta_weights = ParamDict(meta_weights.state_dict())
+        # vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
+        # meta_weights = ParamDict(meta_weights.state_dict())
         
         return meta_weights
     
