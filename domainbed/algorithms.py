@@ -1358,17 +1358,23 @@ class Fishr(Algorithm):
         self.num_domains = num_domains
 
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
-        self.classifier = extend(
-            networks.Classifier(
+        # self.classifier = extend(
+        #     networks.Classifier(
+        #         self.featurizer.n_outputs,
+        #         num_classes,
+        #         self.hparams['nonlinear_classifier'],
+        #     )
+        # )
+        self.classifier = networks.Classifier(
                 self.featurizer.n_outputs,
                 num_classes,
                 self.hparams['nonlinear_classifier'],
-            )
         )
         self.network = nn.Sequential(self.featurizer, self.classifier)
 
         self.register_buffer("update_count", torch.tensor([0]))
-        self.bce_extended = extend(nn.CrossEntropyLoss(reduction='none'))
+        # self.bce_extended = extend(nn.CrossEntropyLoss(reduction='none'))
+        self.bce_extended = nn.CrossEntropyLoss(reduction='none')
         self.ema_per_domain = [
             MovingAverage(ema=self.hparams["ema"], oneminusema_correction=True)
             for _ in range(self.num_domains)
