@@ -236,29 +236,29 @@ class CAG(Algorithm):
         # meta_weights = meta_weights / self.num_domains
         
         # average gradient
-        meta_weights = ParamDict(meta_weights.state_dict())
-        in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
-        for i_domain in range(1, self.num_domains):
-            domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
-            in_grad += domain_grad
-        in_grad = in_grad / self.num_domains
-        meta_weights += in_grad
-        
-        # #cag
-        # all_domain_grads = []
-        # flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
-        # for i_domain in range(self.num_domains):
-        #     domain_grad_diffs = [torch.flatten(inner_param - meta_param) for inner_param, meta_param in zip(inner_weights[i_domain].parameters(), meta_weights.parameters())]
-        #     domain_grad_vector = torch.cat(domain_grad_diffs)
-        #     all_domain_grads.append(domain_grad_vector)
-            
-        # all_domains_grad_tensor = torch.stack(all_domain_grads)
-        
-        # cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
-        # flatten_meta_weights += cagrad
-        
-        # vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
         # meta_weights = ParamDict(meta_weights.state_dict())
+        # in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
+        # for i_domain in range(1, self.num_domains):
+        #     domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
+        #     in_grad += domain_grad
+        # in_grad = in_grad / self.num_domains
+        # meta_weights += in_grad
+        
+        #cag
+        all_domain_grads = []
+        flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
+        for i_domain in range(self.num_domains):
+            domain_grad_diffs = [torch.flatten(inner_param - meta_param) for inner_param, meta_param in zip(inner_weights[i_domain].parameters(), meta_weights.parameters())]
+            domain_grad_vector = torch.cat(domain_grad_diffs)
+            all_domain_grads.append(domain_grad_vector)
+            
+        all_domains_grad_tensor = torch.stack(all_domain_grads)
+        
+        cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
+        flatten_meta_weights += cagrad
+        
+        vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
+        meta_weights = ParamDict(meta_weights.state_dict())
         
         return meta_weights
     
