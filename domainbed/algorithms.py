@@ -159,6 +159,7 @@ class Fish(Algorithm):
         return meta_weights
 
     def update(self, minibatches, unlabeled=None):
+        print(minibatches[0][0].device)
         self.create_clone(minibatches[0][0].device)
         for x, y in minibatches:
             loss = F.cross_entropy(self.network_inner(x), y)
