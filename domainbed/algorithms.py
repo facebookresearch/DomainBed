@@ -198,13 +198,7 @@ class CAG(Algorithm):
         )
         self.optimizer_inner_state = [None] * num_domains
         self.cag_update = self.hparams['cag_update']
-        self.network_inner = []
-        self.optimizer_inner = []
         self.u_count = 0
-        # self.w_count = 0
-        # self.lkd_bs = 64
-        # self.all_x = None
-        # self.all_y = None
         self.grad = torch.zeros(num_domains, sum(p.numel() for p in self.network.parameters()))
         self.cagrad_c = 0.5
 
@@ -249,13 +243,12 @@ class CAG(Algorithm):
         for i_domain in range(self.num_domains):
             domain_grad_diffs = [torch.flatten(inner_param - meta_param) for inner_param, meta_param in zip(inner_weights[i_domain].parameters(), meta_weights.parameters())]
             domain_grad_vector = torch.cat(domain_grad_diffs)
-            # print(domain_grad_vector)
             all_domain_grads.append(domain_grad_vector)
             
         all_domains_grad_tensor = torch.stack(all_domain_grads)
-        
+        print(all_domains_grad_tensor)
         cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
-        # print(cagrad)
+        print(cagrad)
         # print("----------------")
         flatten_meta_weights += cagrad * lr_meta
         
