@@ -53,6 +53,7 @@ ALGORITHMS = [
     'CausIRL_MMD',
     'EQRM',
     'CAG' , #CA Grad
+    'GradBase',
 ]
 
 def get_algorithm_class(algorithm_name):
