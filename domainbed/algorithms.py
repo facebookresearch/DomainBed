@@ -348,21 +348,27 @@ class GradBase(Algorithm):
         self.u_count = 0
 
     def create_clone(self, device, n_domain):
-        self.network_inner = []
-        self.optimizer_inner = []
-        for i_domain in range(n_domain):
-            # We only want to load with network.state_dict() when CAG is applied.
-            # Otherwise, we set the weights with self.network_inner_state[i_domain].state_dict (these state_dict
-            # is saved every round)
-            # Or i think, we synchronize with network_inner_state.state_dict
-            self.network_inner.append(networks.WholeFish(self.input_shape, self.num_classes, self.hparams, weights=self.network.state_dict()).to(device))
-            self.optimizer_inner.append(torch.optim.Adam(
-                self.network_inner[i_domain].parameters(),
-                lr=self.hparams["lr"],
-                weight_decay=self.hparams['weight_decay']
-            ))
-            if self.optimizer_inner_state[i_domain] is not None:
-                self.optimizer_inner[i_domain].load_state_dict(self.optimizer_inner_state[i_domain])
+        # self.network_inner = []
+        # self.optimizer_inner = []
+        # for i_domain in range(n_domain):
+        #     self.network_inner.append(networks.WholeFish(self.input_shape, self.num_classes, self.hparams, weights=self.network.state_dict()).to(device))
+        #     self.optimizer_inner.append(torch.optim.Adam(
+        #         self.network_inner[i_domain].parameters(),
+        #         lr=self.hparams["lr"],
+        #         weight_decay=self.hparams['weight_decay']
+        #     ))
+        #     if self.optimizer_inner_state[i_domain] is not None:
+        #         self.optimizer_inner[i_domain].load_state_dict(self.optimizer_inner_state[i_domain])
+        
+        self.network_inner = networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
+                                            weights=self.network.state_dict()).to(device)
+        self.optimizer_inner = torch.optim.Adam(
+            self.network_inner.parameters(),
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams['weight_decay']
+        )
+        if self.optimizer_inner_state is not None:
+            self.optimizer_inner.load_state_dict(self.optimizer_inner_state)
 
     def cag(self, meta_weights, inner_weights, lr_meta):
         
@@ -374,8 +380,8 @@ class GradBase(Algorithm):
         # meta_weights = meta_weights / self.num_domains
         
         # average gradient
-        meta_weights = ParamDict(meta_weights.state_dict())
-        in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
+        meta_weights = ParamDict(meta_weights)
+        in_grad = ParamDict(inner_weights) - meta_weights
         # for i_domain in range(1, self.num_domains):
         #     domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
         #     in_grad += domain_grad
@@ -406,17 +412,17 @@ class GradBase(Algorithm):
         #     self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
         self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
         for i_domain, (x, y) in enumerate(minibatches):
-            loss = F.cross_entropy(self.network_inner[0](x), y)
-            self.optimizer_inner[0].zero_grad()
+            loss = F.cross_entropy(self.network_inner(x), y)
+            self.optimizer_inner.zero_grad()
             loss.backward()
-            self.optimizer_inner[0].step()
-            self.optimizer_inner_state[0] = self.optimizer_inner[0].state_dict()
+            self.optimizer_inner.step()
+            self.optimizer_inner_state = self.optimizer_inner.state_dict()
         
         # After certain rounds, we cag once
         # if (self.u_count % self.grad_update) == (self.grad_update - 1):
         meta_weights = self.cag(
-            meta_weights=self.network,
-            inner_weights=self.network_inner,
+            meta_weights=self.network.state_dict(),
+            inner_weights=self.network_inner.state_dict(),
             lr_meta=self.hparams["meta_lr"]
         )
         self.network.reset_weights(meta_weights)
