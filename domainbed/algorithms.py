@@ -344,6 +344,7 @@ class GradBase(Algorithm):
         )
         self.optimizer_inner_state = [None] * num_domains
         self.grad_update = self.hparams['grad_update']
+        self.grad_update = 1
         self.u_count = 0
 
     def create_clone(self, device, n_domain):
