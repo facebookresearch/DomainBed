@@ -155,6 +155,7 @@ class Fish(Algorithm):
     def fish(self, meta_weights, inner_weights, lr_meta):
         meta_weights = ParamDict(meta_weights)
         inner_weights = ParamDict(inner_weights)
+        print(inner_weights - meta_weights)
         meta_weights += lr_meta * (inner_weights - meta_weights)
         return meta_weights
 
