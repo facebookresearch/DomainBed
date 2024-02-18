@@ -405,7 +405,8 @@ class GradBase(Algorithm):
         if (self.u_count % self.grad_update) == 0:
             self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
         
-        for i_domain, (x, y) in enumerate(minibatches):
+        # for i_domain, (x, y) in enumerate(minibatches):
+        for x, y in minibatches:
             loss = F.cross_entropy(self.network_inner[0](x), y)
             self.optimizer_inner[0].zero_grad()
             loss.backward()
