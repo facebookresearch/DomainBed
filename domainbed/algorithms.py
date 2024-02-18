@@ -375,10 +375,10 @@ class GradBase(Algorithm):
         # average gradient
         meta_weights = ParamDict(meta_weights.state_dict())
         in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
-        for i_domain in range(1, self.num_domains):
-            domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
-            in_grad += domain_grad
-        in_grad = in_grad / self.num_domains
+        # for i_domain in range(1, self.num_domains):
+        #     domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
+        #     in_grad += domain_grad
+        # in_grad = in_grad / self.num_domains
         meta_weights += in_grad * lr_meta
         
         # #cag
@@ -405,11 +405,11 @@ class GradBase(Algorithm):
             self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
         
         for i_domain, (x, y) in enumerate(minibatches):
-            loss = F.cross_entropy(self.network_inner[i_domain](x), y)
-            self.optimizer_inner[i_domain].zero_grad()
+            loss = F.cross_entropy(self.network_inner[0](x), y)
+            self.optimizer_inner[0].zero_grad()
             loss.backward()
-            self.optimizer_inner[i_domain].step()
-            self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
+            self.optimizer_inner[0].step()
+            self.optimizer_inner_state[0] = self.optimizer_inner[0].state_dict()
         
         # After certain rounds, we cag once
         if (self.u_count % self.grad_update) == (self.grad_update - 1):
