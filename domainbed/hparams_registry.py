@@ -54,7 +54,7 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == 'CAG':
         _hparam('meta_lr', 0.5, lambda r: r.choice([0.05, 0.1, 0.5]))
         # _hparam('alpha', 0.01, lambda r: r.choice([0.01, 0.05, 0.1]))
-        _hparam('cag_update', 1, lambda r: r.choice([1, 5, 10]))
+        _hparam('cag_update', 10, lambda r: r.choice([1, 5, 10]))
         # _hparam('cag_epoch', 15, lambda r: r.choice([10, 20, 30]))
 
     elif algorithm == "RSC":
