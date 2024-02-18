@@ -402,11 +402,10 @@ class GradBase(Algorithm):
         return meta_weights
     
     def update(self, minibatches, unlabeled=None):
-        if (self.u_count % self.grad_update) == 0:
-            self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
-        
-        # for i_domain, (x, y) in enumerate(minibatches):
-        for x, y in minibatches:
+        # if (self.u_count % self.grad_update) == 0:
+        #     self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
+        self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
+        for i_domain, (x, y) in enumerate(minibatches):
             loss = F.cross_entropy(self.network_inner[0](x), y)
             self.optimizer_inner[0].zero_grad()
             loss.backward()
@@ -414,13 +413,13 @@ class GradBase(Algorithm):
             self.optimizer_inner_state[0] = self.optimizer_inner[0].state_dict()
         
         # After certain rounds, we cag once
-        if (self.u_count % self.grad_update) == (self.grad_update - 1):
-            meta_weights = self.cag(
-                meta_weights=self.network,
-                inner_weights=self.network_inner,
-                lr_meta=self.hparams["meta_lr"]
-            )
-            self.network.reset_weights(meta_weights)
+        # if (self.u_count % self.grad_update) == (self.grad_update - 1):
+        meta_weights = self.cag(
+            meta_weights=self.network,
+            inner_weights=self.network_inner,
+            lr_meta=self.hparams["meta_lr"]
+        )
+        self.network.reset_weights(meta_weights)
         
         self.u_count += 1
         return {'loss': loss.item()}
