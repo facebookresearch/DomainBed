@@ -197,8 +197,7 @@ class CAG(Algorithm):
             weight_decay=self.hparams['weight_decay']
         )
         self.optimizer_inner_state = [None] * num_domains
-        self.lkd_update = self.hparams['cag_update']
-        # self.lkd_update = 300
+        self.cag_update = self.hparams['cag_update']
         self.network_inner = []
         self.optimizer_inner = []
         self.u_count = 0
@@ -258,7 +257,7 @@ class CAG(Algorithm):
         cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
         # print(cagrad)
         # print("----------------")
-        flatten_meta_weights += cagrad
+        flatten_meta_weights += cagrad * lr_meta
         
         vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
         meta_weights = ParamDict(meta_weights.state_dict())
@@ -308,7 +307,7 @@ class CAG(Algorithm):
         return g
     
     def update(self, minibatches, unlabeled=None):
-        if (self.u_count % self.lkd_update) == 0:
+        if (self.u_count % self.cag_update) == 0:
             self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
         
         for i_domain, (x, y) in enumerate(minibatches):
@@ -316,23 +315,16 @@ class CAG(Algorithm):
             self.optimizer_inner[i_domain].zero_grad()
             loss.backward()
             self.optimizer_inner[i_domain].step()
-            # print(f"domain: {i_domain}|before: {loss}|after: {F.cross_entropy(self.network_inner[i_domain](x), y)}")
             self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
         
-        # After certain rounds, we lkd once
-        if (self.u_count % self.lkd_update) == (self.lkd_update - 1):
+        # After certain rounds, we cag once
+        if (self.u_count % self.cag_update) == (self.cag_update - 1):
             meta_weights = self.cag(
                 meta_weights=self.network,
                 inner_weights=self.network_inner,
                 lr_meta=self.hparams["meta_lr"]
             )
             self.network.reset_weights(meta_weights)
-            # Update the self.optimizer_inner_state[i_domain] for all i_domain = self.network_inner[i_domain]
-            # Update the self.network_inner_state[i_domain] for all i_domain with CAG network model (newly updated)
-        else:
-            # Update the self.optimizer_inner_state[i_domain] for all i_domain = self.network_inner[i_domain]
-            # Update the self.network_inner_state[i_domain] for all i_domain with domain model (not updated with CAG)
-            pass
         
         self.u_count += 1
         return {'loss': loss.item()}
