@@ -372,12 +372,13 @@ class GradBase(Algorithm):
         print(all_domains_grad_tensor)
         # # average gradient
         meta_weights = ParamDict(meta_weights.state_dict())
-        # in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
-        # for i_domain in range(1, self.num_domains):
-        #     domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
-        #     in_grad += domain_grad
-        # in_grad = in_grad / self.num_domains
-        # meta_weights += in_grad * lr_meta
+        in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
+        for i_domain in range(1, self.num_domains):
+            domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
+            in_grad += domain_grad
+            print(domain_grad)
+        in_grad = in_grad / self.num_domains
+        meta_weights += in_grad * lr_meta
         
         return meta_weights
 
