@@ -370,7 +370,6 @@ class GradBase(Algorithm):
             
         # all_domains_grad_tensor = torch.stack(all_domain_grads)
         # cagrad = torch.mean(all_domains_grad_tensor, dim=0)
-        # # print(cagrad)
         # flatten_meta_weights += cagrad * lr_meta
         
         # vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
