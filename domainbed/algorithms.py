@@ -374,7 +374,6 @@ class GradBase(Algorithm):
 
     def update(self, minibatches, unlabeled=None):
         if (self.u_count % self.update_step) == 0:
-            print(self.u_count)
             self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
         
         for i_domain, (x, y) in enumerate(minibatches):
