@@ -377,7 +377,7 @@ class GradBase(Algorithm):
         meta_weights = ParamDict(meta_weights.state_dict())
         
         # # average gradient
-        meta_weights = ParamDict(meta_weights.state_dict())
+        # meta_weights = ParamDict(meta_weights.state_dict())
         # in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
         # for i_domain in range(1, self.num_domains):
         #     domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
