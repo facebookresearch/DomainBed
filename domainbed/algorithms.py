@@ -374,6 +374,7 @@ class GradBase(Algorithm):
 
     def update(self, minibatches, unlabeled=None):
         if (self.u_count % self.update_step) == 0:
+            print(self.u_count)
             self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
         
         for i_domain, (x, y) in enumerate(minibatches):
@@ -391,7 +392,8 @@ class GradBase(Algorithm):
                 lr_meta=self.hparams["meta_lr"]
             )
             self.network.reset_weights(meta_weights)
-        print(self.u_count)
+            print(self.u_count)
+            
         self.u_count += 1
         return {'loss': loss.item()}
 
