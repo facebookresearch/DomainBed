@@ -327,7 +327,7 @@ class CAG(Algorithm):
 
 class GradBase(Algorithm):
     """
-    gradient base
+    Implementation of CA Grad, as seen in Gradient Matching for Domain
     """
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
@@ -342,70 +342,89 @@ class GradBase(Algorithm):
             lr=self.hparams["lr"],
             weight_decay=self.hparams['weight_decay']
         )
-        self.optimizer_inner_state = None
+        self.optimizer_inner_state = [None] * num_domains
+        self.grad_update = self.hparams['grad_update']
+        self.u_count = 0
 
-    def create_clone(self, device):
-        self.network_inner = networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
-                                            weights=self.network.state_dict()).to(device)
-        self.optimizer_inner = torch.optim.Adam(
-            self.network_inner.parameters(),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams['weight_decay']
-        )
-        if self.optimizer_inner_state is not None:
-            self.optimizer_inner.load_state_dict(self.optimizer_inner_state)
+    def create_clone(self, device, n_domain):
+        self.network_inner = []
+        self.optimizer_inner = []
+        for i_domain in range(n_domain):
+            # We only want to load with network.state_dict() when CAG is applied.
+            # Otherwise, we set the weights with self.network_inner_state[i_domain].state_dict (these state_dict
+            # is saved every round)
+            # Or i think, we synchronize with network_inner_state.state_dict
+            self.network_inner.append(networks.WholeFish(self.input_shape, self.num_classes, self.hparams, weights=self.network.state_dict()).to(device))
+            self.optimizer_inner.append(torch.optim.Adam(
+                self.network_inner[i_domain].parameters(),
+                lr=self.hparams["lr"],
+                weight_decay=self.hparams['weight_decay']
+            ))
+            if self.optimizer_inner_state[i_domain] is not None:
+                self.optimizer_inner[i_domain].load_state_dict(self.optimizer_inner_state[i_domain])
 
-    def grad_update(self, meta_weights, inner_weights, lr_meta):
-        meta_weights = ParamDict(meta_weights)
-        inner_weights = ParamDict(inner_weights)
-        meta_weights += lr_meta * (inner_weights - meta_weights)
+    def cag(self, meta_weights, inner_weights, lr_meta):
+        
+        # #average the weights
+        # meta_weights = ParamDict(inner_weights[0].state_dict())
+        # for i_domain in range(1, self.num_domains):
+        #     in_weight = ParamDict(inner_weights[i_domain].state_dict())
+        #     meta_weights += in_weight
+        # meta_weights = meta_weights / self.num_domains
+        
+        # average gradient
+        meta_weights = ParamDict(meta_weights.state_dict())
+        in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
+        for i_domain in range(1, self.num_domains):
+            domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
+            in_grad += domain_grad
+        in_grad = in_grad / self.num_domains
+        meta_weights += in_grad * lr_meta
+        
+        # #cag
+        # all_domain_grads = []
+        # flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
+        # for i_domain in range(self.num_domains):
+        #     domain_grad_diffs = [torch.flatten(inner_param - meta_param) for inner_param, meta_param in zip(inner_weights[i_domain].parameters(), meta_weights.parameters())]
+        #     domain_grad_vector = torch.cat(domain_grad_diffs)
+        #     all_domain_grads.append(domain_grad_vector)
+            
+        # all_domains_grad_tensor = torch.stack(all_domain_grads)
+        # # print(all_domains_grad_tensor)
+        # cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
+        # # print(cagrad)
+        # flatten_meta_weights += cagrad * lr_meta
+        
+        # vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
+        # meta_weights = ParamDict(meta_weights.state_dict())
+        
         return meta_weights
 
     def update(self, minibatches, unlabeled=None):
-        self.create_clone(minibatches[0][0].device)
-        for x, y in minibatches:
-            loss = F.cross_entropy(self.network_inner(x), y)
-            self.optimizer_inner.zero_grad()
+        if (self.u_count % self.grad_update) == 0:
+            self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
+        
+        for i_domain, (x, y) in enumerate(minibatches):
+            loss = F.cross_entropy(self.network_inner[i_domain](x), y)
+            self.optimizer_inner[i_domain].zero_grad()
             loss.backward()
-            self.optimizer_inner.step()
-        self.optimizer_inner_state = self.optimizer_inner.state_dict()
-        meta_weights = self.grad_update(
-            meta_weights=self.network.state_dict(),
-            inner_weights=self.network_inner.state_dict(),
-            lr_meta=self.hparams["meta_lr"]
-        )
-        self.network.reset_weights(meta_weights)
-
+            self.optimizer_inner[i_domain].step()
+            self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
+        
+        # After certain rounds, we cag once
+        if (self.u_count % self.grad_update) == (self.grad_update - 1):
+            meta_weights = self.cag(
+                meta_weights=self.network,
+                inner_weights=self.network_inner,
+                lr_meta=self.hparams["meta_lr"]
+            )
+            self.network.reset_weights(meta_weights)
+        
+        self.u_count += 1
         return {'loss': loss.item()}
 
     def predict(self, x):
         return self.network(x)
-
-class ARM(ERM):
-    """ Adaptive Risk Minimization (ARM) """
-    def __init__(self, input_shape, num_classes, num_domains, hparams):
-        original_input_shape = input_shape
-        input_shape = (1 + original_input_shape[0],) + original_input_shape[1:]
-        super(ARM, self).__init__(input_shape, num_classes, num_domains,
-                                  hparams)
-        self.context_net = networks.ContextNet(original_input_shape)
-        self.support_size = hparams['batch_size']
-
-    def predict(self, x):
-        batch_size, c, h, w = x.shape
-        if batch_size % self.support_size == 0:
-            meta_batch_size = batch_size // self.support_size
-            support_size = self.support_size
-        else:
-            meta_batch_size, support_size = 1, batch_size
-        context = self.context_net(x)
-        context = context.reshape((meta_batch_size, support_size, 1, h, w))
-        context = context.mean(dim=1)
-        context = torch.repeat_interleave(context, repeats=support_size, dim=0)
-        x = torch.cat([x, context], dim=1)
-        return self.network(x)
-
-
 class AbstractDANN(Algorithm):
     """Domain-Adversarial Neural Networks (abstract class)"""
 
