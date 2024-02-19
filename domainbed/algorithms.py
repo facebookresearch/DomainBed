@@ -382,7 +382,6 @@ class GradBase(Algorithm):
         for i_domain in range(1, self.num_domains):
             domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
             in_grad += domain_grad
-            print(domain_grad)
         in_grad = in_grad / self.num_domains
         meta_weights += in_grad * lr_meta
         
