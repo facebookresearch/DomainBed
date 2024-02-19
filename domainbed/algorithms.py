@@ -347,7 +347,7 @@ class GradBase(Algorithm):
         self.grad_update = 1
         self.u_count = 0
 
-    def create_clone(self, device, n_domain):
+    def create_clone(self, device):
         self.network_inner = networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
                                             weights=self.network.state_dict()).to(device)
         self.optimizer_inner = torch.optim.Adam(
