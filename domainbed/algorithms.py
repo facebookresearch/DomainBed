@@ -343,9 +343,6 @@ class GradBase(Algorithm):
             weight_decay=self.hparams['weight_decay']
         )
         self.optimizer_inner_state = None
-        self.grad_update = self.hparams['grad_update']
-        self.grad_update = 1
-        self.u_count = 0
 
     def create_clone(self, device):
         self.network_inner = networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
@@ -363,7 +360,7 @@ class GradBase(Algorithm):
         inner_weights = ParamDict(inner_weights)
         meta_weights += lr_meta * (inner_weights - meta_weights)
         return meta_weights
-    
+
     def update(self, minibatches, unlabeled=None):
         self.create_clone(minibatches[0][0].device)
         for x, y in minibatches:
@@ -371,7 +368,6 @@ class GradBase(Algorithm):
             self.optimizer_inner.zero_grad()
             loss.backward()
             self.optimizer_inner.step()
-
         self.optimizer_inner_state = self.optimizer_inner.state_dict()
         meta_weights = self.grad_update(
             meta_weights=self.network.state_dict(),
@@ -384,7 +380,7 @@ class GradBase(Algorithm):
 
     def predict(self, x):
         return self.network(x)
-    
+
 class ARM(ERM):
     """ Adaptive Risk Minimization (ARM) """
     def __init__(self, input_shape, num_classes, num_domains, hparams):
