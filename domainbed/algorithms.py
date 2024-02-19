@@ -369,16 +369,22 @@ class GradBase(Algorithm):
             all_domain_grads.append(domain_grad_vector)
             
         all_domains_grad_tensor = torch.stack(all_domain_grads)
-        print(all_domains_grad_tensor)
+        cagrad = torch.mean(all_domains_grad_tensor, dim=0)
+        # print(cagrad)
+        flatten_meta_weights += cagrad * lr_meta
+        
+        vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
+        meta_weights = ParamDict(meta_weights.state_dict())
+        
         # # average gradient
         meta_weights = ParamDict(meta_weights.state_dict())
-        in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
-        for i_domain in range(1, self.num_domains):
-            domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
-            in_grad += domain_grad
-            print(domain_grad)
-        in_grad = in_grad / self.num_domains
-        meta_weights += in_grad * lr_meta
+        # in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
+        # for i_domain in range(1, self.num_domains):
+        #     domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
+        #     in_grad += domain_grad
+        #     print(domain_grad)
+        # in_grad = in_grad / self.num_domains
+        # meta_weights += in_grad * lr_meta
         
         return meta_weights
 
