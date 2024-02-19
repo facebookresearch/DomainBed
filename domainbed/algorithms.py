@@ -358,7 +358,7 @@ class GradBase(Algorithm):
         if self.optimizer_inner_state is not None:
             self.optimizer_inner.load_state_dict(self.optimizer_inner_state)
 
-    def cag(self, meta_weights, inner_weights, lr_meta):
+    def grad_update(self, meta_weights, inner_weights, lr_meta):
         meta_weights = ParamDict(meta_weights)
         inner_weights = ParamDict(inner_weights)
         meta_weights += lr_meta * (inner_weights - meta_weights)
@@ -373,7 +373,7 @@ class GradBase(Algorithm):
             self.optimizer_inner.step()
 
         self.optimizer_inner_state = self.optimizer_inner.state_dict()
-        meta_weights = self.fish(
+        meta_weights = self.grad_update(
             meta_weights=self.network.state_dict(),
             inner_weights=self.network_inner.state_dict(),
             lr_meta=self.hparams["meta_lr"]
