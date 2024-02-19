@@ -57,7 +57,7 @@ def _hparams(algorithm, dataset, random_seed):
 
     elif algorithm == 'GradBase':
         _hparam('meta_lr', 0.5, lambda r: r.choice([0.05, 0.1, 0.5]))
-        _hparam('update_step', 10, lambda r: r.choice([1, 5, 10]))
+        _hparam('update_step', 1, lambda r: r.choice([1, 5, 10]))
         
     elif algorithm == "RSC":
         _hparam('rsc_f_drop_factor', 1/3, lambda r: r.uniform(0, 0.5))
