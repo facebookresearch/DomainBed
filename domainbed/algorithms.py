@@ -387,26 +387,35 @@ class GradBase(Algorithm):
         return meta_weights
 
     def update(self, minibatches, unlabeled=None):
-        if (self.u_count % self.update_step) == 0:
-            self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
+        # if (self.u_count % self.update_step) == 0:
+        #     self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
         
-        for i_domain, (x, y) in enumerate(minibatches):
-            loss = F.cross_entropy(self.network_inner[i_domain](x), y)
-            self.optimizer_inner[i_domain].zero_grad()
-            loss.backward()
-            self.optimizer_inner[i_domain].step()
-            self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
+        # for i_domain, (x, y) in enumerate(minibatches):
+        #     loss = F.cross_entropy(self.network_inner[i_domain](x), y)
+        #     self.optimizer_inner[i_domain].zero_grad()
+        #     loss.backward()
+        #     self.optimizer_inner[i_domain].step()
+        #     self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
         
-        # After certain rounds, we cag once
-        if (self.u_count % self.update_step) == (self.update_step - 1):
-            meta_weights = self.weight_update(
-                meta_weights=self.network,
-                inner_weights=self.network_inner,
-                lr_meta=self.hparams["meta_lr"]
-            )
-            self.network.reset_weights(meta_weights)
+        # # After certain rounds, we cag once
+        # if (self.u_count % self.update_step) == (self.update_step - 1):
+        #     meta_weights = self.weight_update(
+        #         meta_weights=self.network,
+        #         inner_weights=self.network_inner,
+        #         lr_meta=self.hparams["meta_lr"]
+        #     )
+        #     self.network.reset_weights(meta_weights)
             
-        self.u_count += 1
+        # self.u_count += 1
+        
+        all_x = torch.cat([x for x, y in minibatches])
+        all_y = torch.cat([y for x, y in minibatches])
+        loss = F.cross_entropy(self.predict(all_x), all_y)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
         return {'loss': loss.item()}
 
     def predict(self, x):
