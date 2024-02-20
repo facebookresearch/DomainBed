@@ -275,7 +275,7 @@ if __name__ == "__main__":
                 
                 if errors:
                     print(f"Có lỗi ở các phần tử sau: {errors}")
-                else:
+                # else:
                     # print("Tất cả các phần tử đều có thể serialize bằng JSON.")
                 return errors
 
