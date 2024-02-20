@@ -54,7 +54,6 @@ ALGORITHMS = [
     'EQRM',
     'CAG' , #CA Grad
     'GradBase',
-    'ERMclone',
 ]
 
 def get_algorithm_class(algorithm_name):
@@ -87,59 +86,7 @@ class Algorithm(torch.nn.Module):
     def predict(self, x):
         raise NotImplementedError
 
-class ERMclone(Algorithm):
 
-    def __init__(self, input_shape, num_classes, num_domains, hparams):
-        super(ERMclone, self).__init__(input_shape, num_classes, num_domains,
-                                   hparams)
-        self.input_shape = input_shape
-        self.num_classes = num_classes
-
-        self.network = networks.WholeFish(input_shape, num_classes, hparams)
-        self.optimizer = torch.optim.Adam(
-            self.network.parameters(),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams['weight_decay']
-        )
-        self.optimizer_inner_state = None
-
-    def create_clone(self, device):
-        self.network_inner = networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
-                                            weights=self.network.state_dict()).to(device)
-        self.optimizer_inner = torch.optim.Adam(
-            self.network_inner.parameters(),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams['weight_decay']
-        )
-        if self.optimizer_inner_state is not None:
-            self.optimizer_inner.load_state_dict(self.optimizer_inner_state)
-
-    def fish(self, meta_weights, inner_weights, lr_meta):
-        meta_weights = ParamDict(meta_weights)
-        inner_weights = ParamDict(inner_weights)
-        meta_weights += lr_meta * (inner_weights - meta_weights)
-        return meta_weights
-
-    def update(self, minibatches, unlabeled=None):
-        self.create_clone(minibatches[0][0].device)
-        for x, y in minibatches:
-            loss = F.cross_entropy(self.network_inner(x), y)
-            self.optimizer_inner.zero_grad()
-            loss.backward()
-            self.optimizer_inner.step()
-
-        self.optimizer_inner_state = self.optimizer_inner.state_dict()
-        meta_weights = self.fish(
-            meta_weights=self.network.state_dict(),
-            inner_weights=self.network_inner.state_dict(),
-            lr_meta=self.hparams["meta_lr"]
-        )
-        self.network.reset_weights(meta_weights)
-
-        return {'loss': loss.item()}
-
-    def predict(self, x):
-        return self.network(x)
 class ERM(Algorithm):
     """
     Empirical Risk Minimization (ERM)
@@ -414,36 +361,26 @@ class GradBase(Algorithm):
         return meta_weights
 
     def update(self, minibatches, unlabeled=None):
-        # if (self.u_count % self.update_step) == 0:
-        #     self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
+        if (self.u_count % self.update_step) == 0:
+            self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
         
-        # for i_domain, (x, y) in enumerate(minibatches):
-        #     loss = F.cross_entropy(self.network_inner[i_domain](x), y)
-        #     self.optimizer_inner[i_domain].zero_grad()
-        #     loss.backward()
-        #     self.optimizer_inner[i_domain].step()
-        #     self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
+        for i_domain, (x, y) in enumerate(minibatches):
+            loss = F.cross_entropy(self.network_inner[i_domain](x), y)
+            self.optimizer_inner[i_domain].zero_grad()
+            loss.backward()
+            self.optimizer_inner[i_domain].step()
+            self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
         
-        # # After certain rounds, we cag once
-        # if (self.u_count % self.update_step) == (self.update_step - 1):
-        #     meta_weights = self.weight_update(
-        #         meta_weights=self.network,
-        #         inner_weights=self.network_inner,
-        #         lr_meta=self.hparams["meta_lr"]
-        #     )
-        #     self.network.reset_weights(meta_weights)
+        # After certain rounds, we cag once
+        if (self.u_count % self.update_step) == (self.update_step - 1):
+            meta_weights = self.weight_update(
+                meta_weights=self.network,
+                inner_weights=self.network_inner,
+                lr_meta=self.hparams["meta_lr"]
+            )
+            self.network.reset_weights(meta_weights)
             
-        # self.u_count += 1
-        
-        all_x = torch.cat([x for x, y in minibatches])
-        all_y = torch.cat([y for x, y in minibatches])
-        loss = F.cross_entropy(self.predict(all_x), all_y)
-
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-
-        return {'loss': loss.item()}
+        self.u_count += 1
 
     def predict(self, x):
         return self.network(x)
