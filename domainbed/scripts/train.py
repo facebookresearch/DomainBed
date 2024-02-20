@@ -279,12 +279,6 @@ if __name__ == "__main__":
                     print("Tất cả các phần tử đều có thể serialize bằng JSON.")
                 return errors
 
-            # Giả sử results chứa các giá trị có thể gây ra lỗi khi serialize
-            results = {
-                'step': np.int64(0),  # Giá trị numpy.int64
-                # Thêm các phần tử khác để kiểm tra
-            }
-
             # Kiểm tra và in ra báo cáo
             errors = validate_and_report(results)
 
