@@ -54,6 +54,7 @@ ALGORITHMS = [
     'EQRM',
     'CAG' , #CA Grad
     'GradBase',
+    'ERMclone',
 ]
 
 def get_algorithm_class(algorithm_name):
@@ -86,6 +87,40 @@ class Algorithm(torch.nn.Module):
     def predict(self, x):
         raise NotImplementedError
 
+class ERMclone(Algorithm):
+    """
+    Empirical Risk Minimization (ERM)
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(ERMclone, self).__init__(input_shape, num_classes, num_domains,
+                                  hparams)
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = networks.Classifier(
+            self.featurizer.n_outputs,
+            num_classes,
+            self.hparams['nonlinear_classifier'])
+
+        self.network = nn.Sequential(self.featurizer, self.classifier)
+        self.optimizer = torch.optim.Adam(
+            self.network.parameters(),
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams['weight_decay']
+        )
+
+    def update(self, minibatches, unlabeled=None):
+        all_x = torch.cat([x for x, y in minibatches])
+        all_y = torch.cat([y for x, y in minibatches])
+        loss = F.cross_entropy(self.predict(all_x), all_y)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return {'loss': loss.item()}
+
+    def predict(self, x):
+        return self.network(x)
 class ERM(Algorithm):
     """
     Empirical Risk Minimization (ERM)
@@ -222,23 +257,6 @@ class CAG(Algorithm):
 
     def cag(self, meta_weights, inner_weights, lr_meta):
         
-        # #average the weights
-        # meta_weights = ParamDict(inner_weights[0].state_dict())
-        # for i_domain in range(1, self.num_domains):
-        #     in_weight = ParamDict(inner_weights[i_domain].state_dict())
-        #     meta_weights += in_weight
-        # meta_weights = meta_weights / self.num_domains
-        
-        # average gradient
-        # meta_weights = ParamDict(meta_weights.state_dict())
-        # in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
-        # for i_domain in range(1, self.num_domains):
-        #     domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
-        #     in_grad += domain_grad
-        # in_grad = in_grad / self.num_domains
-        # meta_weights += in_grad * lr_meta
-        
-        # #cag
         all_domain_grads = []
         flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
         for i_domain in range(self.num_domains):
