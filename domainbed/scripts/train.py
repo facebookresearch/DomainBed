@@ -2,7 +2,8 @@
 
 import argparse
 import collections
-import json
+# import json
+import simplejson as json
 import os
 import random
 import sys
