@@ -372,7 +372,6 @@ class GradBase(Algorithm):
                                    hparams)
         self.input_shape = input_shape
         self.num_classes = num_classes
-        self.num_domains = num_domains
         self.network = networks.WholeFish(input_shape, num_classes, hparams)
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
@@ -411,15 +410,6 @@ class GradBase(Algorithm):
         
         vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
         meta_weights = ParamDict(meta_weights.state_dict())
-        
-        # # average gradient
-        # meta_weights = ParamDict(meta_weights.state_dict())
-        # in_grad = ParamDict(inner_weights[0].state_dict()) - meta_weights
-        # for i_domain in range(1, self.num_domains):
-        #     domain_grad = ParamDict(inner_weights[i_domain].state_dict()) - meta_weights
-        #     in_grad += domain_grad
-        # in_grad = in_grad / self.num_domains
-        # meta_weights += in_grad * lr_meta
         
         return meta_weights
 
