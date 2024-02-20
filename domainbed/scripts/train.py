@@ -247,6 +247,7 @@ if __name__ == "__main__":
 
             epochs_path = os.path.join(args.output_dir, 'results.jsonl')
             with open(epochs_path, 'a') as f:
+                print(results)
                 f.write(json.dumps(results, sort_keys=True) + "\n")
 
             algorithm_dict = algorithm.state_dict()
