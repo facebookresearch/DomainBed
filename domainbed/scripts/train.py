@@ -77,7 +77,7 @@ if __name__ == "__main__":
     else:
         hparams = hparams_registry.random_hparams(args.algorithm, args.dataset,
             misc.seed_hash(args.hparams_seed, args.trial_seed))
-    print(hparams)
+    # print(hparams)
     if args.hparams:
         hparams.update(json.loads(args.hparams))
 
