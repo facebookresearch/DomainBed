@@ -29,7 +29,7 @@ def _hparams(algorithm, dataset, random_seed):
 
     _hparam('data_augmentation', True, lambda r: True)
     _hparam('resnet18', False, lambda r: False)
-    _hparam('resnet_dropout', 0., lambda r: r.choice([0., 0.1, 0.5]))
+    _hparam('resnet_dropout', 0., lambda r: r.choice([0]))
     _hparam('class_balanced', False, lambda r: False)
     # TODO: nonlinear classifiers disabled
     _hparam('nonlinear_classifier', False,
