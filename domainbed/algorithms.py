@@ -333,7 +333,7 @@ class GradBase(Algorithm):
     def create_clone(self, device):
         self.network_inner = []
         self.optimizer_inner = []
-        for i_domain in range(self.n_domain):
+        for i_domain in range(self.num_domains):
             self.network_inner.append(networks.WholeFish(self.input_shape, self.num_classes, self.hparams, weights=self.network.state_dict()).to(device))
             self.optimizer_inner.append(torch.optim.Adam(
                 self.network_inner[i_domain].parameters(),
