@@ -353,8 +353,7 @@ class GradBase(Algorithm):
             # Tạo một list chứa gradient chênh lệch hoặc vector 0 tương ứng với mỗi parameter
             domain_grads = []
             for (clone_param, meta_param, name) in zip(clone_weights[i_domain].parameters(), meta_weights.parameters(), param_names):
-                print(name)
-                if name.startswith('classifier'):
+                if name.startswith('net.1'):
                     # Tính gradient chênh lệch cho tầng Classifier
                     domain_grads.append(torch.flatten(clone_param - meta_param))
                 else:
