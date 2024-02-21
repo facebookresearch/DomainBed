@@ -325,6 +325,11 @@ class CAG(Algorithm):
             loss.backward()
             self.optimizer_inner[i_domain].step()
             self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
+            
+            loss = F.cross_entropy(self.network(x), y)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step() 
         
         # After certain rounds, we cag once
         if (self.u_count % self.cag_update) == (self.cag_update - 1):
