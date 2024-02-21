@@ -344,27 +344,10 @@ class GradBase(Algorithm):
                 self.optimizer_clone[i_domain].load_state_dict(self.optimizer_clone_state[i_domain])
 
     def weight_update(self, meta_weights, clone_weights, lr_meta):
-        
-        # all_domain_grads = []
-        # flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
-        # for i_domain in range(self.num_domains):
-        #     domain_grad_diffs = [torch.flatten(clone_param - meta_param) for clone_param, meta_param in zip(clone_weights[i_domain].parameters(), meta_weights.parameters())]
-        #     domain_grad_vector = torch.cat(domain_grad_diffs)
-        #     all_domain_grads.append(domain_grad_vector)
-            
-        # all_domains_grad_tensor = torch.stack(all_domain_grads)
-        # cagrad = torch.mean(all_domains_grad_tensor, dim=0)
-        # flatten_meta_weights += cagrad * lr_meta
-        
-        # vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
-        # meta_weights = ParamDict(meta_weights.state_dict())
-        # for name in meta_weights.keys():
-        #     print(name)
-        # return meta_weights
-    
         # Tính gradient trung bình từ sự chênh lệch giữa trọng số clone và meta cho mỗi domain
         domain_grad_diffs = [parameters_to_vector(clone_weights[i_domain].parameters()) - parameters_to_vector(meta_weights.parameters()) for i_domain in range(self.num_domains)]
         
+        print(meta_weights.parameters())
         # Tính trung bình gradient qua tất cả các domain
         cagrad = torch.mean(torch.stack(domain_grad_diffs), dim=0)
         
@@ -388,6 +371,11 @@ class GradBase(Algorithm):
             loss.backward()
             self.optimizer_clone[i_domain].step()
             self.optimizer_clone_state[i_domain] = self.optimizer_clone[i_domain].state_dict()
+            
+            loss = F.cross_entropy(self.network(x), y)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()         
         
         # After certain rounds, we cag once
         if (self.u_count % self.update_step) == (self.update_step - 1):
