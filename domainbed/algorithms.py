@@ -379,7 +379,7 @@ class GradBase(Algorithm):
                 inner_weights=self.network_inner,
                 lr_meta=self.hparams["meta_lr"]
             )
-            self.network.reset_weights(meta_weights)
+            # self.network.reset_weights(meta_weights)
             
         self.u_count += 1
         return {'loss': loss.item()}
