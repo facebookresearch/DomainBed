@@ -174,7 +174,7 @@ class Fish(Algorithm):
             inner_weights=self.network_inner.state_dict(),
             lr_meta=self.hparams["meta_lr"]
         )
-        # self.network.reset_weights(meta_weights)
+        self.network.reset_weights(meta_weights)
 
         return {'loss': loss.item()}
 
