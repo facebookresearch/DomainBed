@@ -174,7 +174,7 @@ class Fish(Algorithm):
             inner_weights=self.network_inner.state_dict(),
             lr_meta=self.hparams["meta_lr"]
         )
-        # self.network.reset_weights(meta_weights)
+        self.network.reset_weights(meta_weights)
 
         return {'loss': loss.item()}
 
@@ -330,10 +330,10 @@ class GradBase(Algorithm):
         self.update_step = self.hparams['update_step']
         self.u_count = 0
 
-    def create_clone(self, device, n_domain):
+    def create_clone(self, device):
         self.network_inner = []
         self.optimizer_inner = []
-        for i_domain in range(n_domain):
+        for i_domain in range(self.n_domain):
             self.network_inner.append(networks.WholeFish(self.input_shape, self.num_classes, self.hparams, weights=self.network.state_dict()).to(device))
             self.optimizer_inner.append(torch.optim.Adam(
                 self.network_inner[i_domain].parameters(),
@@ -363,9 +363,10 @@ class GradBase(Algorithm):
 
     def update(self, minibatches, unlabeled=None):
         if (self.u_count % self.update_step) == 0:
-            self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
+            self.create_clone(minibatches[0][0].device)
         
         for i_domain, (x, y) in enumerate(minibatches):
+            print(i_domain)
             loss = F.cross_entropy(self.network_inner[i_domain](x), y)
             self.optimizer_inner[i_domain].zero_grad()
             loss.backward()
