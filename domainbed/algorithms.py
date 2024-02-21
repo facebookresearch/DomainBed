@@ -319,6 +319,7 @@ class GradBase(Algorithm):
                                    hparams)
         self.input_shape = input_shape
         self.num_classes = num_classes
+        self.num_domains = num_domains
         self.network = networks.WholeFish(input_shape, num_classes, hparams)
         self.optimizer = torch.optim.Adam(
             self.network.parameters(),
