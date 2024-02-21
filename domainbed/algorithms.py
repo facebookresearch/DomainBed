@@ -202,7 +202,7 @@ class CAG(Algorithm):
         self.cag_update = self.hparams['cag_update']
         self.u_count = 0
         self.grad = torch.zeros(num_domains, sum(p.numel() for p in self.network.parameters()))
-        self.cagrad_c = 0.5
+        self.cagrad_c = self.hparams['cagrad_c']
 
     def create_clone(self, device, n_domain):
         self.network_inner = []
