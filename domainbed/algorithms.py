@@ -345,22 +345,38 @@ class GradBase(Algorithm):
 
     def weight_update(self, meta_weights, clone_weights, lr_meta):
         
-        all_domain_grads = []
-        flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
-        for i_domain in range(self.num_domains):
-            domain_grad_diffs = [torch.flatten(clone_param - meta_param) for clone_param, meta_param in zip(clone_weights[i_domain].parameters(), meta_weights.parameters())]
-            domain_grad_vector = torch.cat(domain_grad_diffs)
-            all_domain_grads.append(domain_grad_vector)
+        # all_domain_grads = []
+        # flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
+        # for i_domain in range(self.num_domains):
+        #     domain_grad_diffs = [torch.flatten(clone_param - meta_param) for clone_param, meta_param in zip(clone_weights[i_domain].parameters(), meta_weights.parameters())]
+        #     domain_grad_vector = torch.cat(domain_grad_diffs)
+        #     all_domain_grads.append(domain_grad_vector)
             
-        all_domains_grad_tensor = torch.stack(all_domain_grads)
-        cagrad = torch.mean(all_domains_grad_tensor, dim=0)
-        flatten_meta_weights += cagrad * lr_meta
+        # all_domains_grad_tensor = torch.stack(all_domain_grads)
+        # cagrad = torch.mean(all_domains_grad_tensor, dim=0)
+        # flatten_meta_weights += cagrad * lr_meta
         
-        vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
-        meta_weights = ParamDict(meta_weights.state_dict())
-        for name in meta_weights.keys():
-            print(name)
-        return meta_weights
+        # vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
+        # meta_weights = ParamDict(meta_weights.state_dict())
+        # for name in meta_weights.keys():
+        #     print(name)
+        # return meta_weights
+    
+        # Tính gradient trung bình từ sự chênh lệch giữa trọng số clone và meta cho mỗi domain
+        domain_grad_diffs = [parameters_to_vector(clone_weights[i_domain].parameters()) - parameters_to_vector(meta_weights.parameters()) for i_domain in range(self.num_domains)]
+        
+        # Tính trung bình gradient qua tất cả các domain
+        cagrad = torch.mean(torch.stack(domain_grad_diffs), dim=0)
+        
+        # Cập nhật trọng số meta
+        meta_weights_vector = parameters_to_vector(meta_weights.parameters())
+        meta_weights_vector += cagrad * lr_meta
+        vector_to_parameters(meta_weights_vector, meta_weights.parameters())
+        
+        # Tạo một ParamDict mới từ trạng thái cập nhật của meta_weights để in ra tên các tầng
+        updated_meta_weights = ParamDict(meta_weights.state_dict())
+            
+        return updated_meta_weights
 
     def update(self, minibatches, unlabeled=None):
         if (self.u_count % self.update_step) == 0:
