@@ -358,8 +358,7 @@ class GradBase(Algorithm):
         
         vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
         meta_weights = ParamDict(meta_weights.state_dict())
-        
-        meta_weights = ParamDict(clone_weights[1].state_dict())
+        print(meta_weights)
         return meta_weights
 
     def update(self, minibatches, unlabeled=None):
