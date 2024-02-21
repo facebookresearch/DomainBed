@@ -354,6 +354,7 @@ class GradBase(Algorithm):
             domain_grads = []
             for (clone_param, meta_param, name) in zip(clone_weights[i_domain].parameters(), meta_weights.parameters(), param_names):
                 if name.startswith('net.1'):
+                    print(1)
                     # Tính gradient chênh lệch cho tầng Classifier
                     domain_grads.append(torch.flatten(clone_param - meta_param))
                 else:
