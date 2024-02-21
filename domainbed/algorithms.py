@@ -359,6 +359,7 @@ class GradBase(Algorithm):
         vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
         meta_weights = ParamDict(meta_weights.state_dict())
         
+        meta_weights = ParamDict(clone_weights[0].state_dict())
         return meta_weights
 
     def update(self, minibatches, unlabeled=None):
@@ -379,7 +380,7 @@ class GradBase(Algorithm):
                 clone_weights=self.network_clone,
                 lr_meta=self.hparams["meta_lr"]
             )
-            # self.network.reset_weights(meta_weights)
+            self.network.reset_weights(meta_weights)
             
         self.u_count += 1
         return {'loss': loss.item()}
