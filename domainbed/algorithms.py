@@ -223,6 +223,37 @@ class CAG(Algorithm):
 
     def cag(self, meta_weights, inner_weights, lr_meta):
         
+        # Lấy tất cả parameter names
+        param_names = [name for name, _ in meta_weights.named_parameters()]
+        
+        # Tính toán gradient chênh lệch cho mỗi domain
+        domain_grad_diffs = []
+        for i_domain in range(self.num_domains):
+            # Tạo một list chứa gradient chênh lệch hoặc vector 0 tương ứng với mỗi parameter
+            domain_grads = []
+            for (clone_param, meta_param, name) in zip(inner_weights[i_domain].parameters(), meta_weights.parameters(), param_names):
+                if name.startswith('net.1'):
+                    # Tính gradient chênh lệch cho tầng Classifier
+                    domain_grads.append(torch.flatten(clone_param - meta_param))
+                else:
+                    # Tạo vector 0 cho tầng Featurizer
+                    domain_grads.append(torch.zeros_like(torch.flatten(meta_param)))
+            # Nối và thêm vào list tổng
+            domain_grad_diffs.append(torch.cat(domain_grads))
+        
+        all_domains_grad_tensor = torch.stack(domain_grad_diffs)
+        # print(all_domains_grad_tensor)
+        cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
+        
+        # Cập nhật trọng số meta
+        meta_weights_vector = parameters_to_vector(meta_weights.parameters())
+        vector_to_parameters(meta_weights_vector + cagrad * lr_meta, meta_weights.parameters())
+        
+        # Tạo và in ra ParamDict mới từ trạng thái cập nhật của meta_weights
+        updated_meta_weights = ParamDict(meta_weights.state_dict())
+        
+        return updated_meta_weights
+    
         all_domain_grads = []
         flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
         for i_domain in range(self.num_domains):
@@ -344,7 +375,7 @@ class GradBase(Algorithm):
                 self.optimizer_clone[i_domain].load_state_dict(self.optimizer_clone_state[i_domain])
 
     def weight_update(self, meta_weights, clone_weights, lr_meta):
-         # Lấy tất cả parameter names
+        # Lấy tất cả parameter names
         param_names = [name for name, _ in meta_weights.named_parameters()]
         
         # Tính toán gradient chênh lệch cho mỗi domain
@@ -354,7 +385,6 @@ class GradBase(Algorithm):
             domain_grads = []
             for (clone_param, meta_param, name) in zip(clone_weights[i_domain].parameters(), meta_weights.parameters(), param_names):
                 if name.startswith('net.1'):
-                    print(name)
                     # Tính gradient chênh lệch cho tầng Classifier
                     domain_grads.append(torch.flatten(clone_param - meta_param))
                 else:
