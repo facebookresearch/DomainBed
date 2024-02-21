@@ -242,8 +242,9 @@ class CAG(Algorithm):
             domain_grad_diffs.append(torch.cat(domain_grads))
         
         all_domains_grad_tensor = torch.stack(domain_grad_diffs)
-        # print(all_domains_grad_tensor)
+        print(all_domains_grad_tensor)
         cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
+        print(cagrad)
         
         # Cập nhật trọng số meta
         meta_weights_vector = parameters_to_vector(meta_weights.parameters())
