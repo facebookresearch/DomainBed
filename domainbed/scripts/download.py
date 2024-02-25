@@ -277,7 +277,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     download_mnist(args.data_dir)
-    download_pacs(args.data_dir)
+    # download_pacs(args.data_dir)
     # download_office_home(args.data_dir)
     # download_domain_net(args.data_dir)
     download_vlcs(args.data_dir)
