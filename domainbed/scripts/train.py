@@ -96,6 +96,9 @@ if __name__ == "__main__":
     # print(hparams)
     if args.hparams:
         hparams.update(json.loads(args.hparams))
+        
+    # Setup
+    log_interface = Logging(args, hparams)
 
     print('HParams:')
     for k, v in sorted(hparams.items()):
@@ -216,7 +219,7 @@ if __name__ == "__main__":
         }
         torch.save(save_dict, os.path.join(args.output_dir, filename))
 
-
+    c_counter = 0
     last_results_keys = None
     for step in range(start_step, n_steps):
         step_start_time = time.time()
@@ -304,6 +307,13 @@ if __name__ == "__main__":
             #         f.write(json.dumps(results, default=lambda o: check_and_convert(o)[0], sort_keys=True) + "\n")
             # else:
             #     print("Đã xảy ra lỗi trong quá trình kiểm tra, không ghi vào file.")
+            
+            for key, value in results.items():
+                if (key != "hparams") and (key != "args"):
+                    log_interface(key=f"test/{key}", value=value)
+
+            log_interface.step(epoch=int(step//checkpoint_freq), test_len=int(n_steps//checkpoint_freq))
+            c_counter += 1
 
             algorithm_dict = algorithm.state_dict()
             start_step = step + 1
