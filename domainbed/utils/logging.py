@@ -24,14 +24,6 @@ class Logging:
                 name=args.run_name,
                 force=True
             )
-
-        if args.log:
-            self.__writer = SummaryWriter(args.exp_dir)
-            self.__writer.add_text(
-                "hyperparameters",
-                "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
-            )
-
         self.__args = args
 
     def __call__(self, key, value):

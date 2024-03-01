@@ -53,8 +53,6 @@ if __name__ == "__main__":
     # LOGGING
     parser.add_argument('--wandb', action='store_true',
                         help='toggle to use wandb for online saving')
-    parser.add_argument('--log', action='store_true',
-                        help='toggle to use tensorboard for offline saving')
     parser.add_argument('--wandb_prj', type=str, default="DomainBed",
                         help='toggle to use wandb for online saving')
     parser.add_argument('--wandb_entity', type=str, default="scalemind",
@@ -219,7 +217,6 @@ if __name__ == "__main__":
         }
         torch.save(save_dict, os.path.join(args.output_dir, filename))
 
-    c_counter = 0
     last_results_keys = None
     for step in range(start_step, n_steps):
         step_start_time = time.time()
@@ -313,7 +310,6 @@ if __name__ == "__main__":
                     log_interface(key=f"test/{key}", value=value)
 
             log_interface.step(epoch=int(step//checkpoint_freq), test_len=int(n_steps//checkpoint_freq))
-            c_counter += 1
 
             algorithm_dict = algorithm.state_dict()
             start_step = step + 1
