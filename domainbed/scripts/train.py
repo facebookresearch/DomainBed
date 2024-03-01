@@ -95,11 +95,6 @@ if __name__ == "__main__":
     if args.hparams:
         hparams.update(json.loads(args.hparams))
         
-    # Setup wandb
-    print(args)
-    print(hparams)
-    log_interface = Logging(args, hparams)
-
     print('HParams:')
     for k, v in sorted(hparams.items()):
         print('\t{}: {}'.format(k, v))
@@ -120,6 +115,9 @@ if __name__ == "__main__":
             args.test_envs, hparams)
     else:
         raise NotImplementedError
+
+    # Setup wandb
+    log_interface = Logging(args, hparams)
 
     # Split each env into an 'in-split' and an 'out-split'. We'll train on
     # each in-split except the test envs, and evaluate on all splits.
