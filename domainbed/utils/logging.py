@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, shutil, tempfile
 import time
 
 import wandb
@@ -83,8 +83,15 @@ class Logging:
     
     def save_file(self, path):
         if self.__args.wandb:
-            self.__run.save(path)
-            print(f"Saved {path} to wandb")
+            # Extract the filename from the path.
+            filename = os.path.basename(path)
+            # Copy the file to the current working directory.
+            temp_path = os.path.join(os.getcwd(), filename)
+            shutil.copy(path, temp_path)
+            # Save the file with wandb.
+            self.__run.save(filename)
+            # Remove the copied file to clean up.
+            os.remove(temp_path)
 
     @property
     def log(self):
