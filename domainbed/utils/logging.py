@@ -80,6 +80,10 @@ class Logging:
 
     def watch(self, model, num_train_batch):
         self.__run.watch(models=model, log='all', log_freq=num_train_batch, log_graph=True)
+    
+    def save_file(self, path):
+        if self.__args.wandb:
+            self.__run.save(path)
 
     @property
     def log(self):
