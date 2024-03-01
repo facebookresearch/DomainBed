@@ -281,7 +281,9 @@ if __name__ == "__main__":
                 save_checkpoint(f'model_step{step}.pkl')
 
     save_checkpoint('model.pkl')
-    log_interface.save_file(os.path.join(args.output_dir, 'results.jsonl'))
+    
+    epochs_path = os.path.join(args.output_dir, 'results.jsonl')
+    log_interface.save_file(epochs_path)
 
     with open(os.path.join(args.output_dir, 'done'), 'w') as f:
         f.write('done')

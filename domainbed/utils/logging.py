@@ -84,6 +84,7 @@ class Logging:
     def save_file(self, path):
         if self.__args.wandb:
             self.__run.save(path)
+            print(f"Saved {path} to wandb")
 
     @property
     def log(self):
