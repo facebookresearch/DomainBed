@@ -92,7 +92,6 @@ class Logging:
             self.__run.save(filename)
             # Remove the copied file to clean up.
             os.remove(temp_path)
-            print(filename,temp_path)
 
     @property
     def log(self):
