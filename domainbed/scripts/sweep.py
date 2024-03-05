@@ -121,7 +121,7 @@ def make_args_list(n_trials, dataset_names, algorithms, n_hparams_from, n_hparam
                         train_args['seed'] = misc.seed_hash(dataset,
                             algorithm, test_envs, hparams_seed, trial_seed)
                         if wandb:
-                            train_args['wandb'] = wandb
+                            train_args['wandb'] = True
                         if steps is not None:
                             train_args['steps'] = steps
                         if hparams is not None:
