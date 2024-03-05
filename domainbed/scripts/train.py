@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
     
     # LOGGING
-    parser.add_argument('--wandb', action='store_true',
+    parser.add_argument('--wandb', nargs='?', const=True, default=False,
                         help='toggle to use wandb for online saving')
     parser.add_argument('--log', action='store_true',
                         help='toggle to use tensorboard for offline saving')
