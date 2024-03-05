@@ -170,7 +170,7 @@ if __name__ == "__main__":
         task=args.task,
         holdout_fraction=args.holdout_fraction,
         single_test_envs=args.single_test_envs,
-        wandb=args.wandb
+        wandb=args.wandb,
         hparams=args.hparams
     )
 
