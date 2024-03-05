@@ -27,14 +27,19 @@ for run in runs:
         download_url = file.url
         destination_path = os.path.join(run_folder, file.name)
         
-        # Tải file và lưu vào folder tương ứng
-        response = requests.get(download_url, stream=True)
-        if response.status_code == 200:
-            with open(destination_path, 'wb') as f:
-                for chunk in response.iter_content(1024):
-                    f.write(chunk)
-            print(f"Downloaded {file.name} to {destination_path}")
-        else:
-            print(f"Failed to download {file.name}")
+        try:
+            # Tải file và lưu vào folder tương ứng
+            response = requests.get(download_url, stream=True)
+            if response.status_code == 200:
+                with open(destination_path, 'wb') as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                print(f"Downloaded {file.name} to {destination_path}")
+            else:
+                print(f"Failed to download {file.name} with status code {response.status_code}")
+        except IOError as e:
+            print(f"An IOError occurred while downloading {file.name}: {e}")
+        except Exception as e:
+            print(f"An unexpected error occurred while downloading {file.name}: {e}")
 
 print("All files downloaded.")
