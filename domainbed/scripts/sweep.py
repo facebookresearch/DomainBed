@@ -127,7 +127,6 @@ def make_args_list(n_trials, dataset_names, algorithms, n_hparams_from, n_hparam
                         if hparams is not None:
                             train_args['hparams'] = hparams
                         args_list.append(train_args)
-                        print(train_args)
     return args_list
 
 def ask_for_confirmation():
