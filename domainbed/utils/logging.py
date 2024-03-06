@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, shutil
 import time
 
 import wandb
@@ -24,6 +24,14 @@ class Logging:
                 name=args.run_name,
                 force=True
             )
+
+        if args.log:
+            self.__writer = SummaryWriter(args.exp_dir)
+            self.__writer.add_text(
+                "hyperparameters",
+                "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
+            )
+
         self.__args = args
 
     def __call__(self, key, value):
@@ -72,6 +80,18 @@ class Logging:
 
     def watch(self, model, num_train_batch):
         self.__run.watch(models=model, log='all', log_freq=num_train_batch, log_graph=True)
+    
+    def save_file(self, path):
+        if self.__args.wandb:
+            # Extract the filename from the path.
+            filename = os.path.basename(path)
+            # Copy the file to the current working directory.
+            temp_path = os.path.join(os.getcwd(), filename)
+            shutil.copy(path, temp_path)
+            # Save the file with wandb.
+            self.__run.save(filename)
+            # Remove the copied file to clean up.
+            os.remove(temp_path)
 
     @property
     def log(self):

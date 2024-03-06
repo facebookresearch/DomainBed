@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
     
     # LOGGING
-    parser.add_argument('--wandb', action='store_true',
+    parser.add_argument('--wandb', nargs='?', const=True, default=False,
                         help='toggle to use wandb for online saving')
     parser.add_argument('--log', action='store_true',
                         help='toggle to use tensorboard for offline saving')
@@ -97,9 +97,6 @@ if __name__ == "__main__":
     if args.hparams:
         hparams.update(json.loads(args.hparams))
         
-    # Setup
-    log_interface = Logging(args, hparams)
-
     print('HParams:')
     for k, v in sorted(hparams.items()):
         print('\t{}: {}'.format(k, v))
@@ -120,6 +117,9 @@ if __name__ == "__main__":
             args.test_envs, hparams)
     else:
         raise NotImplementedError
+
+    # Setup wandb
+    log_interface = Logging(args, hparams)
 
     # Split each env into an 'in-split' and an 'out-split'. We'll train on
     # each in-split except the test envs, and evaluate on all splits.
@@ -267,50 +267,10 @@ if __name__ == "__main__":
             with open(epochs_path, 'a') as f:
                 f.write(json.dumps(results, sort_keys=True) + "\n")
             
-            # def check_and_convert(value):
-            #     """
-            #     Kiểm tra và chuyển đổi giá trị nếu cần.
-            #     Trả về giá trị đã chuyển đổi và flag chỉ ra liệu có lỗi không.
-            #     """
-            #     if isinstance(value, np.integer):
-            #         return int(value), False
-            #     elif isinstance(value, (list, tuple)):
-            #         return [check_and_convert(v)[0] for v in value], False
-            #     elif isinstance(value, dict):
-            #         return {k: check_and_convert(v)[0] for k, v in value.items()}, False
-            #     else:
-            #         return value, False
-
-            # def validate_and_report(results):
-            #     """
-            #     Duyệt qua results và báo cáo nếu có giá trị không thể serialize bằng JSON.
-            #     """
-            #     errors = []
-            #     for key, value in results.items():
-            #         _, error = check_and_convert(value)
-            #         if error:
-            #             errors.append(key)
-                
-            #     if errors:
-            #         print(f"Có lỗi ở các phần tử sau: {errors}")
-            #     # else:
-            #         # print("Tất cả các phần tử đều có thể serialize bằng JSON.")
-            #     return errors
-
-            # # Kiểm tra và in ra báo cáo
-            # errors = validate_and_report(results)
-
-            # # Nếu không có lỗi, ghi vào file
-            # if not errors:
-            #     with open('epochs_path.json', 'a') as f:
-            #         f.write(json.dumps(results, default=lambda o: check_and_convert(o)[0], sort_keys=True) + "\n")
-            # else:
-            #     print("Đã xảy ra lỗi trong quá trình kiểm tra, không ghi vào file.")
-            
+            #logging
             for key, value in results.items():
                 if (key != "hparams") and (key != "args"):
                     log_interface(key=f"test/{key}", value=value)
-
             log_interface.step(epoch=int(step//checkpoint_freq), test_len=int(n_steps//checkpoint_freq))
 
             algorithm_dict = algorithm.state_dict()
@@ -321,6 +281,10 @@ if __name__ == "__main__":
                 save_checkpoint(f'model_step{step}.pkl')
 
     save_checkpoint('model.pkl')
+    
+    #save wandb file
+    epochs_path = os.path.join(args.output_dir, 'results.jsonl')
+    log_interface.save_file(epochs_path)
 
     with open(os.path.join(args.output_dir, 'done'), 'w') as f:
         f.write('done')
