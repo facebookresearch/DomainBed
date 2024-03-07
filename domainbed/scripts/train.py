@@ -55,10 +55,6 @@ if __name__ == "__main__":
                         help='toggle to use wandb for online saving')
     parser.add_argument('--log', action='store_true',
                         help='toggle to use tensorboard for offline saving')
-    parser.add_argument('--wandb_prj', type=str, default="DomainBed",
-                        help='toggle to use wandb for online saving')
-    parser.add_argument('--wandb_entity', type=str, default="scalemind",
-                        help='toggle to use wandb for online saving')
     parser.add_argument("--verbose", action="store_true",
                         help="printout mode")
     parser.add_argument("--mode", type=str, default="train",

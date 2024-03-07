@@ -12,14 +12,15 @@ class Logging:
         self.__epoch = 0
 
         if args.wandb:
+            wandb.login(key="1eac4d04cc3cc4aed9a1409cd8eb7dc0f6537ef2")
             args.run_name = (f"{args.dataset}_{args.algorithm}"
-                             f"_{args.task}-{args.steps}"
-                             f"-{args.test_envs}"
+                             f"_{args.hparams_seed}_{args.trial_seed}"
+                             f"_{args.test_envs}"
                              f"__{int(time.time())}")
 
             self.__run = wandb.init(
-                project=args.wandb_prj,
-                entity=args.wandb_entity,
+                project="DomainBed2",
+                entity="namkhanh2172",
                 config=args,
                 name=args.run_name,
                 force=True
@@ -82,16 +83,7 @@ class Logging:
         self.__run.watch(models=model, log='all', log_freq=num_train_batch, log_graph=True)
     
     def save_file(self, path):
-        if self.__args.wandb:
-            # Extract the filename from the path.
-            filename = os.path.basename(path)
-            # Copy the file to the current working directory.
-            temp_path = os.path.join(os.getcwd(), filename)
-            shutil.copy(path, temp_path)
-            # Save the file with wandb.
-            self.__run.save(filename)
-            # Remove the copied file to clean up.
-            os.remove(temp_path)
+        self.__run.save(path)
 
     @property
     def log(self):

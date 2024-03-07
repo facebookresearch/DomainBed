@@ -6,7 +6,14 @@ import wandb
 wandb.login(key='1eac4d04cc3cc4aed9a1409cd8eb7dc0f6537ef2')
 
 # Thay thế 'YOUR_PROJECT_PATH' bằng path của project bạn muốn truy cập, ví dụ: 'username/projectname'
-project_path = 'scalemind/DomainBed'
+project_path = 'namkhanh2172/DomainBed2'
+
+# Đường dẫn tới thư mục bạn muốn lưu file
+destination_folder = "./collect_wandb"
+
+# Tạo thư mục nếu nó không tồn tại
+if not os.path.exists(destination_folder):
+    os.makedirs(destination_folder)
 
 # Khởi tạo API
 api = wandb.Api()
@@ -15,31 +22,14 @@ api = wandb.Api()
 runs = api.runs(path=project_path)
 
 for run in runs:
-    # Tạo folder cho mỗi run, sử dụng tên của run
-    run_folder = run.name
-    os.makedirs(run_folder, exist_ok=True)
-    
-    # Lấy thông tin files từ run
+    print(f"Processing run: {run.name}")
+    # Lấy danh sách files của run
     files = run.files()
     
+    # Tìm và tải xuống file results.txt
     for file in files:
-        # Tạo URL download và tên file đích
-        download_url = file.url
-        destination_path = os.path.join(run_folder, file.name)
-        
-        try:
-            # Tải file và lưu vào folder tương ứng
-            response = requests.get(download_url, stream=True)
-            if response.status_code == 200:
-                with open(destination_path, 'wb') as f:
-                    for chunk in response.iter_content(1024):
-                        f.write(chunk)
-                print(f"Downloaded {file.name} to {destination_path}")
-            else:
-                print(f"Failed to download {file.name} with status code {response.status_code}")
-        except IOError as e:
-            print(f"An IOError occurred while downloading {file.name}: {e}")
-        except Exception as e:
-            print(f"An unexpected error occurred while downloading {file.name}: {e}")
+        if "results.jsonl" in file.name:
+            print(file.name)
+            file.download(root=destination_folder, replace=True)
+            
 
-print("All files downloaded.")
