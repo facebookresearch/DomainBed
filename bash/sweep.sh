@@ -6,7 +6,7 @@ python -m domainbed.scripts.sweep launch\
        --output_dir=./train_output\
        --command_launcher local\
        --algorithms ERM GradBase CAG Fish \
-       --datasets RotatedMNIST \
+       --datasets ColoredMNIST \
        --n_hparams 1\
        --n_trials 1\
        --skip_confirmation\

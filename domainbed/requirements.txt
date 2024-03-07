@@ -1,7 +1,7 @@
-numpy==1.20.3
-wilds==1.2.2
+numpy
+wilds
 imageio==2.9.0
-gdown==3.13.0
+gdown
 tqdm==4.62.2
 backpack==0.1
 parameterized==0.8.1

@@ -276,8 +276,8 @@ if __name__ == "__main__":
     parser.add_argument('--data_dir', type=str, required=True)
     args = parser.parse_args()
 
-    download_mnist(args.data_dir)
-    # download_pacs(args.data_dir)
+    # download_mnist(args.data_dir)
+    download_pacs(args.data_dir)
     # download_office_home(args.data_dir)
     # download_domain_net(args.data_dir)
     download_vlcs(args.data_dir)
