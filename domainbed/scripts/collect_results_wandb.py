@@ -9,8 +9,8 @@ wandb.login(key='1eac4d04cc3cc4aed9a1409cd8eb7dc0f6537ef2')
 project_path = 'namkhanh2172/DomainBed2'
 
 # Đường dẫn tới thư mục bạn muốn lưu file
-destination_folder = "./collect_wandb"
-# destination_folder = "./"
+# destination_folder = "./collect_wandb"
+destination_folder = "./"
 
 # Tạo thư mục nếu nó không tồn tại
 if not os.path.exists(destination_folder):
