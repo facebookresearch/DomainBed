@@ -32,6 +32,8 @@ for run in runs:
         if "results.jsonl" in file.name:
             print(file.name)
             file.download(root=destination_folder, replace=True)
-            break
+            file_dir = os.path.join(destination_folder, os.path.dirname(file.name))
+            with open(os.path.join(file_dir, 'done'), 'w') as f:
+                f.write('done')
             
 
