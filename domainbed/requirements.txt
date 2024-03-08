@@ -1,5 +1,4 @@
 numpy
-wilds
 imageio==2.9.0
 gdown
 tqdm==4.62.2
