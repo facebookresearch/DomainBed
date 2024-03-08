@@ -10,6 +10,7 @@ project_path = 'namkhanh2172/DomainBed2'
 
 # Đường dẫn tới thư mục bạn muốn lưu file
 destination_folder = "./collect_wandb"
+# destination_folder = "./"
 
 # Tạo thư mục nếu nó không tồn tại
 if not os.path.exists(destination_folder):
@@ -31,5 +32,6 @@ for run in runs:
         if "results.jsonl" in file.name:
             print(file.name)
             file.download(root=destination_folder, replace=True)
+            break
             
 

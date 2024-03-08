@@ -279,8 +279,9 @@ if __name__ == "__main__":
     save_checkpoint('model.pkl')
     
     #save wandb file
-    epochs_path = os.path.join(args.output_dir, 'results.jsonl')
-    log_interface.save_file(epochs_path)
+    if args.wandb:
+        epochs_path = os.path.join(args.output_dir, 'results.jsonl')
+        log_interface.save_file(epochs_path)
 
     with open(os.path.join(args.output_dir, 'done'), 'w') as f:
         f.write('done')
