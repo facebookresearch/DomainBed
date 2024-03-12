@@ -6,5 +6,5 @@ python3 -m domainbed.scripts.train\
        --dataset ColoredMNIST\
        --test_env 0\
        --steps 2\
-       --hparams_seed 1\
+       # --hparams_seed 1\
        # --trial_seed 1\
