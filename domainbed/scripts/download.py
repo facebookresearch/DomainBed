@@ -28,7 +28,7 @@ def stage_path(data_dir, name):
 
 
 def download_and_extract(url, dst, remove=True):
-    gdown.download(url, dst, quiet=False)
+    # gdown.download(url, dst, quiet=False)
 
     if dst.endswith(".tar.gz"):
         tar = tarfile.open(dst, "r:gz")
