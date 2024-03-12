@@ -3,8 +3,8 @@ CUDA_VISIBLE_DEVICES=1 \
 python3 -m domainbed.scripts.train\
        --data_dir=./domainbed/data/\
        --algorithm CAG\
-       --dataset OfficeHome\
+       --dataset ColoredMNIST\
        --test_env 0\
-       --steps 301\
-       # --hparams_seed 1\
+       --steps 2\
+       --hparams_seed 1\
        # --trial_seed 1\

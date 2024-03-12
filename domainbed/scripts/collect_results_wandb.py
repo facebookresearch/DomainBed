@@ -6,7 +6,7 @@ import wandb
 wandb.login(key='1eac4d04cc3cc4aed9a1409cd8eb7dc0f6537ef2')
 
 # Thay thế 'YOUR_PROJECT_PATH' bằng path của project bạn muốn truy cập, ví dụ: 'username/projectname'
-project_path = 'namkhanh2172/DomainBed2'
+project_path = 'namkhanh2172/DomainBed3'
 
 # Đường dẫn tới thư mục bạn muốn lưu file
 # destination_folder = "./collect_wandb"

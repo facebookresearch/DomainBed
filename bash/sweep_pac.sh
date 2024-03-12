@@ -3,7 +3,7 @@ python -m domainbed.scripts.sweep launch\
        --data_dir=./domainbed/data/\
        --output_dir=./train_output\
        --command_launcher local\
-       --algorithms ERM GradBase CAG Fish \
+       --algorithms CAG1 \
        --datasets PACS \
        --n_hparams 1\
        --n_trials 1\

@@ -51,14 +51,14 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == 'Fish':
         _hparam('meta_lr', 0.5, lambda r:r.choice([0.05, 0.1, 0.5]))
         
-    elif algorithm == 'CAG':
+    elif algorithm == 'CAG' or algorithm == 'CAG1':
         _hparam('meta_lr', 0.5, lambda r: r.choice([0.05, 0.1, 0.5]))
         _hparam('cagrad_c', 0.5, lambda r: r.choice([0.05, 0.1, 0.5]))
-        _hparam('cag_update', 1, lambda r: r.choice([1, 5, 10]))
+        _hparam('cag_update', 1, lambda r: int(r.choice([1, 5, 10])))
 
     elif algorithm == 'GradBase':
         _hparam('meta_lr', 0.5, lambda r: r.choice([0.05, 0.1, 0.5]))
-        _hparam('update_step', 1, lambda r: r.choice([1, 5, 10]))
+        _hparam('update_step', 1, lambda r: int(r.choice([1, 5, 10])))
         
     elif algorithm == "RSC":
         _hparam('rsc_f_drop_factor', 1/3, lambda r: r.uniform(0, 0.5))

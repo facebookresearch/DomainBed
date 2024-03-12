@@ -89,7 +89,7 @@ if __name__ == "__main__":
     else:
         hparams = hparams_registry.random_hparams(args.algorithm, args.dataset,
             misc.seed_hash(args.hparams_seed, args.trial_seed))
-    # print(hparams)
+
     if args.hparams:
         hparams.update(json.loads(args.hparams))
         
@@ -264,10 +264,11 @@ if __name__ == "__main__":
                 f.write(json.dumps(results, sort_keys=True) + "\n")
             
             #logging
-            for key, value in results.items():
-                if (key != "hparams") and (key != "args"):
-                    log_interface(key=f"test/{key}", value=value)
-            log_interface.step(epoch=int(step//checkpoint_freq), test_len=int(n_steps//checkpoint_freq))
+            if args.wandb:
+                for key, value in results.items():
+                    if (key != "hparams") and (key != "args"):
+                        log_interface(key=f"test/{key}", value=value)
+                log_interface.step(epoch=int(step//checkpoint_freq), test_len=int(n_steps//checkpoint_freq))
 
             algorithm_dict = algorithm.state_dict()
             start_step = step + 1

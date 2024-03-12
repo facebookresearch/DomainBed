@@ -54,6 +54,7 @@ ALGORITHMS = [
     'EQRM',
     'CAG' , #CA Grad
     'GradBase',
+    'CAG1',
 ]
 
 def get_algorithm_class(algorithm_name):
@@ -254,25 +255,6 @@ class CAG(Algorithm):
         updated_meta_weights = ParamDict(meta_weights.state_dict())
         
         return updated_meta_weights
-    
-        all_domain_grads = []
-        flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
-        for i_domain in range(self.num_domains):
-            domain_grad_diffs = [torch.flatten(inner_param - meta_param) for inner_param, meta_param in zip(inner_weights[i_domain].parameters(), meta_weights.parameters())]
-            domain_grad_vector = torch.cat(domain_grad_diffs)
-            all_domain_grads.append(domain_grad_vector)
-            
-        all_domains_grad_tensor = torch.stack(all_domain_grads)
-        # print(all_domains_grad_tensor)
-        cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
-        # print(cagrad)
-        flatten_meta_weights += cagrad * lr_meta
-        
-        vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
-        meta_weights = ParamDict(meta_weights.state_dict())
-        
-        return meta_weights
-    
 
     def cagrad(self, grad_vec, num_tasks):
         """
@@ -345,6 +327,50 @@ class CAG(Algorithm):
 
     def predict(self, x):
         return self.network(x)
+
+class CAG1(CAG):
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super().__init__(input_shape, num_classes, num_domains, hparams)
+    def cag(self, meta_weights, inner_weights, lr_meta):
+        all_domain_grads = []
+        flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
+        for i_domain in range(self.num_domains):
+            domain_grad_diffs = [torch.flatten(inner_param - meta_param) for inner_param, meta_param in zip(inner_weights[i_domain].parameters(), meta_weights.parameters())]
+            domain_grad_vector = torch.cat(domain_grad_diffs)
+            all_domain_grads.append(domain_grad_vector)
+            
+        all_domains_grad_tensor = torch.stack(all_domain_grads)
+        # print(all_domains_grad_tensor)
+        cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
+        # print(cagrad)
+        flatten_meta_weights += cagrad * lr_meta
+        
+        vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
+        meta_weights = ParamDict(meta_weights.state_dict())
+        
+        return meta_weights
+    def update(self, minibatches, unlabeled=None):
+        if (self.u_count % self.cag_update) == 0:
+            self.create_clone(minibatches[0][0].device, n_domain=self.num_domains)
+        
+        for i_domain, (x, y) in enumerate(minibatches):
+            loss = F.cross_entropy(self.network_inner[i_domain](x), y)
+            self.optimizer_inner[i_domain].zero_grad()
+            loss.backward()
+            self.optimizer_inner[i_domain].step()
+            self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
+            
+        # After certain rounds, we cag once
+        if (self.u_count % self.cag_update) == (self.cag_update - 1):
+            meta_weights = self.cag(
+                meta_weights=self.network,
+                inner_weights=self.network_inner,
+                lr_meta=self.hparams["meta_lr"]
+            )
+            self.network.reset_weights(meta_weights)
+        
+        self.u_count += 1
+        return {'loss': loss.item()}
 
 class GradBase(Algorithm):
     """
@@ -1517,10 +1543,10 @@ class Fishr(Algorithm):
     def _get_grads(self, logits, y):
         self.optimizer.zero_grad()
         loss = self.bce_extended(logits, y).sum()
-        # with backpack(BatchGrad()):
-        #     loss.backward(
-        #         inputs=list(self.classifier.parameters()), retain_graph=True, create_graph=True
-        #     )
+        with backpack(BatchGrad()):
+            loss.backward(
+                inputs=list(self.classifier.parameters()), retain_graph=True, create_graph=True
+            )
         loss.backward(
                 inputs=list(self.classifier.parameters()), retain_graph=True, create_graph=True
             )
