@@ -5,7 +5,7 @@ python -m domainbed.scripts.sweep launch\
        --command_launcher local\
        --algorithms CAG1 \
        --datasets OfficeHome \
-       --n_hparams 20\
+       --n_hparams 1\
        --n_trials 3\
        --skip_confirmation\
        --wandb\
