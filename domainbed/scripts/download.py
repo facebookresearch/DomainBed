@@ -279,7 +279,7 @@ if __name__ == "__main__":
     # download_mnist(args.data_dir)
     # download_pacs(args.data_dir)
     # download_office_home(args.data_dir)
-    download_domain_net(args.data_dir)
+    # download_domain_net(args.data_dir)
     download_vlcs(args.data_dir)
     # download_terra_incognita(args.data_dir)
     # download_spawrious(args.data_dir)

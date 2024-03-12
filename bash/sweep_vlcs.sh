@@ -5,6 +5,6 @@ python -m domainbed.scripts.sweep launch\
        --algorithms CAG1 \
        --datasets VLCS \
        --n_hparams 1\
-       --n_trials 1\
+       --n_trials 3\
        --skip_confirmation\
-       # --wandb\
+       --wandb\
