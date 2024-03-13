@@ -1,4 +1,4 @@
-python -m domainbed.scripts.sweep delete_incomplete\
+python -m domainbed.scripts.sweep launch\
        --data_dir=./domainbed/data/\
        --output_dir=./train_output\
        --command_launcher local\
