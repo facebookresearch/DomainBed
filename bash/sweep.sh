@@ -9,7 +9,7 @@ python3 -m domainbed.scripts.sweep delete_incomplete\
        --command_launcher local\
        --algorithms CAG1 \
        --datasets RotatedMNIST ColoredMNIST\
-       --n_hparams 1\
+       --n_hparams 20\
        --n_trials 3\
        --skip_confirmation\
        --wandb\
