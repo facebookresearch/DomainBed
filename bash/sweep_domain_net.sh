@@ -4,7 +4,7 @@ python -m domainbed.scripts.sweep launch\
        --command_launcher local\
        --algorithms CAG1 \
        --datasets DomainNet \
-       --n_hparams 1\
-       --n_trials 1\
+       --n_hparams 5\
+       --n_trials 3\
        --skip_confirmation\
        --wandb\
