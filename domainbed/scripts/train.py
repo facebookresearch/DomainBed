@@ -20,6 +20,7 @@ from domainbed import hparams_registry
 from domainbed import algorithms
 from domainbed.lib import misc
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
+from domainbed.utils.logging import Logging
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Domain generalization')
@@ -48,6 +49,17 @@ if __name__ == "__main__":
         help="For domain adaptation, % of test to use unlabeled for training.")
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
+    
+    # LOGGING
+    parser.add_argument('--wandb', nargs='?', const=True, default=False,
+                        help='toggle to use wandb for online saving')
+    parser.add_argument('--log', action='store_true',
+                        help='toggle to use tensorboard for offline saving')
+    parser.add_argument("--verbose", action="store_true",
+                        help="printout mode")
+    parser.add_argument("--mode", type=str, default="train",
+                        help="train/valid mode")
+    
     args = parser.parse_args()
 
     # If we ever want to implement checkpointing, just persist these values
@@ -77,9 +89,10 @@ if __name__ == "__main__":
     else:
         hparams = hparams_registry.random_hparams(args.algorithm, args.dataset,
             misc.seed_hash(args.hparams_seed, args.trial_seed))
+
     if args.hparams:
         hparams.update(json.loads(args.hparams))
-
+        
     print('HParams:')
     for k, v in sorted(hparams.items()):
         print('\t{}: {}'.format(k, v))
@@ -101,6 +114,9 @@ if __name__ == "__main__":
     else:
         raise NotImplementedError
 
+    # Setup wandb
+    log_interface = Logging(args, hparams)
+
     # Split each env into an 'in-split' and an 'out-split'. We'll train on
     # each in-split except the test envs, and evaluate on all splits.
 
@@ -118,7 +134,6 @@ if __name__ == "__main__":
     uda_splits = []
     for env_i, env in enumerate(dataset):
         uda = []
-
         out, in_ = misc.split_dataset(env,
             int(len(env)*args.holdout_fraction),
             misc.seed_hash(args.trial_seed, env_i))
@@ -139,7 +154,6 @@ if __name__ == "__main__":
         out_splits.append((out, out_weights))
         if len(uda):
             uda_splits.append((uda, uda_weights))
-
     if args.task == "domain_adaptation" and len(uda_splits) == 0:
         raise ValueError("Not enough unlabeled samples for domain adaptation.")
 
@@ -150,7 +164,6 @@ if __name__ == "__main__":
         num_workers=dataset.N_WORKERS)
         for i, (env, env_weights) in enumerate(in_splits)
         if i not in args.test_envs]
-
     uda_loaders = [InfiniteDataLoader(
         dataset=env,
         weights=env_weights,
@@ -202,7 +215,6 @@ if __name__ == "__main__":
         }
         torch.save(save_dict, os.path.join(args.output_dir, filename))
 
-
     last_results_keys = None
     for step in range(start_step, n_steps):
         step_start_time = time.time()
@@ -250,6 +262,13 @@ if __name__ == "__main__":
             epochs_path = os.path.join(args.output_dir, 'results.jsonl')
             with open(epochs_path, 'a') as f:
                 f.write(json.dumps(results, sort_keys=True) + "\n")
+            
+            #logging
+            if args.wandb:
+                for key, value in results.items():
+                    if (key != "hparams") and (key != "args"):
+                        log_interface(key=f"test/{key}", value=value)
+                log_interface.step(epoch=int(step//checkpoint_freq), test_len=int(n_steps//checkpoint_freq))
 
             algorithm_dict = algorithm.state_dict()
             start_step = step + 1
@@ -259,6 +278,11 @@ if __name__ == "__main__":
                 save_checkpoint(f'model_step{step}.pkl')
 
     save_checkpoint('model.pkl')
+    
+    #save wandb file
+    if args.wandb:
+        epochs_path = os.path.join(args.output_dir, 'results.jsonl')
+        log_interface.save_file(epochs_path)
 
     with open(os.path.join(args.output_dir, 'done'), 'w') as f:
         f.write('done')
