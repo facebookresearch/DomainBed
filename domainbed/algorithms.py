@@ -55,6 +55,7 @@ ALGORITHMS = [
     'CAG' , #CA Grad
     'GradBase',
     'CAG1',
+    'Fish_T'
 ]
 
 def get_algorithm_class(algorithm_name):
@@ -86,6 +87,17 @@ class Algorithm(torch.nn.Module):
 
     def predict(self, x):
         raise NotImplementedError
+    
+    def diff_weight(self, model1, model2):
+        params1 = [p.data for p in model1.parameters()]
+        params2 = [p.data for p in model2.parameters()]
+
+        # Tính hiệu và norm của hiệu giữa các parameter tương ứng
+        diff_norms = [torch.norm(p1 - p2, p='fro') for p1, p2 in zip(params1, params2)]
+
+        # Tính tổng (hoặc trung bình) của các norm này để có một đại lượng đơn lẻ mô tả sự khác biệt
+        total_diff_norm = torch.sum(torch.stack(diff_norms))
+        return total_diff_norm.item()
 
 
 class ERM(Algorithm):
@@ -182,6 +194,92 @@ class Fish(Algorithm):
     def predict(self, x):
         return self.network(x)
 
+class Fish_T(Algorithm):
+    """
+    Implementation of Fish, as seen in Gradient Matching for Domain
+    Generalization, Shi et al. 2021.
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(Fish_T, self).__init__(input_shape, num_classes, num_domains,
+                                   hparams)
+        self.input_shape = input_shape
+        self.num_classes = num_classes
+        self.num_domains = num_domains
+
+        self.network = networks.WholeFish(input_shape, num_classes, hparams)
+        self.optimizer = torch.optim.Adam(
+            self.network.parameters(),
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams['weight_decay']
+        )
+        self.optimizer_inner_state = None
+        self.optimizer_specific_state = [None] * num_domains
+
+    def create_clone(self, device, n_domain):
+        self.network_inner = networks.WholeFish(self.input_shape, self.num_classes, self.hparams,
+                                            weights=self.network.state_dict()).to(device)
+        self.optimizer_inner = torch.optim.Adam(
+            self.network_inner.parameters(),
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams['weight_decay']
+        )
+        if self.optimizer_inner_state is not None:
+            self.optimizer_inner.load_state_dict(self.optimizer_inner_state)
+        self.network_specific = []
+        self.optimizer_specific = []
+        for i_domain in range(n_domain):
+            self.network_specific.append(networks.WholeFish(self.input_shape, self.num_classes, self.hparams, weights=self.network.state_dict()).to(device))
+            self.optimizer_specific.append(torch.optim.Adam(
+                self.network_specific[i_domain].parameters(),
+                lr=self.hparams["lr"],
+                weight_decay=self.hparams['weight_decay']
+            ))
+            if self.optimizer_specific_state[i_domain] is not None:
+                self.optimizer_specific[i_domain].load_state_dict(self.optimizer_specific_state[i_domain])
+
+    def fish(self, meta_weights, inner_weights, lr_meta):
+        meta_weights = ParamDict(meta_weights)
+        inner_weights = ParamDict(inner_weights)
+        meta_weights += lr_meta * (inner_weights - meta_weights)
+        return meta_weights
+    
+
+    def update(self, minibatches, unlabeled=None):
+        self.create_clone(minibatches[0][0].device, self.num_domains)
+        for i_domain, (x, y) in enumerate(minibatches):
+            loss = F.cross_entropy(self.network_inner(x), y)
+            self.optimizer_inner.zero_grad()
+            loss.backward()
+            self.optimizer_inner.step()
+            
+            loss = F.cross_entropy(self.network_specific[i_domain](x), y)
+            self.optimizer_specific[i_domain].zero_grad()
+            loss.backward()
+            self.optimizer_specific[i_domain].step()
+            self.optimizer_specific_state[i_domain] = self.optimizer_specific[i_domain].state_dict()
+            
+            loss = F.cross_entropy(self.network(x), y)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+        self.optimizer_inner_state = self.optimizer_inner.state_dict()
+        meta_weights = self.fish(
+            meta_weights=self.network.state_dict(),
+            inner_weights=self.network_inner.state_dict(),
+            lr_meta=self.hparams["meta_lr"]
+        )
+        self.network.reset_weights(meta_weights)
+        
+        diff = [self.diff_weight(self.network_specific[i_domain],self.network) for i_domain in range(self.num_domains)]
+        print(diff)
+
+        return {'loss': loss.item()}
+
+    def predict(self, x):
+        return self.network(x)
+    
 class CAG(Algorithm):
     """
     Implementation of CA Grad, as seen in Gradient Matching for Domain
@@ -223,38 +321,23 @@ class CAG(Algorithm):
                 self.optimizer_inner[i_domain].load_state_dict(self.optimizer_inner_state[i_domain])
 
     def cag(self, meta_weights, inner_weights, lr_meta):
-        
-        # Lấy tất cả parameter names
-        param_names = [name for name, _ in meta_weights.named_parameters()]
-        
-        # Tính toán gradient chênh lệch cho mỗi domain
-        domain_grad_diffs = []
+        all_domain_grads = []
+        flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
         for i_domain in range(self.num_domains):
-            # Tạo một list chứa gradient chênh lệch hoặc vector 0 tương ứng với mỗi parameter
-            domain_grads = []
-            for (clone_param, meta_param, name) in zip(inner_weights[i_domain].parameters(), meta_weights.parameters(), param_names):
-                if name.startswith('net.1'):
-                    # Tính gradient chênh lệch cho tầng Classifier
-                    domain_grads.append(torch.flatten(clone_param - meta_param))
-                else:
-                    # Tạo vector 0 cho tầng Featurizer
-                    domain_grads.append(torch.zeros_like(torch.flatten(meta_param)))
-            # Nối và thêm vào list tổng
-            domain_grad_diffs.append(torch.cat(domain_grads))
-        
-        all_domains_grad_tensor = torch.stack(domain_grad_diffs)
+            domain_grad_diffs = [torch.flatten(inner_param - meta_param) for inner_param, meta_param in zip(inner_weights[i_domain].parameters(), meta_weights.parameters())]
+            domain_grad_vector = torch.cat(domain_grad_diffs)
+            all_domain_grads.append(domain_grad_vector)
+            
+        all_domains_grad_tensor = torch.stack(all_domain_grads)
         # print(all_domains_grad_tensor)
         cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
         # print(cagrad)
+        flatten_meta_weights += cagrad * lr_meta
         
-        # Cập nhật trọng số meta
-        meta_weights_vector = parameters_to_vector(meta_weights.parameters())
-        vector_to_parameters(meta_weights_vector + cagrad * lr_meta, meta_weights.parameters())
+        vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
+        meta_weights = ParamDict(meta_weights.state_dict())
         
-        # Tạo và in ra ParamDict mới từ trạng thái cập nhật của meta_weights
-        updated_meta_weights = ParamDict(meta_weights.state_dict())
-        
-        return updated_meta_weights
+        return meta_weights
 
     def cagrad(self, grad_vec, num_tasks):
         """
@@ -308,11 +391,6 @@ class CAG(Algorithm):
             self.optimizer_inner[i_domain].step()
             self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
             
-            loss = F.cross_entropy(self.network(x), y)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step() 
-        
         # After certain rounds, we cag once
         if (self.u_count % self.cag_update) == (self.cag_update - 1):
             meta_weights = self.cag(
@@ -321,6 +399,8 @@ class CAG(Algorithm):
                 lr_meta=self.hparams["meta_lr"]
             )
             self.network.reset_weights(meta_weights)
+            diff = [self.diff_weight(self.network_inner[i_domain],self.network) for i_domain in range(self.num_domains)]
+            print(diff)
         
         self.u_count += 1
         return {'loss': loss.item()}

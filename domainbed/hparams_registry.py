@@ -48,7 +48,7 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('mlp_depth', 3, lambda r: int(r.choice([3, 4, 5])))
         _hparam('mlp_dropout', 0., lambda r: r.choice([0., 0.1, 0.5]))
 
-    elif algorithm == 'Fish':
+    elif algorithm == 'Fish' or algorithm == 'Fish_T':
         _hparam('meta_lr', 0.5, lambda r:r.choice([0.05, 0.1, 0.5]))
         
     elif algorithm == 'CAG' or algorithm == 'CAG1':
