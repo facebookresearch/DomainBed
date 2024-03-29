@@ -9,3 +9,4 @@ python -m domainbed.scripts.sweep launch\
        --n_trials 3\
        --skip_confirmation\
        --wandb\
+       --single_test_envs\

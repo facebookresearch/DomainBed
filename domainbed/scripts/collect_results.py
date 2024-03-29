@@ -148,11 +148,12 @@ if __name__ == "__main__":
         description="Domain generalization testbed")
     parser.add_argument("--input_dir", type=str, required=True)
     parser.add_argument("--latex", action="store_true")
+    parser.add_argument("--save_latex_dir", type=str, default="./domainbed/results")
     args = parser.parse_args()
 
     results_file = "results.tex" if args.latex else "results.txt"
 
-    sys.stdout = misc.Tee(os.path.join(args.input_dir, results_file), "w")
+    sys.stdout = misc.Tee(os.path.join(args.save_latex_dir, results_file), "w")
 
     records = reporting.load_records(args.input_dir)
 
@@ -168,7 +169,7 @@ if __name__ == "__main__":
 
     SELECTION_METHODS = [
         model_selection.IIDAccuracySelectionMethod,
-        model_selection.LeaveOneOutSelectionMethod,
+        # model_selection.LeaveOneOutSelectionMethod,
         model_selection.OracleSelectionMethod,
     ]
 

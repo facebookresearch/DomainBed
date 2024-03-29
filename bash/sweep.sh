@@ -13,3 +13,4 @@ python3 -m domainbed.scripts.sweep delete_incomplete\
        --n_trials 3\
        --skip_confirmation\
        --wandb\
+       --single_test_envs\

@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
     SELECTION_METHODS = [
         model_selection.IIDAccuracySelectionMethod,
-        model_selection.LeaveOneOutSelectionMethod,
+        # model_selection.LeaveOneOutSelectionMethod,
         model_selection.OracleSelectionMethod,
     ]
 
@@ -140,13 +140,15 @@ if __name__ == "__main__":
             print(f"trial_seed: {group['trial_seed']}")
             best_hparams = selection_method.hparams_accs(group['records'])
             for run_acc, hparam_records in best_hparams:
-                print(f"\t{run_acc}")
-                for r in hparam_records:
-                    assert(r['hparams'] == hparam_records[0]['hparams'])
-                print("\t\thparams:")
+                print(f"\t{run_acc}", end='')
+                # for r in hparam_records:
+                    # assert(r['hparams'] == hparam_records[0]['hparams'])
+                # print("\t\thparams:")
                 for k, v in sorted(hparam_records[0]['hparams'].items()):
-                    print('\t\t\t{}: {}'.format(k, v))
-                print("\t\toutput_dirs:")
-                output_dirs = hparam_records.select('args.output_dir').unique()
-                for output_dir in output_dirs:
-                    print(f"\t\t\t{output_dir}")
+                    if(k in {"cagrad_c", "cag_update", "meta_lr"}):
+                        print('\t\t\t{}: {}'.format(k, v), end='')       
+                print("")
+                # print("\t\toutput_dirs:")
+                # output_dirs = hparam_records.select('args.output_dir').unique()
+                # for output_dir in output_dirs:
+                #     print(f"\t\t\t{output_dir}")
