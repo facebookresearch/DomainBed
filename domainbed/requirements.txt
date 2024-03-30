@@ -7,6 +7,6 @@ parameterized
 Pillow
 wilds
 wandb
-tensorboard
+# tensorboard
 
 #test

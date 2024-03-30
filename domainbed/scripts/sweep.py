@@ -36,6 +36,7 @@ class Job:
         args_str = json.dumps(train_args, sort_keys=True)
         args_hash = hashlib.md5(args_str.encode('utf-8')).hexdigest()
         self.output_dir = os.path.join(sweep_output_dir, args_hash)
+        print(self.output_dir, args_hash,args_str)
 
         self.train_args = copy.deepcopy(train_args)
         self.train_args['output_dir'] = self.output_dir

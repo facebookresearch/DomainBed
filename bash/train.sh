@@ -5,6 +5,6 @@ python3 -m domainbed.scripts.train\
        --algorithm CAG\
        --dataset RotatedMNIST\
        --test_env 0\
-       --steps 100\
+       --steps 2\
        --hparams_seed 0\
        --trial_seed 0\

@@ -30,10 +30,12 @@ for run in runs:
     # Tìm và tải xuống file results.txt
     for file in files:
         if "results.jsonl" in file.name:
-            print(file.name)
-            file.download(root=destination_folder, replace=True)
-            file_dir = os.path.join(destination_folder, os.path.dirname(file.name))
-            with open(os.path.join(file_dir, 'done'), 'w') as f:
-                f.write('done')
-            
+            file_path = os.path.join(destination_folder, file.name)
+            if not os.path.exists(file_path):
+                file.download(root=destination_folder, replace=False)
+                file_dir = os.path.join(destination_folder, os.path.dirname(file.name))
+                with open(os.path.join(file_dir, 'done'), 'w') as f:
+                    f.write('done') 
+            else:
+                print(f"File {file_path} already exists")           
 
