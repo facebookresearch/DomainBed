@@ -15,6 +15,9 @@ import torch
 import torchvision
 import torch.utils.data
 
+os.environ['WANDB_DISABLE_SERVICE'] = 'True'
+os.environ['WANDB_CONFIG_DIR'] = "<CUSTOM_COFIG_DIR>"
+
 from domainbed import datasets
 from domainbed import hparams_registry
 from domainbed import algorithms

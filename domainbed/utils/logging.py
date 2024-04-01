@@ -61,10 +61,7 @@ class Logging:
 
         self.__log_avg = {}
         for log_key in self.__log:
-            if log_key.split("/")[0] in ['train']:
-                self.__log_avg[log_key] = self.__log[log_key]
-            else:
-                self.__log_avg[log_key] = self.__log[log_key] / test_len
+            self.__log_avg[log_key] = self.__log[log_key] 
 
 
         if self.__args.wandb:

@@ -5,8 +5,7 @@ python3 -m domainbed.scripts.sweep launch\
        --command_launcher local\
        --algorithms CAG \
        --datasets ColoredMNIST\
-       --n_hparams 20\
+       --n_hparams 30\
        --n_trials 3\
        --skip_confirmation\
-       --wandb\
        --single_test_envs\
