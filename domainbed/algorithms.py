@@ -223,38 +223,23 @@ class CAG(Algorithm):
                 self.optimizer_inner[i_domain].load_state_dict(self.optimizer_inner_state[i_domain])
 
     def cag(self, meta_weights, inner_weights, lr_meta):
-        
-        # Lấy tất cả parameter names
-        param_names = [name for name, _ in meta_weights.named_parameters()]
-        
-        # Tính toán gradient chênh lệch cho mỗi domain
-        domain_grad_diffs = []
+        all_domain_grads = []
+        flatten_meta_weights = torch.cat([param.view(-1) for param in meta_weights.parameters()])
         for i_domain in range(self.num_domains):
-            # Tạo một list chứa gradient chênh lệch hoặc vector 0 tương ứng với mỗi parameter
-            domain_grads = []
-            for (clone_param, meta_param, name) in zip(inner_weights[i_domain].parameters(), meta_weights.parameters(), param_names):
-                if name.startswith('net.1'):
-                    # Tính gradient chênh lệch cho tầng Classifier
-                    domain_grads.append(torch.flatten(clone_param - meta_param))
-                else:
-                    # Tạo vector 0 cho tầng Featurizer
-                    domain_grads.append(torch.zeros_like(torch.flatten(meta_param)))
-            # Nối và thêm vào list tổng
-            domain_grad_diffs.append(torch.cat(domain_grads))
-        
-        all_domains_grad_tensor = torch.stack(domain_grad_diffs)
+            domain_grad_diffs = [torch.flatten(inner_param - meta_param) for inner_param, meta_param in zip(inner_weights[i_domain].parameters(), meta_weights.parameters())]
+            domain_grad_vector = torch.cat(domain_grad_diffs)
+            all_domain_grads.append(domain_grad_vector)
+            
+        all_domains_grad_tensor = torch.stack(all_domain_grads)
         # print(all_domains_grad_tensor)
         cagrad = self.cagrad(all_domains_grad_tensor, self.num_domains)
         # print(cagrad)
+        flatten_meta_weights += cagrad * lr_meta
         
-        # Cập nhật trọng số meta
-        meta_weights_vector = parameters_to_vector(meta_weights.parameters())
-        vector_to_parameters(meta_weights_vector + cagrad * lr_meta, meta_weights.parameters())
+        vector_to_parameters(flatten_meta_weights, meta_weights.parameters())
+        meta_weights = ParamDict(meta_weights.state_dict())
         
-        # Tạo và in ra ParamDict mới từ trạng thái cập nhật của meta_weights
-        updated_meta_weights = ParamDict(meta_weights.state_dict())
-        
-        return updated_meta_weights
+        return meta_weights
 
     def cagrad(self, grad_vec, num_tasks):
         """
@@ -308,11 +293,6 @@ class CAG(Algorithm):
             self.optimizer_inner[i_domain].step()
             self.optimizer_inner_state[i_domain] = self.optimizer_inner[i_domain].state_dict()
             
-            loss = F.cross_entropy(self.network(x), y)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step() 
-        
         # After certain rounds, we cag once
         if (self.u_count % self.cag_update) == (self.cag_update - 1):
             meta_weights = self.cag(
