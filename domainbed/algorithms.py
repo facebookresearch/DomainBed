@@ -405,7 +405,8 @@ class CAG(Algorithm):
 
     def predict(self, x):
         return self.network(x)
-
+class CAG1(CAG):
+    None
 
 class GradBase(Algorithm):
     """
