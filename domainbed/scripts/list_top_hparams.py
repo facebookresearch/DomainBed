@@ -114,6 +114,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', required=True)
     parser.add_argument('--algorithm', required=True)
     parser.add_argument('--test_env', type=int, required=True)
+    parser.add_argument('--only_best',action='store_true')
     args = parser.parse_args()
 
     records = reporting.load_records(args.input_dir)
@@ -134,21 +135,28 @@ if __name__ == "__main__":
     ]
 
     for selection_method in SELECTION_METHODS:
+        print("---------------------------------")
         print(f'Model selection: {selection_method.name}')
 
         for group in records:
             print(f"trial_seed: {group['trial_seed']}")
             best_hparams = selection_method.hparams_accs(group['records'])
-            for run_acc, hparam_records in best_hparams:
-                print(f"\t{run_acc}", end='')
-                # for r in hparam_records:
-                    # assert(r['hparams'] == hparam_records[0]['hparams'])
-                # print("\t\thparams:")
-                for k, v in sorted(hparam_records[0]['hparams'].items()):
-                    if(k in {"cagrad_c", "cag_update", "meta_lr"}):
-                        print('\t\t\t{}: {}'.format(k, v), end='')       
-                print("")
-                # print("\t\toutput_dirs:")
-                # output_dirs = hparam_records.select('args.output_dir').unique()
-                # for output_dir in output_dirs:
-                #     print(f"\t\t\t{output_dir}")
+            if not args.only_best:
+                for run_acc, hparam_records in best_hparams:
+                    print(f"\t{run_acc}", end='')
+                    # for r in hparam_records:
+                        # assert(r['hparams'] == hparam_records[0]['hparams'])
+                    # print("\t\thparams:")
+                    for k, v in sorted(hparam_records[0]['hparams'].items()):
+                        if(k in {"cagrad_c", "cag_update", "meta_lr"}):
+                            print('\t\t\t{}: {}'.format(k, v), end='')       
+                    print("")
+                    # print("\t\toutput_dirs:")
+                    # output_dirs = hparam_records.select('args.output_dir').unique()
+                    # for output_dir in output_dirs:
+                    #     print(f"\t\t\t{output_dir}")
+            else:
+                run_acc, hparam_records = best_hparams[0]
+                print(run_acc)
+                print(hparam_records[0]['args'])
+                print(hparam_records[0]['hparams'])

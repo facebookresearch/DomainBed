@@ -1,3 +1,4 @@
 python -u -m domainbed.scripts.list_top_hparams \
-    --input_dir ./train_output --algorithm CAG1 \
-    --dataset RotatedMNIST --test_env 1
+    --input_dir ./MnistTest --algorithm CAG \
+    --dataset ColoredMNIST --test_env 0 \
+    # --only_best
