@@ -19,7 +19,7 @@ from domainbed import datasets
 from domainbed import hparams_registry
 from domainbed import algorithms
 from domainbed.lib import misc
-from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
+from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader, InfiniteDataLoaderWithoutReplacement
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Domain generalization')
@@ -48,6 +48,7 @@ if __name__ == "__main__":
         help="For domain adaptation, % of test to use unlabeled for training.")
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
+    parser.add_argument('--auto_lr', action='store_true')
     args = parser.parse_args()
 
     # If we ever want to implement checkpointing, just persist these values
@@ -113,6 +114,8 @@ if __name__ == "__main__":
     # domain generalization and domain adaptation results, then domain
     # generalization algorithms should create the same 'uda-splits', which will
     # be discared at training.
+
+
     in_splits = []
     out_splits = []
     uda_splits = []
@@ -143,7 +146,7 @@ if __name__ == "__main__":
     if args.task == "domain_adaptation" and len(uda_splits) == 0:
         raise ValueError("Not enough unlabeled samples for domain adaptation.")
 
-    train_loaders = [InfiniteDataLoader(
+    train_loaders = [InfiniteDataLoaderWithoutReplacement(
         dataset=env,
         weights=env_weights,
         batch_size=hparams['batch_size'],
@@ -151,7 +154,7 @@ if __name__ == "__main__":
         for i, (env, env_weights) in enumerate(in_splits)
         if i not in args.test_envs]
 
-    uda_loaders = [InfiniteDataLoader(
+    uda_loaders = [InfiniteDataLoaderWithoutReplacement(
         dataset=env,
         weights=env_weights,
         batch_size=hparams['batch_size'],
@@ -163,6 +166,13 @@ if __name__ == "__main__":
         batch_size=64,
         num_workers=dataset.N_WORKERS)
         for env, _ in (in_splits + out_splits + uda_splits)]
+
+    eval_loaders_iid = [FastDataLoader(
+        dataset=env,
+        batch_size=64,
+        num_workers=dataset.N_WORKERS)
+        for i, (env, _) in enumerate(out_splits) if i not in args.test_envs ]
+
     eval_weights = [None for _, weights in (in_splits + out_splits + uda_splits)]
     eval_loader_names = ['env{}_in'.format(i)
         for i in range(len(in_splits))]
@@ -172,7 +182,150 @@ if __name__ == "__main__":
         for i in range(len(uda_splits))]
 
     algorithm_class = algorithms.get_algorithm_class(args.algorithm)
-    algorithm = algorithm_class(dataset.input_shape, dataset.num_classes, len(dataset) - len(args.test_envs), hparams)
+    algorithm = algorithm_class(dataset.input_shape, dataset.num_classes,
+        len(dataset) - len(args.test_envs), hparams)
+
+    if algorithm_dict is not None:
+        algorithm.load_state_dict(algorithm_dict)
+
+    algorithm.to(device)
+
+    train_minibatches_iterator = zip(*train_loaders)
+    uda_minibatches_iterator = zip(*uda_loaders)
+    checkpoint_vals = collections.defaultdict(lambda: [])
+
+    steps_per_epoch = min([len(env)/hparams['batch_size'] for env,_ in in_splits])
+
+    n_steps = args.steps or dataset.N_STEPS
+    checkpoint_freq = args.checkpoint_freq or dataset.CHECKPOINT_FREQ
+
+
+    last_results_keys = None
+    for step in range(start_step, n_steps):
+        step_start_time = time.time()
+        minibatches_device = [(x.to(device), y.to(device))
+            for x,y in next(train_minibatches_iterator)]
+        if args.task == "domain_adaptation":
+            uda_device = [x.to(device)
+                for x,_ in next(uda_minibatches_iterator)]
+        else:
+            uda_device = None
+        step_vals = algorithm.update(minibatches_device, uda_device)
+        checkpoint_vals['step_time'].append(time.time() - step_start_time)
+
+        for key, val in step_vals.items():
+            checkpoint_vals[key].append(val)
+
+        if (step % checkpoint_freq == 0) or (step == n_steps - 1):
+           schedule = algorithm.set_lr(eval_loaders_iid = eval_loaders_iid, device=device)
+
+           if schedule is not None and schedule[-1] == [0.0]:
+               break
+
+           results = {
+               'step': step,
+               'epoch': step / steps_per_epoch,
+               'lr': algorithm.optimizer.param_groups[0]['lr']
+           }
+
+           for key, val in checkpoint_vals.items():
+               results[key] = np.mean(val)
+
+           evals = zip(eval_loader_names, eval_loaders, eval_weights)
+           for name, loader, weights in evals:
+               acc = misc.accuracy(algorithm, loader, weights, device)
+               results[name+'_acc'] = acc
+
+           results['mem_gb'] = torch.cuda.max_memory_allocated() / (1024.*1024.*1024.)
+
+           results_keys = sorted(results.keys())
+           if results_keys != last_results_keys:
+               misc.print_row(results_keys, colwidth=12)
+               last_results_keys = results_keys
+           misc.print_row([results[key] for key in results_keys],
+               colwidth=12)
+
+           results.update({
+               'hparams': hparams,
+               'args': vars(args)
+           })
+
+           epochs_path = os.path.join(args.output_dir, 'results.jsonl')
+           with open(epochs_path, 'a') as f:
+               f.write(json.dumps(results, sort_keys=True) + "\n")
+
+
+
+
+    ###################################################### Second stage
+
+
+    # Split each env into an 'in-split' and an 'out-split'. We'll train on
+    # each in-split except the test envs, and evaluate on all splits.
+
+    # To allow unsupervised domain adaptation experiments, we split each test
+    # env into 'in-split', 'uda-split' and 'out-split'. The 'in-split' is used
+    # by collect_results.py to compute classification accuracies.  The
+    # 'out-split' is used by the Oracle model selectino method. The unlabeled
+    # samples in 'uda-split' are passed to the algorithm at training time if
+    # args.task == "domain_adaptation". If we are interested in comparing
+    # domain generalization and domain adaptation results, then domain
+    # generalization algorithms should create the same 'uda-splits', which will
+    # be discared at training.
+    in_splits = []
+    uda_splits = []
+    args.holdout_fraction = 0.0
+    for env_i, env in enumerate(dataset):
+        uda = []
+
+        in_ = env
+
+        if env_i in args.test_envs:
+            uda, in_ = misc.split_dataset(in_,
+                int(len(in_)*args.uda_holdout_fraction),
+                misc.seed_hash(args.trial_seed, env_i))
+
+        if hparams['class_balanced']:
+            in_weights = misc.make_weights_for_balanced_classes(in_)
+            if uda is not None:
+                uda_weights = misc.make_weights_for_balanced_classes(uda)
+        else:
+            in_weights, out_weights, uda_weights = None, None, None
+        in_splits.append((in_, in_weights))
+        if len(uda):
+            uda_splits.append((uda, uda_weights))
+
+    if args.task == "domain_adaptation" and len(uda_splits) == 0:
+        raise ValueError("Not enough unlabeled samples for domain adaptation.")
+    train_loaders = [InfiniteDataLoaderWithoutReplacement(
+        dataset=env,
+        weights=env_weights,
+        batch_size=hparams['batch_size'],
+        num_workers=dataset.N_WORKERS)
+        for i, (env, env_weights) in enumerate(in_splits)
+        if i not in args.test_envs]
+
+    uda_loaders = [InfiniteDataLoaderWithoutReplacement(
+        dataset=env,
+        weights=env_weights,
+        batch_size=hparams['batch_size'],
+        num_workers=dataset.N_WORKERS)
+        for i, (env, env_weights) in enumerate(uda_splits)]
+
+    eval_loaders = [FastDataLoader(
+        dataset=env,
+        batch_size=64,
+        num_workers=dataset.N_WORKERS)
+        for env, _ in (in_splits  + uda_splits)]
+    eval_weights = [None for _, weights in (in_splits  + uda_splits)]
+    eval_loader_names = ['env{}_in'.format(i)
+        for i in range(len(eval_loaders))]
+    eval_loader_names += ['env{}_uda'.format(i)
+        for i in range(len(uda_splits))]
+
+    algorithm_class = algorithms.get_algorithm_class(args.algorithm)
+    algorithm = algorithm_class(dataset.input_shape, dataset.num_classes,
+        len(dataset) - len(args.test_envs), hparams)
 
     if algorithm_dict is not None:
         algorithm.load_state_dict(algorithm_dict)
@@ -222,7 +375,13 @@ if __name__ == "__main__":
             results = {
                 'step': step,
                 'epoch': step / steps_per_epoch,
+                'lr': float(algorithm.optimizer.param_groups[0]['lr'])
             }
+
+            schedule = algorithm.set_lr(schedule= schedule)
+            if schedule is not None and schedule[0] == [0.0]:
+               break
+
 
             for key, val in checkpoint_vals.items():
                 results[key] = np.mean(val)
@@ -230,7 +389,7 @@ if __name__ == "__main__":
             evals = zip(eval_loader_names, eval_loaders, eval_weights)
             for name, loader, weights in evals:
                 acc = misc.accuracy(algorithm, loader, weights, device)
-                results[name+'_acc'] = acc
+                results['fd_'+name+'_acc'] = acc
 
             results['mem_gb'] = torch.cuda.max_memory_allocated() / (1024.*1024.*1024.)
 

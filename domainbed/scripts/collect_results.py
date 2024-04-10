@@ -23,6 +23,44 @@ from domainbed import model_selection
 from domainbed.lib.query import Q
 import warnings
 
+def remove_key(d,key):
+    new_d = d.copy()
+    new_d.pop(key)
+    return new_d
+
+def recursive_freeze(obj):
+    if isinstance(obj, dict):
+        return frozenset((key, recursive_freeze(val)) for key, val in obj.items())
+    elif isinstance(obj, list):
+        return tuple(recursive_freeze(item) for item in obj)
+    elif isinstance(obj, set):
+        return frozenset(recursive_freeze(item) for item in obj)
+    elif isinstance(obj, tuple):
+        return tuple(recursive_freeze(item) for item in obj)
+    else:
+        return obj
+
+def merge_records(records):
+    merged_records = []
+    args_set = set()  # Store unique args dictionaries
+
+    # Group records by unique 'args' dictionaries
+    for record in records:
+        args = record['args'].copy()
+        args.pop('holdout_fraction', None)  # Remove 'holdout_fraction' from comparison
+        args_key = recursive_freeze(args)
+        args_set.add(args_key)
+
+    # Merge records with the same 'args' except for 'holdout_fraction'
+    for args_key in args_set:
+        args_dict = dict(args_key)
+        filtered_records = [record for record in records if dict(recursive_freeze(remove_key(record['args'],'holdout_fraction'))) == args_dict]
+        merged_record = {}
+        for record in filtered_records:
+            merged_record.update(record)
+        merged_records.append(merged_record)
+    return Q(merged_records)
+
 def format_mean(data, latex):
     """Given a list of datapoints, return a string describing their mean and
     standard error"""
@@ -68,9 +106,17 @@ def print_table(table, header_text, row_labels, col_labels, colwidth=10,
 
 def print_results_tables(records, selection_method, latex):
     """Given all records, print a results table for each dataset."""
-    grouped_records = reporting.get_grouped_records(records).map(lambda group:
+    grouped_records = reporting.get_grouped_records(records)
+
+    for r in grouped_records:
+        r['records'] = merge_records(r['records'])
+
+    #grouped_records = grouped_records.filter_equals("dataset", ("PACS"))
+
+    grouped_records = grouped_records.map(lambda group:
         { **group, "sweep_acc": selection_method.sweep_acc(group["records"]) }
     ).filter(lambda g: g["sweep_acc"] is not None)
+
 
     # read algorithm names and sort (predefined order)
     alg_names = Q(records).select("args.algorithm").unique()
@@ -167,9 +213,10 @@ if __name__ == "__main__":
         print("Total records:", len(records))
 
     SELECTION_METHODS = [
-        model_selection.IIDAccuracySelectionMethod,
-        model_selection.LeaveOneOutSelectionMethod,
-        model_selection.OracleSelectionMethod,
+        #model_selection.IIDAccuracySelectionMethod,
+        model_selection.IIDAutoLRAccuracySelectionMethod,
+        #model_selection.LeaveOneOutSelectionMethod,
+        #model_selection.OracleSelectionMethod,
     ]
 
     for selection_method in SELECTION_METHODS:
