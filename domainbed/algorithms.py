@@ -5,7 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.autograd as autograd
 
-import copy
 import numpy as np
 from collections import OrderedDict
 try:
@@ -17,7 +16,7 @@ except:
 from domainbed import networks
 from domainbed.lib.misc import (
     random_pairs_of_minibatches, split_meta_train_test, ParamDict,
-    MovingAverage, l2_between_dicts, proj, Nonparametric
+    MovingAverage, ErmPlusPlusMovingAvg, l2_between_dicts, proj, Nonparametric
 )
 
 
@@ -84,32 +83,45 @@ class Algorithm(torch.nn.Module):
     def predict(self, x):
         raise NotImplementedError
 
-class MovingAvg:
-    def __init__(self, network):
-        self.network = network
-        self.network_sma = copy.deepcopy(network)
-        self.network_sma.eval()
-        self.sma_start_iter = 600
-        self.global_iter = 0
-        self.sma_count = 0
 
-    def update_sma(self):
-        self.global_iter += 1
-        new_dict = {}
-        if self.global_iter>=self.sma_start_iter:
-            self.sma_count += 1
-            for (name,param_q), (_,param_k) in zip(self.network.state_dict().items(), self.network_sma.state_dict().items()):
-                if 'num_batches_tracked' not in name:
-                   new_dict[name] = ((param_k.data.detach().clone()* self.sma_count + param_q.data.detach().clone())/(1.+self.sma_count))
-        else:
-            for (name,param_q), (_,param_k) in zip(self.network.state_dict().items(), self.network_sma.state_dict().items()):
-                if 'num_batches_tracked' not in name:
-                    new_dict[name] = param_q.detach().data.clone()
-        self.network_sma.load_state_dict(new_dict)
-
-class ERM(Algorithm,MovingAvg):
+class ERM(Algorithm):
     """
     Empirical Risk Minimization (ERM)
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(ERM, self).__init__(input_shape, num_classes, num_domains,
+                                  hparams)
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = networks.Classifier(
+            self.featurizer.n_outputs,
+            num_classes,
+            self.hparams['nonlinear_classifier'])
+
+        self.network = nn.Sequential(self.featurizer, self.classifier)
+        self.optimizer = torch.optim.Adam(
+            self.network.parameters(),
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams['weight_decay']
+        )
+
+    def update(self, minibatches, unlabeled=None):
+        all_x = torch.cat([x for x, y in minibatches])
+        all_y = torch.cat([y for x, y in minibatches])
+        loss = F.cross_entropy(self.predict(all_x), all_y)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return {'loss': loss.item()}
+
+    def predict(self, x):
+        return self.network(x)
+
+class ERMPlusPlus(Algorithm,ErmPlusPlusMovingAvg):
+    """
+    Empirical Risk Minimization with improvements (ERM++)
     """
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
@@ -141,7 +153,7 @@ class ERM(Algorithm,MovingAvg):
         self.lr_schedule = []
         self.lr_schedule_changes = 0
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, 'min', patience = 1)
-        MovingAvg.__init__(self, self.network)
+        ErmPlusPlusMovingAvg.__init__(self, self.network)
 
     def update(self, minibatches, unlabeled=None):
 

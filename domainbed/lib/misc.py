@@ -4,6 +4,7 @@
 Things that don't belong anywhere else
 """
 
+import copy
 import math
 import hashlib
 import sys
@@ -46,6 +47,30 @@ def l2_between_dicts(dict_1, dict_2):
         torch.cat(tuple([t.view(-1) for t in dict_1_values])) -
         torch.cat(tuple([t.view(-1) for t in dict_2_values]))
     ).pow(2).mean()
+
+class ErmPlusPlusMovingAvg:
+    def __init__(self, network):
+        self.network = network
+        self.network_sma = copy.deepcopy(network)
+        self.network_sma.eval()
+        self.sma_start_iter = 600
+        self.global_iter = 0
+        self.sma_count = 0
+
+    def update_sma(self):
+        self.global_iter += 1
+        new_dict = {}
+        if self.global_iter>=self.sma_start_iter:
+            self.sma_count += 1
+            for (name,param_q), (_,param_k) in zip(self.network.state_dict().items(), self.network_sma.state_dict().items()):
+                if 'num_batches_tracked' not in name:
+                   new_dict[name] = ((param_k.data.detach().clone()* self.sma_count + param_q.data.detach().clone())/(1.+self.sma_count))
+        else:
+            for (name,param_q), (_,param_k) in zip(self.network.state_dict().items(), self.network_sma.state_dict().items()):
+                if 'num_batches_tracked' not in name:
+                    new_dict[name] = param_q.detach().data.clone()
+        self.network_sma.load_state_dict(new_dict)
+
 
 class MovingAverage:
 
