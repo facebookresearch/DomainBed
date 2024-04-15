@@ -34,6 +34,7 @@ def _hparams(algorithm, dataset, random_seed):
     _hparam('vit', False, lambda r: False)
     _hparam('vit_attn_tune', False, lambda r: False)
     _hparam('freeze_bn', False, lambda r: False)
+    _hparam('lars', False, lambda r: False)
     _hparam('linear_steps', 500, lambda r: 500)
     _hparam('resnet_dropout', 0., lambda r: r.choice([0., 0.1, 0.5]))
     _hparam('vit_dropout', 0., lambda r: r.choice([0., 0.1, 0.5]))
@@ -147,6 +148,9 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('eqrm_quantile', 0.75, lambda r: r.uniform(0.5, 0.99))
         _hparam('eqrm_burnin_iters', 2500, lambda r: 10 ** r.uniform(2.5, 3.5))
         _hparam('eqrm_lr', 1e-6, lambda r: 10 ** r.uniform(-7, -5))
+
+    elif algorithm == 'ERMPlusPlus':
+        _hparam('linear_lr', 5e-5, lambda r: 10**r.uniform(-5, -3.5))
 
 
     # Dataset-and-algorithm-specific hparam definitions. Each block of code

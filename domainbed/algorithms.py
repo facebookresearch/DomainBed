@@ -16,12 +16,14 @@ except:
 from domainbed import networks
 from domainbed.lib.misc import (
     random_pairs_of_minibatches, split_meta_train_test, ParamDict,
-    MovingAverage, ErmPlusPlusMovingAvg, l2_between_dicts, proj, Nonparametric
+    MovingAverage, ErmPlusPlusMovingAvg, l2_between_dicts, proj, Nonparametric,
+    LARS
 )
 
 
 ALGORITHMS = [
     'ERM',
+    'ERMPlusPlus',
     'Fish',
     'IRM',
     'GroupDRO',
@@ -133,23 +135,41 @@ class ERMPlusPlus(Algorithm,ErmPlusPlusMovingAvg):
             self.hparams['nonlinear_classifier'])
 
         self.network = nn.Sequential(self.featurizer, self.classifier)
-        self.optimizer = torch.optim.Adam(
-            self.network.parameters(),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams['weight_decay'],
-            foreach=False
-        )
+        if self.hparams["lars"]:
+            self.optimizer = LARS(
+                self.network.parameters(),
+                lr=self.hparams["lr"],
+                weight_decay=self.hparams['weight_decay'],
+                foreach=False
+            )
+
+        else:
+            self.optimizer = torch.optim.Adam(
+                self.network.parameters(),
+                lr=self.hparams["lr"],
+                weight_decay=self.hparams['weight_decay'],
+                foreach=False
+            )
 
         linear_parameters = []
         for n, p in self.network[1].named_parameters():
             linear_parameters.append(p)
 
-        self.linear_optimizer = torch.optim.Adam(
-            linear_parameters,
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams['weight_decay'],
-            foreach=False
-        )
+        if self.hparams["lars"]:
+            self.linear_optimizer = LARS(
+                linear_parameters,
+                lr=self.hparams["linear_lr"],
+                weight_decay=self.hparams['weight_decay'],
+                foreach=False
+            )
+
+        else:
+            self.linear_optimizer = torch.optim.Adam(
+                linear_parameters,
+                lr=self.hparams["linear_lr"],
+                weight_decay=self.hparams['weight_decay'],
+                foreach=False
+            )
         self.lr_schedule = []
         self.lr_schedule_changes = 0
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, 'min', patience = 1)
