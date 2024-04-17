@@ -149,8 +149,9 @@ if __name__ == "__main__":
                     # print("\t\thparams:")
                     for k, v in sorted(hparam_records[0]['hparams'].items()):
                         if(k in {"cagrad_c", "cag_update", "meta_lr"}):
-                            print('\t\t\t{}: {}'.format(k, v), end='')       
-                    print("")
+                            print('\t{}: {}'.format(k, v), end='')
+                    print('\t{}: {}'.format('hparams_seed', hparam_records[0]['args']['hparams_seed']))       
+                    # print("")
                     # print("\t\toutput_dirs:")
                     # output_dirs = hparam_records.select('args.output_dir').unique()
                     # for output_dir in output_dirs:

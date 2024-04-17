@@ -1,0 +1,19 @@
+Total records: 28384
+[91.97914434683237, 98.39297193057638, 98.85722448396544, 98.9322191272052, 98.72138290653237, 95.06768098860672]
+
+-------- Dataset: RotatedMNIST, model selection method: training-domain validation set
+Algorithm             0                     15                    30                    45                    60                    75                    Avg                  
+CAG                   92.0 +/- 0.6          98.4 +/- 0.1          98.9 +/- 0.1          98.9 +/- 0.1          98.7 +/- 0.1          95.1 +/- 0.6          97.0                 
+
+-------- Averages, model selection method: training-domain validation set
+Algorithm                  RotatedMNIST               Avg                       
+CAG                        97.0 +/- 0.2               97.0                      
+[93.96828797943004, 98.5751017784444, 98.81079922862654, 99.025069637883, 98.63566555948427, 95.73913354048359]
+
+-------- Dataset: RotatedMNIST, model selection method: test-domain validation set (oracle)
+Algorithm             0                     15                    30                    45                    60                    75                    Avg                  
+CAG                   94.0 +/- 0.1          98.6 +/- 0.1          98.8 +/- 0.1          99.0 +/- 0.1          98.6 +/- 0.2          95.7 +/- 0.5          97.5                 
+
+-------- Averages, model selection method: test-domain validation set (oracle)
+Algorithm                  RotatedMNIST               Avg                       
+CAG                        97.5 +/- 0.1               97.5                      

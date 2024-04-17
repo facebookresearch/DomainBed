@@ -56,6 +56,7 @@ class OracleSelectionMethod(SelectionMethod):
     and checkpoints, but instead of taking the argmax over all
     checkpoints, we pick the last checkpoint, i.e. no early stopping."""
     name = "test-domain validation set (oracle)"
+    short_name = "test_val"
 
     @classmethod
     def run_acc(self, run_records):
@@ -75,6 +76,7 @@ class OracleSelectionMethod(SelectionMethod):
 class IIDAccuracySelectionMethod(SelectionMethod):
     """Picks argmax(mean(env_out_acc for env in train_envs))"""
     name = "training-domain validation set"
+    short_name = "train_val"
 
     @classmethod
     def _step_acc(self, record):

@@ -28,13 +28,18 @@ def get_grouped_records(records):
     """Group records by (trial_seed, dataset, algorithm, test_env). Because
     records can have multiple test envs, a given record may appear in more than
     one group."""
+    """add group by hparams"""
     result = collections.defaultdict(lambda: [])
     for r in records:
         for test_env in r["args"]["test_envs"]:
             group = (r["args"]["trial_seed"],
                 r["args"]["dataset"],
                 r["args"]["algorithm"],
+                r["hparams"]["cag_update"],
+                r["hparams"]["cagrad_c"],
+                r["hparams"]["meta_lr"],
                 test_env)
             result[group].append(r)
-    return Q([{"trial_seed": t, "dataset": d, "algorithm": a, "test_env": e,
-        "records": Q(r)} for (t,d,a,e),r in result.items()])
+    return Q([{"trial_seed": t, "dataset": d, "algorithm": a, "test_env": e, 
+        "cag_update": cag_update, "cagrad_c": cagrad_c, "meta_lr": meta_lr,
+        "records": Q(r)} for (t,d,a,cag_update,cagrad_c,meta_lr,e),r in result.items()])

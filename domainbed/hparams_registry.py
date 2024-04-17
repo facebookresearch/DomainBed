@@ -59,7 +59,7 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == 'CAG':
         _hparam('meta_lr', 0.5, lambda r: r.choice([0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 1.0, 2.0, 5.0]))
         _hparam('cagrad_c', 0.5, lambda r: r.choice([0.01, 0.05, 0.1, 0,2, 0.5, 0.8, 1.0, 2.0, 5.0]))
-        _hparam('cag_update', 1, lambda r: int(r.choice([1])))
+        _hparam('cag_update', 1, lambda r: int(r.choice([1,2,3,4,5,6,7,8,9,10])))
 
     elif algorithm == 'GradBase':
         _hparam('meta_lr', 0.5, lambda r: r.choice([0.05, 0.1, 0.5]))
