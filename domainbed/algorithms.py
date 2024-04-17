@@ -1503,28 +1503,22 @@ class Fishr(Algorithm):
     "Invariant Gradients variances for Out-of-distribution Generalization"
 
     def __init__(self, input_shape, num_classes, num_domains, hparams):
-        # assert backpack is not None, "Install backpack with: 'pip install backpack-for-pytorch==1.3.0'"
+        assert backpack is not None, "Install backpack with: 'pip install backpack-for-pytorch==1.3.0'"
         super(Fishr, self).__init__(input_shape, num_classes, num_domains, hparams)
         self.num_domains = num_domains
 
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
-        # self.classifier = extend(
-        #     networks.Classifier(
-        #         self.featurizer.n_outputs,
-        #         num_classes,
-        #         self.hparams['nonlinear_classifier'],
-        #     )
-        # )
-        self.classifier = networks.Classifier(
+        self.classifier = extend(
+            networks.Classifier(
                 self.featurizer.n_outputs,
                 num_classes,
                 self.hparams['nonlinear_classifier'],
+            )
         )
         self.network = nn.Sequential(self.featurizer, self.classifier)
 
         self.register_buffer("update_count", torch.tensor([0]))
-        # self.bce_extended = extend(nn.CrossEntropyLoss(reduction='none'))
-        self.bce_extended = nn.CrossEntropyLoss(reduction='none')
+        self.bce_extended = extend(nn.CrossEntropyLoss(reduction='none'))
         self.ema_per_domain = [
             MovingAverage(ema=self.hparams["ema"], oneminusema_correction=True)
             for _ in range(self.num_domains)
@@ -1538,7 +1532,7 @@ class Fishr(Algorithm):
             weight_decay=self.hparams["weight_decay"],
         )
 
-    def update(self, minibatches, unlabeled=None):
+    def update(self, minibatches, unlabeled=False):
         assert len(minibatches) == self.num_domains
         all_x = torch.cat([x for x, y in minibatches])
         all_y = torch.cat([y for x, y in minibatches])
@@ -1576,11 +1570,9 @@ class Fishr(Algorithm):
         loss = self.bce_extended(logits, y).sum()
         with backpack(BatchGrad()):
             loss.backward(
-                inputs=list(self.classifier.parameters()), retain_graph=True, create_graph=True
+                retain_graph=True, create_graph=True
             )
-        loss.backward(
-                inputs=list(self.classifier.parameters()), retain_graph=True, create_graph=True
-            )
+
         # compute individual grads for all samples across all domains simultaneously
         dict_grads = OrderedDict(
             [

@@ -8,6 +8,7 @@ Pillow
 wilds
 wandb
 matplotlib
+backpack-for-pytorch
 # tensorboard
 
 #test

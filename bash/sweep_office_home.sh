@@ -1,5 +1,4 @@
-CUDA_VISIBLE_DEVICES=1 \
-python -m domainbed.scripts.sweep launch\
+CUDA_VISIBLE_DEVICES=0 python -m domainbed.scripts.sweep launch\
        --data_dir=./domainbed/data/\
        --output_dir=./train_output\
        --command_launcher local\
