@@ -1,17 +1,65 @@
-Total records: 36372
+Total records: 128562
+
+-------- Dataset: ColoredMNIST, model selection method: training-domain validation set
+Algorithm             +90%                  +80%                  -90%                  Avg                  
+CAG1                  71.3 +/- 0.2          73.2 +/- 0.4          10.1 +/- 0.1          51.5                 
 
 -------- Dataset: RotatedMNIST, model selection method: training-domain validation set
 Algorithm             0                     15                    30                    45                    60                    75                    Avg                  
-CAG                   74.1 +/- 1.9          86.9 +/- 1.7          90.6 +/- 1.5          90.9 +/- 1.5          88.2 +/- 1.6          77.1 +/- 1.9          84.6                 
+CAG1                  93.4 +/- 0.4          98.5 +/- 0.2          99.0 +/- 0.0          98.9 +/- 0.0          98.7 +/- 0.1          94.3 +/- 0.5          97.1                 
+
+-------- Dataset: VLCS, model selection method: training-domain validation set
+Algorithm             C                     L                     S                     V                     Avg                  
+CAG1                  98.9 +/- 0.1          63.5 +/- 0.9          77.6 +/- 0.3          79.2 +/- 1.1          79.8                 
+
+-------- Dataset: PACS, model selection method: training-domain validation set
+Algorithm             A                     C                     P                     S                     Avg                  
+CAG1                  89.1 +/- 0.4          80.4 +/- 1.0          97.8 +/- 0.2          79.3 +/- 1.7          86.6                 
+
+-------- Dataset: OfficeHome, model selection method: training-domain validation set
+Algorithm             A                     C                     P                     R                     Avg                  
+CAG1                  62.9 +/- 1.8          55.9 +/- 1.1          77.5 +/- 0.4          78.8 +/- 0.6          68.8                 
+
+-------- Dataset: TerraIncognita, model selection method: training-domain validation set
+Algorithm             L100                  L38                   L43                   L46                   Avg                  
+CAG1                  47.9 +/- 0.8          41.7 +/- 0.4          53.4 +/- 1.3          41.0 +/- 1.2          46.0                 
+
+-------- Dataset: DomainNet, model selection method: training-domain validation set
+Algorithm             clip                  info                  paint                 quick                 real                  sketch                Avg                  
+CAG1                  54.1 +/- 0.3          17.5 +/- 0.1          44.6 +/- 0.2          10.7 +/- 0.1          58.0 +/- 0.1          46.7 +/- 0.2          38.6                 
 
 -------- Averages, model selection method: training-domain validation set
-Algorithm                  RotatedMNIST               Avg                       
-CAG                        83.7 +/- 1.5               83.7                      
+Algorithm                  ColoredMNIST               RotatedMNIST               VLCS                       PACS                       OfficeHome                 TerraIncognita             DomainNet                  Avg                       
+CAG1                       51.5 +/- 0.1               97.1 +/- 0.2               79.8 +/- 0.3               86.6 +/- 0.7               68.8 +/- 0.8               46.0 +/- 0.3               38.6 +/- 0.0               66.9                      
+
+-------- Dataset: ColoredMNIST, model selection method: test-domain validation set (oracle)
+Algorithm             +90%                  +80%                  -90%                  Avg                  
+CAG1                  81.7 +/- 3.3          79.7 +/- 0.1          27.1 +/- 0.1          62.8                 
 
 -------- Dataset: RotatedMNIST, model selection method: test-domain validation set (oracle)
 Algorithm             0                     15                    30                    45                    60                    75                    Avg                  
-CAG                   72.6 +/- 2.0          86.8 +/- 1.7          90.3 +/- 1.5          90.7 +/- 1.5          87.7 +/- 1.6          75.8 +/- 2.0          84.0                 
+CAG1                  93.7 +/- 0.3          98.2 +/- 0.0          98.8 +/- 0.1          98.9 +/- 0.1          98.6 +/- 0.2          94.7 +/- 0.3          97.2                 
+
+-------- Dataset: VLCS, model selection method: test-domain validation set (oracle)
+Algorithm             C                     L                     S                     V                     Avg                  
+CAG1                  99.1 +/- 0.1          65.1 +/- 0.7          79.4 +/- 0.5          82.0 +/- 0.4          81.4                 
+
+-------- Dataset: PACS, model selection method: test-domain validation set (oracle)
+Algorithm             A                     C                     P                     S                     Avg                  
+CAG1                  89.6 +/- 0.4          81.4 +/- 0.8          98.0 +/- 0.2          83.6 +/- 0.5          88.2                 
+
+-------- Dataset: OfficeHome, model selection method: test-domain validation set (oracle)
+Algorithm             A                     C                     P                     R                     Avg                  
+CAG1                  64.3 +/- 1.0          57.7 +/- 0.6          77.5 +/- 0.3          78.8 +/- 0.5          69.6                 
+
+-------- Dataset: TerraIncognita, model selection method: test-domain validation set (oracle)
+Algorithm             L100                  L38                   L43                   L46                   Avg                  
+CAG1                  62.0 +/- 1.3          46.4 +/- 1.1          56.8 +/- 0.4          44.7 +/- 0.6          52.5                 
+
+-------- Dataset: DomainNet, model selection method: test-domain validation set (oracle)
+Algorithm             clip                  info                  paint                 quick                 real                  sketch                Avg                  
+CAG1                  54.1 +/- 0.3          17.5 +/- 0.1          44.6 +/- 0.2          10.7 +/- 0.1          58.0 +/- 0.1          46.7 +/- 0.2          38.6                 
 
 -------- Averages, model selection method: test-domain validation set (oracle)
-Algorithm                  RotatedMNIST               Avg                       
-CAG                        83.1 +/- 1.6               83.1                      
+Algorithm                  ColoredMNIST               RotatedMNIST               VLCS                       PACS                       OfficeHome                 TerraIncognita             DomainNet                  Avg                       
+CAG1                       62.8 +/- 1.1               97.2 +/- 0.1               81.4 +/- 0.3               88.2 +/- 0.3               69.6 +/- 0.3               52.5 +/- 0.5               38.6 +/- 0.0               70.0                      
