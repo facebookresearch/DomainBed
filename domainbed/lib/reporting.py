@@ -15,6 +15,7 @@ def load_records(path):
                                ncols=80,
                                leave=False):
         results_path = os.path.join(path, subdir, "results.jsonl")
+        print(results_path)
         try:
             with open(results_path, "r") as f:
                 for line in f:
