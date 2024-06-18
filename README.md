@@ -140,5 +140,7 @@ This source code is released under the MIT license, included [here](LICENSE).
 ## Core Contributors
 
 David Lopez-Paz
+
 Ishaan Gulrajani
+
 Piotr Teterwak
