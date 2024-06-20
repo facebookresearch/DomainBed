@@ -51,6 +51,26 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == 'Fish':
         _hparam('meta_lr', 0.5, lambda r:r.choice([0.05, 0.1, 0.5]))
 
+    elif algorithm == "RDM": 
+        if dataset in ['DomainNet']: 
+            _hparam('rdm_lambda', 0.5, lambda r: r.uniform(0.1, 1.0))
+        elif dataset in ['PACS', 'TerraIncognita']:
+            _hparam('rdm_lambda', 5.0, lambda r: r.uniform(1.0, 10.0))
+        else:
+            _hparam('rdm_lambda', 5.0, lambda r: r.uniform(0.1, 10.0))
+            
+        if dataset == 'DomainNet':
+            _hparam('rdm_penalty_anneal_iters', 2400, lambda r: int(r.uniform(1500, 3000)))
+        else:
+            _hparam('rdm_penalty_anneal_iters', 1500, lambda r: int(r.uniform(800, 2700)))
+            
+        if dataset in ['TerraIncognita', 'OfficeHome', 'DomainNet']:
+            _hparam('variance_weight', 0.0, lambda r: r.choice([0.0]))
+        else:
+            _hparam('variance_weight', 0.004, lambda r: r.uniform(0.001, 0.007))
+            
+        _hparam('rdm_lr', 1.5e-5, lambda r: r.uniform(8e-6, 2e-5))
+
     elif algorithm == "RSC":
         _hparam('rsc_f_drop_factor', 1/3, lambda r: r.uniform(0, 0.5))
         _hparam('rsc_b_drop_factor', 1/3, lambda r: r.uniform(0, 0.5))
@@ -159,6 +179,11 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('batch_size', 64, lambda r: int(2**r.uniform(3, 9)))
     elif algorithm == 'ARM':
         _hparam('batch_size', 8, lambda r: 8)
+    elif algorithm == 'RDM':
+        if dataset in ['DomainNet', 'TerraIncognita']:
+            _hparam('batch_size', 40, lambda r: int(r.uniform(30, 60)))
+        else:
+            _hparam('batch_size', 88, lambda r: int(r.uniform(70, 100)))
     elif dataset == 'DomainNet':
         _hparam('batch_size', 32, lambda r: int(2**r.uniform(3, 5)))
     else:
