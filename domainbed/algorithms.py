@@ -2261,7 +2261,7 @@ class ADRMX(Algorithm):
                     # make prediction
                     pred = self.classifier_label_1(remixed_feat.view(1,-1))
                     # accumulate the loss
-                    classifier_remixed_loss += F.cross_entropy(pred.view(-1), all_y[idx1])
+                    classifier_remixed_loss += F.cross_entropy(pred.view(1, -1), all_y[idx1].view(-1))
             # normalize
             classifier_remixed_loss /= (self.num_classes * self.mix_num)
 
