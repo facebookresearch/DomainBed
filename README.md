@@ -41,6 +41,7 @@ The [currently available algorithms](domainbed/algorithms.py) are:
 * Invariant Causal Mechanisms through Distribution Matching (CausIRL with CORAL or MMD, [Chevalley et al., 2022](https://arxiv.org/abs/2206.11646)), contributed by [@MathieuChevalley](https://github.com/MathieuChevalley)
 * Empirical Quantile Risk Minimization (EQRM, [Eastwood et al., 2022](https://arxiv.org/abs/2207.09944)), contributed by [@cianeastwood](https://github.com/cianeastwood)
 * Domain Generalisation via Risk Distribution Matching (RDM, [Nguyen et al., 2024](https://arxiv.org/abs/2310.18598)), contributed by [@nktoan](https://github.com/nktoan), [authors' contact email](mailto:ktoan271199@gmail.com)
+* ADRMX: Additive Disentanglement of Domain Features with Remix Loss (ADRMX, [Demirel et al., 2023](https://arxiv.org/abs/2308.06624)), contributed by [@berkerdemirel](https://github.com/berkerdemirel)
 
 Send us a PR to add your algorithm! Our implementations use ResNet50 / ResNet18 networks ([He et al., 2015](https://arxiv.org/abs/1512.03385)) and the hyper-parameter grids [described here](domainbed/hparams_registry.py).
 
