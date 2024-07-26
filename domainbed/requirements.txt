@@ -8,3 +8,4 @@ imageio==2.9.0
 gdown==3.13.0
 parameterized==0.9.0
 Pillow==10.3.0
+timm==0.9.16
