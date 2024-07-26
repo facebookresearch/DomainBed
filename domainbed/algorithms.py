@@ -2322,7 +2322,6 @@ class ADRMX(Algorithm):
             for i, (x, _) in enumerate(minibatches)
         ])
         # predict domain feats from disentangled features
-
         disc_out = self.discriminator(feat_combined) 
         disc_loss = F.cross_entropy(disc_out, disc_labels) # discriminative loss for final labels (ascend/descend)
 
