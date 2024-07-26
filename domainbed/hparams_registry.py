@@ -29,7 +29,15 @@ def _hparams(algorithm, dataset, random_seed):
 
     _hparam('data_augmentation', True, lambda r: True)
     _hparam('resnet18', False, lambda r: False)
+    _hparam('resnet50_augmix', True, lambda r: True)
+    _hparam('dinov2', False, lambda r: False)
+    _hparam('vit', False, lambda r: False)
+    _hparam('vit_attn_tune', False, lambda r: False)
+    _hparam('freeze_bn', False, lambda r: False)
+    _hparam('lars', False, lambda r: False)
+    _hparam('linear_steps', 500, lambda r: 500)
     _hparam('resnet_dropout', 0., lambda r: r.choice([0., 0.1, 0.5]))
+    _hparam('vit_dropout', 0., lambda r: r.choice([0., 0.1, 0.5]))
     _hparam('class_balanced', False, lambda r: False)
     # TODO: nonlinear classifiers disabled
     _hparam('nonlinear_classifier', False,
@@ -146,7 +154,7 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('is_normalized', False, lambda r: False)
         _hparam('is_project', False, lambda r: False)
         _hparam('is_flipped', True, lambda r: True)
-        
+
     elif algorithm == "Transfer":
         _hparam('t_lambda', 1.0, lambda r: 10**r.uniform(-2, 1))
         _hparam('delta', 2.0, lambda r: r.uniform(0.1, 3.0))
@@ -160,6 +168,10 @@ def _hparams(algorithm, dataset, random_seed):
         _hparam('eqrm_quantile', 0.75, lambda r: r.uniform(0.5, 0.99))
         _hparam('eqrm_burnin_iters', 2500, lambda r: 10 ** r.uniform(2.5, 3.5))
         _hparam('eqrm_lr', 1e-6, lambda r: 10 ** r.uniform(-7, -5))
+
+    elif algorithm == 'ERMPlusPlus':
+        _hparam('linear_lr', 5e-5, lambda r: 10**r.uniform(-5, -3.5))
+
 
     if algorithm == "ADRMX":
         _hparam('cnt_lambda', 1.0, lambda r: r.choice([1.0]))

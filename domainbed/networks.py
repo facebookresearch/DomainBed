@@ -8,6 +8,8 @@ import torchvision.models
 from domainbed.lib import wide_resnet
 import copy
 
+import timm
+
 
 def remove_batch_norm_from_resnet(model):
     fuse = torch.nn.utils.fusion.fuse_conv_bn_eval
@@ -65,6 +67,41 @@ class MLP(nn.Module):
         x = self.output(x)
         return x
 
+class DinoV2(torch.nn.Module):
+    """ """
+    def __init__(self,input_shape, hparams):
+        super(DinoV2, self).__init__()
+
+        self.network = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
+        self.n_outputs =  5 * 768
+
+        nc = input_shape[0]
+
+        if nc != 3:
+            raise RuntimeError("Inputs must have 3 channels")
+
+        self.hparams = hparams
+        self.dropout = nn.Dropout(hparams['vit_dropout'])
+
+        if hparams["vit_attn_tune"]:
+            for n,p in self.network.named_parameters():
+                if 'attn' in n:
+                    p.requires_grad = True
+                else:
+                    p.requires_grad = False
+
+
+    def forward(self, x):
+        x = self.network.get_intermediate_layers(x, n=4, return_class_token=True)
+        linear_input = torch.cat([
+            x[0][1],
+            x[1][1],
+            x[2][1],
+            x[3][1],
+            x[3][0].mean(1)
+            ], dim=1)
+        return self.dropout(linear_input)
+
 
 class ResNet(torch.nn.Module):
     """ResNet with the softmax chopped off and the batchnorm frozen"""
@@ -75,6 +112,10 @@ class ResNet(torch.nn.Module):
             self.n_outputs = 512
         else:
             self.network = torchvision.models.resnet50(pretrained=True)
+            self.n_outputs = 2048
+
+        if hparams['resnet50_augmix']:
+            self.network = timm.create_model('resnet50.ram_in1k', pretrained=True)
             self.n_outputs = 2048
 
         # self.network = remove_batch_norm_from_resnet(self.network)
@@ -95,7 +136,8 @@ class ResNet(torch.nn.Module):
         del self.network.fc
         self.network.fc = Identity()
 
-        self.freeze_bn()
+        if hparams["freeze_bn"]:
+            self.freeze_bn()
         self.hparams = hparams
         self.dropout = nn.Dropout(hparams['resnet_dropout'])
 
@@ -108,7 +150,8 @@ class ResNet(torch.nn.Module):
         Override the default train() to freeze the BN parameters
         """
         super().train(mode)
-        self.freeze_bn()
+        if self.hparams["freeze_bn"]:
+            self.freeze_bn()
 
     def freeze_bn(self):
         for m in self.network.modules():
@@ -190,6 +233,11 @@ def Featurizer(input_shape, hparams):
     elif input_shape[1:3] == (32, 32):
         return wide_resnet.Wide_ResNet(input_shape, 16, 2, 0.)
     elif input_shape[1:3] == (224, 224):
+        if hparams["vit"]:
+            if hparams["dinov2"]:
+                return DinoV2(input_shape, hparams)
+            else:
+                raise NotImplementedError
         return ResNet(input_shape, hparams)
     else:
         raise NotImplementedError

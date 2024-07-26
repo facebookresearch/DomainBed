@@ -45,6 +45,42 @@ class InfiniteDataLoader:
     def __len__(self):
         raise ValueError
 
+
+class InfiniteDataLoaderWithoutReplacement:
+    def __init__(self, dataset, weights, batch_size, num_workers):
+        super().__init__()
+
+        if weights is not None:
+            sampler = torch.utils.data.WeightedRandomSampler(weights,
+                replacement=False,
+                num_samples=batch_size)
+        else:
+            sampler = torch.utils.data.RandomSampler(dataset,
+                replacement=False)
+
+        if weights == None:
+            weights = torch.ones(len(dataset))
+
+        batch_sampler = torch.utils.data.BatchSampler(
+            sampler,
+            batch_size=batch_size,
+            drop_last=True)
+
+        self._infinite_iterator = iter(torch.utils.data.DataLoader(
+            dataset,
+            num_workers=num_workers,
+            batch_sampler=_InfiniteSampler(batch_sampler)
+        ))
+
+    def __iter__(self):
+        while True:
+            yield next(self._infinite_iterator)
+
+    def __len__(self):
+        raise ValueError
+
+
+
 class FastDataLoader:
     """DataLoader wrapper with slightly improved speed by not respawning worker
     processes at every epoch."""

@@ -17,12 +17,14 @@ except:
 from domainbed import networks
 from domainbed.lib.misc import (
     random_pairs_of_minibatches, split_meta_train_test, ParamDict,
-    MovingAverage, l2_between_dicts, proj, Nonparametric, SupConLossLambda
-)
+    MovingAverage, ErmPlusPlusMovingAvg, l2_between_dicts, proj, Nonparametric,
+            LARS,  SupConLossLambda
+    )
 
 
 ALGORITHMS = [
     'ERM',
+    'ERMPlusPlus',
     'Fish',
     'IRM',
     'GroupDRO',
@@ -120,6 +122,114 @@ class ERM(Algorithm):
 
     def predict(self, x):
         return self.network(x)
+
+class ERMPlusPlus(Algorithm,ErmPlusPlusMovingAvg):
+    """
+    Empirical Risk Minimization with improvements (ERM++)
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        Algorithm.__init__(self,input_shape, num_classes, num_domains,hparams)
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = networks.Classifier(
+            self.featurizer.n_outputs,
+            num_classes,
+            self.hparams['nonlinear_classifier'])
+
+        self.network = nn.Sequential(self.featurizer, self.classifier)
+        if self.hparams["lars"]:
+            self.optimizer = LARS(
+                self.network.parameters(),
+                lr=self.hparams["lr"],
+                weight_decay=self.hparams['weight_decay'],
+                foreach=False
+            )
+
+        else:
+            self.optimizer = torch.optim.Adam(
+                self.network.parameters(),
+                lr=self.hparams["lr"],
+                weight_decay=self.hparams['weight_decay'],
+                foreach=False
+            )
+
+        linear_parameters = []
+        for n, p in self.network[1].named_parameters():
+            linear_parameters.append(p)
+
+        if self.hparams["lars"]:
+            self.linear_optimizer = LARS(
+                linear_parameters,
+                lr=self.hparams["linear_lr"],
+                weight_decay=self.hparams['weight_decay'],
+                foreach=False
+            )
+
+        else:
+            self.linear_optimizer = torch.optim.Adam(
+                linear_parameters,
+                lr=self.hparams["linear_lr"],
+                weight_decay=self.hparams['weight_decay'],
+                foreach=False
+            )
+        self.lr_schedule = []
+        self.lr_schedule_changes = 0
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, 'min', patience = 1)
+        ErmPlusPlusMovingAvg.__init__(self, self.network)
+
+    def update(self, minibatches, unlabeled=None):
+
+        if self.global_iter > self.hparams["linear_steps"]:
+            selected_optimizer = self.optimizer
+        else:
+            selected_optimizer = self.linear_optimizer
+
+
+
+        all_x = torch.cat([x for x, y in minibatches])
+        all_y = torch.cat([y for x, y in minibatches])
+        loss = F.cross_entropy(self.network(all_x), all_y)
+
+        selected_optimizer.zero_grad()
+        loss.backward()
+        selected_optimizer.step()
+        self.update_sma()
+        if not self.hparams["freeze_bn"]:
+            self.network_sma.train()
+            self.network_sma(all_x)
+
+        return {'loss': loss.item()}
+
+    def predict(self, x):
+        self.network_sma.eval()
+        return self.network_sma(x)
+
+    def set_lr(self, eval_loaders_iid=None, schedule=None,device=None):
+        with torch.no_grad():
+             if self.global_iter > self.hparams["linear_steps"]:
+                 if schedule is None:
+                     self.network_sma.eval()
+                     val_losses = []
+                     for loader in eval_loaders_iid:
+                         loss = 0.0
+                         for x, y in loader:
+                             x = x.to(device)
+                             y = y.to(device)
+                             loss += F.cross_entropy(self.network_sma(x),y)
+                         val_losses.append(loss / len(loader ))
+                     val_loss = torch.mean(torch.stack(val_losses))
+                     self.scheduler.step(val_loss)
+                     self.lr_schedule.append(self.scheduler._last_lr)
+                     if len(self.lr_schedule) > 1:
+                         if self.lr_schedule[-1] !=  self.lr_schedule[-2]:
+                            self.lr_schedule_changes += 1
+                     if self.lr_schedule_changes == 3:
+                         self.lr_schedule[-1] = [0.0]
+                     return self.lr_schedule
+                 else:
+                     self.optimizer.param_groups[0]['lr'] = (torch.Tensor(schedule[0]).requires_grad_(False))[0]
+                     schedule = schedule[1:]
+             return schedule
 
 
 class Fish(Algorithm):
@@ -372,9 +482,9 @@ class RDM(ERM):
         super(RDM, self).__init__(input_shape, num_classes, num_domains, hparams)
         self.register_buffer('update_count', torch.tensor([0]))
 
-    def my_cdist(self, x1, x2): 
+    def my_cdist(self, x1, x2):
         x1_norm = x1.pow(2).sum(dim=-1, keepdim=True)
-        x2_norm = x2.pow(2).sum(dim=-1, keepdim=True) 
+        x2_norm = x2.pow(2).sum(dim=-1, keepdim=True)
 
         res = torch.addmm(x2_norm.transpose(-2, -1),
                           x1,
@@ -415,7 +525,7 @@ class RDM(ERM):
         matching_penalty_weight = (self.hparams['rdm_lambda'] if self.update_count
                           >= self.hparams['rdm_penalty_anneal_iters'] else
                           0.)
-        
+
         variance_penalty_weight = (self.hparams['variance_weight'] if self.update_count
                           >= self.hparams['rdm_penalty_anneal_iters'] else
                           0.)
@@ -425,7 +535,7 @@ class RDM(ERM):
         losses = torch.zeros(len(minibatches)).cuda()
         all_logits_idx = 0
         all_confs_envs = None
-        
+
         for i, (x, y) in enumerate(minibatches):
             logits = all_logits[all_logits_idx:all_logits_idx + x.shape[0]]
             all_logits_idx += x.shape[0]
@@ -466,7 +576,7 @@ class RDM(ERM):
                 self.network.parameters(),
                 lr=self.hparams["rdm_lr"],
                 weight_decay=self.hparams['weight_decay'])
-        
+
         self.optimizer.zero_grad()
         total_loss.backward()
         self.optimizer.step()
@@ -2151,13 +2261,13 @@ class ADRMX(Algorithm):
         super(ADRMX, self).__init__(input_shape, num_classes, num_domains,
                                    hparams)
         self.register_buffer('update_count', torch.tensor([0]))
-        
+
         self.num_classes = num_classes
         self.num_domains = num_domains
         self.mix_num = 1
         self.scl_int = SupConLossLambda(lamda=0.5)
         self.scl_final = SupConLossLambda(lamda=0.5)
-        
+
         self.featurizer_label = networks.Featurizer(input_shape, self.hparams)
         self.featurizer_domain = networks.Featurizer(input_shape, self.hparams)
 
@@ -2195,8 +2305,7 @@ class ADRMX(Algorithm):
                 list(self.classifier_domain.parameters())),
             lr=self.hparams["lr"],
             betas=(self.hparams['beta1'], 0.9))
-
-        
+                                                    
     def update(self, minibatches, unlabeled=None):
 
         self.update_count += 1
@@ -2213,6 +2322,7 @@ class ADRMX(Algorithm):
             for i, (x, _) in enumerate(minibatches)
         ])
         # predict domain feats from disentangled features
+
         disc_out = self.discriminator(feat_combined) 
         disc_loss = F.cross_entropy(disc_out, disc_labels) # discriminative loss for final labels (ascend/descend)
 

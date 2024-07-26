@@ -4,6 +4,7 @@
 Things that don't belong anywhere else
 """
 
+import copy
 import math
 import hashlib
 import sys
@@ -46,6 +47,30 @@ def l2_between_dicts(dict_1, dict_2):
         torch.cat(tuple([t.view(-1) for t in dict_1_values])) -
         torch.cat(tuple([t.view(-1) for t in dict_2_values]))
     ).pow(2).mean()
+
+class ErmPlusPlusMovingAvg:
+    def __init__(self, network):
+        self.network = network
+        self.network_sma = copy.deepcopy(network)
+        self.network_sma.eval()
+        self.sma_start_iter = 600
+        self.global_iter = 0
+        self.sma_count = 0
+
+    def update_sma(self):
+        self.global_iter += 1
+        new_dict = {}
+        if self.global_iter>=self.sma_start_iter:
+            self.sma_count += 1
+            for (name,param_q), (_,param_k) in zip(self.network.state_dict().items(), self.network_sma.state_dict().items()):
+                if 'num_batches_tracked' not in name:
+                   new_dict[name] = ((param_k.data.detach().clone()* self.sma_count + param_q.data.detach().clone())/(1.+self.sma_count))
+        else:
+            for (name,param_q), (_,param_k) in zip(self.network.state_dict().items(), self.network_sma.state_dict().items()):
+                if 'num_batches_tracked' not in name:
+                    new_dict[name] = param_q.detach().data.clone()
+        self.network_sma.load_state_dict(new_dict)
+
 
 class MovingAverage:
 
@@ -500,6 +525,46 @@ class Nonparametric(Distribution1D):
             v = torch.mean(self.data + self.bw * math.sqrt(-2 * log_y))
             return v
 
+# --------------------------------------------------------
+# LARS optimizer, implementation from MoCo v3:
+# https://github.com/facebookresearch/moco-v3
+# --------------------------------------------------------
+
+class LARS(torch.optim.Optimizer):
+    """
+    LARS optimizer, no rate scaling or weight decay for parameters <= 1D.
+    """
+    def __init__(self, params, lr=0, weight_decay=0, momentum=0.9, trust_coefficient=0.001):
+        defaults = dict(lr=lr, weight_decay=weight_decay, momentum=momentum, trust_coefficient=trust_coefficient)
+        super().__init__(params, defaults)
+
+    @torch.no_grad()
+    def step(self):
+        for g in self.param_groups:
+            for p in g['params']:
+                dp = p.grad
+
+                if dp is None:
+                    continue
+
+                if p.ndim > 1: # if not normalization gamma/beta or bias
+                    dp = dp.add(p, alpha=g['weight_decay'])
+                    param_norm = torch.norm(p)
+                    update_norm = torch.norm(dp)
+                    one = torch.ones_like(param_norm)
+                    q = torch.where(param_norm > 0.,
+                                    torch.where(update_norm > 0,
+                                    (g['trust_coefficient'] * param_norm / update_norm), one),
+                                    one)
+                    dp = dp.mul(q)
+
+                param_state = self.state[p]
+                if 'mu' not in param_state:
+                    param_state['mu'] = torch.zeros_like(p)
+                mu = param_state['mu']
+                mu.mul_(g['momentum']).add_(dp)
+                p.add_(mu, alpha=-g['lr'])
+
 
 ############################################################
 # Supervised Contrastive Loss implementation from:
@@ -519,6 +584,7 @@ class SupConLossLambda(torch.nn.Module):
         loss = 0
         nans = 0
         for i, (label, domain_label) in enumerate(zip(labels, domain_labels)):
+
             # take the positive and negative samples wrt in/out domain            
             cond_pos_in_domain = torch.logical_and(labels==label, domain_labels == domain_label) # take all positives
             cond_pos_in_domain[i] = False # exclude itself
@@ -530,12 +596,12 @@ class SupConLossLambda(torch.nn.Module):
             pos_feats_out_domain = pairwise_dot_prods[cond_pos_out_domain]
             neg_feats_in_domain = pairwise_dot_prods[cond_neg_in_domain]
             neg_feats_out_domain = pairwise_dot_prods[cond_neg_out_domain]
-            
+
 
             # calculate nominator and denominator wrt lambda scaling
             scaled_exp_term = torch.cat((self.lamda * torch.exp(pos_feats_in_domain[:, i]), (1 - self.lamda) * torch.exp(pos_feats_out_domain[:, i])))
             scaled_denom_const = torch.sum(torch.cat((self.lamda * torch.exp(neg_feats_in_domain[:, i]), (1 - self.lamda) * torch.exp(neg_feats_out_domain[:, i]), scaled_exp_term))) + 1e-5
-            
+
             # nof positive samples
             num_positives = pos_feats_in_domain.shape[0] + pos_feats_out_domain.shape[0] # total positive samples
             log_fraction = torch.log((scaled_exp_term / scaled_denom_const) + 1e-5) # take log fraction
