@@ -84,6 +84,8 @@ class Wide_ResNet(nn.Module):
 
         self.n_outputs = nStages[3]
 
+        self.activation = nn.Identity() # for URM; does not affect other algorithms
+
     def _wide_layer(self, block, planes, num_blocks, dropout_rate, stride):
         strides = [stride] + [1] * (int(num_blocks) - 1)
         layers = []
@@ -101,4 +103,6 @@ class Wide_ResNet(nn.Module):
         out = self.layer3(out)
         out = F.relu(self.bn1(out))
         out = F.avg_pool2d(out, 8)
-        return out[:, :, 0, 0]
+        out = out[:, :, 0, 0]
+        out = self.activation(out)
+        return out
