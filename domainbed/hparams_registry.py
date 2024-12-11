@@ -175,9 +175,6 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == 'URM':
         _hparam('urm', 'adversarial', lambda r: str(r.choice(['adversarial']))) # 'adversarial'
         
-        if args and args.mixup:
-            _hparam('mixup_alpha', 0.2, lambda r: 10**r.uniform(-1, 1))
-
         _hparam('urm_adv_lambda', 0.1, lambda r: float(r.uniform(0,0.2)))
         _hparam('urm_discriminator_label_smoothing', 0, lambda r: float(r.uniform(0, 0)))
         _hparam('urm_discriminator_optimizer', 'adam', lambda r: str(r.choice(['adam'])))

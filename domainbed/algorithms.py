@@ -375,55 +375,17 @@ class URM(ERM):
         return loss, feats
 
     def update(self, minibatches, unlabeled=None):
-        if 'mixup_alpha' in self.hparams:
-            loss = 0
-
-            for (xi, yi), (xj, yj) in random_pairs_of_minibatches(minibatches):
-                lam = np.random.beta(self.hparams["mixup_alpha"],
-                                     self.hparams["mixup_alpha"])
-
-                x = lam * xi + (1 - lam) * xj
-                feats = self.featurizer(x)
-                predictions = self.classifier(feats)
-
-                if self.hparams['urm'] == 'adversarial':
-                    # train generator/encoder to make discriminator classify feats as noise (label 1)
-                    true_y = torch.tensor(feats.shape[0]*[1], device=feats.device, dtype=feats.dtype)
-                    g_logits = self.discriminator(feats)
-                    g_loss = self.discriminator_loss(g_logits.squeeze(1), true_y) # apply BCEWithLogitsLoss to discriminator's logit output
-                    g_loss = self.hparams['urm_adv_lambda']*g_loss
-                else:
-                    raise NotImplementedError
-
-                loss += lam * F.cross_entropy(predictions, yi)
-                loss += (1 - lam) * F.cross_entropy(predictions, yj)
-                loss += g_loss
-
-            loss /= len(minibatches)
-        else:
-            all_x = torch.cat([x for x, y in minibatches])
-            all_y = torch.cat([y for x, y in minibatches])
+        all_x = torch.cat([x for x, y in minibatches])
+        all_y = torch.cat([y for x, y in minibatches])
             
-            loss, feats = self._compute_loss(all_x, all_y)
+        loss, feats = self._compute_loss(all_x, all_y)
 
         self.optimizer.zero_grad()
 
         loss.backward()
         self.optimizer.step()
 
-        # update discriminator after updating encoder-classifier (alternating updates)
-        if 'mixup_alpha' in self.hparams:
-            for (xi, yi), (xj, yj) in random_pairs_of_minibatches(minibatches):
-                lam = np.random.beta(self.hparams["mixup_alpha"],
-                                     self.hparams["mixup_alpha"])
-
-                x = lam * xi + (1 - lam) * xj
-                feats = self.featurizer(x)
-                self._update_discriminator(None, None, feats)
-                break # update discriminator once only for a random mixup of minibatches from two domains (updating more than once will push the discriminator ahead of generator)
-
-        else:
-            self._update_discriminator(all_x, all_y, feats)
+        self._update_discriminator(all_x, all_y, feats)
     
         return {'loss': loss.item()}
 
