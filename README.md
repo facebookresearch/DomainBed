@@ -43,7 +43,7 @@ The [currently available algorithms](domainbed/algorithms.py) are:
 * Domain Generalisation via Risk Distribution Matching (RDM, [Nguyen et al., 2024](https://arxiv.org/abs/2310.18598)), contributed by [@nktoan](https://github.com/nktoan), [authors' contact email](mailto:ktoan271199@gmail.com)
 * ADRMX: Additive Disentanglement of Domain Features with Remix Loss (ADRMX, [Demirel et al., 2023](https://arxiv.org/abs/2308.06624)), contributed by [@berkerdemirel](https://github.com/berkerdemirel)
 * ERM++: An Improved Baseline for Domain Generalization( ERM++, [Teterwak et. al. 2023](https://arxiv.org/abs/2304.01973), contributed by [@piotr-teterwak](https://cs-people.bu.edu/piotrt/).
-* Uniform Risk Minimization (URM) from Uniformly Distributed Feature Representations for Fair and Robust Learning ([Krishnamachari et al., 2024](https://openreview.net/forum?id=PgLbS5yp8n))
+* Uniform Risk Minimization (URM) from Uniformly Distributed Feature Representations for Fair and Robust Learning ([Krishnamachari et al., 2024](https://openreview.net/forum?id=PgLbS5yp8n)), contributed by [@kiranchari](https://github.com/kiranchari), [authors' contact email](mailto:kirankchari@gmail.com)
 
 Send us a PR to add your algorithm! Our implementations use ResNet50 / ResNet18 networks ([He et al., 2015](https://arxiv.org/abs/1512.03385)) and the hyper-parameter grids [described here](domainbed/hparams_registry.py).
 
