@@ -55,6 +55,7 @@ class MLP(nn.Module):
             for _ in range(hparams['mlp_depth']-2)])
         self.output = nn.Linear(hparams['mlp_width'], n_outputs)
         self.n_outputs = n_outputs
+        self.activation = nn.Identity() # for URM; does not affect other algorithms
 
     def forward(self, x):
         x = self.input(x)
@@ -65,6 +66,7 @@ class MLP(nn.Module):
             x = self.dropout(x)
             x = F.relu(x)
         x = self.output(x)
+        x = self.activation(x) # for URM; does not affect other algorithms
         return x
 
 class DinoV2(torch.nn.Module):
@@ -140,10 +142,11 @@ class ResNet(torch.nn.Module):
             self.freeze_bn()
         self.hparams = hparams
         self.dropout = nn.Dropout(hparams['resnet_dropout'])
+        self.activation = nn.Identity() # for URM; does not affect other algorithms
 
     def forward(self, x):
         """Encode x into a feature vector of size n_outputs."""
-        return self.dropout(self.network(x))
+        return self.activation(self.dropout(self.network(x)))
 
     def train(self, mode=True):
         """
@@ -181,6 +184,7 @@ class MNIST_CNN(nn.Module):
         self.bn3 = nn.GroupNorm(8, 128)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.activation = nn.Identity() # for URM; does not affect other algorithms
 
     def forward(self, x):
         x = self.conv1(x)
@@ -201,7 +205,7 @@ class MNIST_CNN(nn.Module):
 
         x = self.avgpool(x)
         x = x.view(len(x), -1)
-        return x
+        return self.activation(x)
 
 
 class ContextNet(nn.Module):

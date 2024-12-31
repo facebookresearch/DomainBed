@@ -172,6 +172,20 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == 'ERMPlusPlus':
         _hparam('linear_lr', 5e-5, lambda r: 10**r.uniform(-5, -3.5))
 
+    elif algorithm == 'URM':
+        _hparam('urm', 'adversarial', lambda r: str(r.choice(['adversarial']))) # 'adversarial'
+        
+        _hparam('urm_adv_lambda', 0.1, lambda r: float(r.uniform(0,0.2)))
+        _hparam('urm_discriminator_label_smoothing', 0, lambda r: float(r.uniform(0, 0)))
+        _hparam('urm_discriminator_optimizer', 'adam', lambda r: str(r.choice(['adam'])))
+        _hparam('urm_discriminator_hidden_layers', 1, lambda r: int(r.choice([1,2,3])))
+        _hparam('urm_generator_output', 'tanh', lambda r: str(r.choice(['tanh', 'relu'])))
+                
+        if dataset in SMALL_IMAGES:
+            _hparam('urm_discriminator_lr', 1e-3, lambda r: 10**r.uniform(-5.5, -3.5))
+        else:
+            _hparam('urm_discriminator_lr', 5e-5, lambda r: 10**r.uniform(-6, -4.5))
+
 
     if algorithm == "ADRMX":
         _hparam('cnt_lambda', 1.0, lambda r: r.choice([1.0]))
