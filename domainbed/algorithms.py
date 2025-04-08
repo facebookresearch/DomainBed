@@ -101,6 +101,144 @@ class Algorithm(torch.nn.Module):
         raise NotImplementedError
 
 
+# Helper function for pairwise cosine similarity
+def pairwise_cosine_similarity(features1, features2):
+    """Compute cosine similarity between two feature matrices."""
+    features1 = F.normalize(features1, dim=1)  # Normalize along feature dimension
+    features2 = F.normalize(features2, dim=1)
+    return (features1 * features2).sum(dim=1).mean()  #
+
+
+# def linear_cka(X, Y):
+#     X = X - X.mean(dim=0)  # Center the features
+#     Y = Y - Y.mean(dim=0)
+#     cov_XX = X.T @ X
+#     cov_YY = Y.T @ Y
+#     cov_XY = X.T @ Y
+#     return (torch.trace(cov_XY @ cov_XY.T) /
+#             (torch.sqrt(torch.trace(cov_XX @ cov_XX.T)) *
+#              torch.sqrt(torch.trace(cov_YY @ cov_YY.T))))
+
+
+class DAS(Algorithm):
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(DAS, self).__init__(input_shape, num_classes, num_domains, hparams)
+        # Initialize featurizer and classifier
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = networks.Classifier(
+            self.featurizer.n_outputs, num_classes, self.hparams["nonlinear_classifier"]
+        )
+        self.network = nn.Sequential(self.featurizer, self.classifier)
+        # Optimizer
+        self.optimizer = torch.optim.Adam(
+            self.network.parameters(), lr=self.hparams["lr"], weight_decay=self.hparams["weight_decay"]
+        )
+        # Hyperparameter for similarity penalty weight
+        self.lambda_sim = hparams.get("lambda_sim", 1.0)
+
+    def cka_similarity(self, X, Y):
+        """
+        Compute CKA between two feature matrices.
+        X, Y: (batch_size, feature_dim)
+        """
+        # Center features
+        X = X - X.mean(dim=0)
+        Y = Y - Y.mean(dim=0)
+
+        # Compute Gram matrices
+        gram_X = torch.mm(X, X.t())
+        gram_Y = torch.mm(Y, Y.t())
+
+        # Frobenius norms
+        norm_X = torch.norm(gram_X, p="fro")
+        norm_Y = torch.norm(gram_Y, p="fro")
+
+        # Handle dimension mismatch cases
+        if gram_X.size(0) != gram_Y.size(0):
+            # Option 1: Use HSIC alignment formula instead of direct matrix multiplication
+            # For matrices of different sizes, we can use the average of element-wise products
+            # Resize to enable broadcasting
+            X_flat = X.view(X.size(0), -1)
+            Y_flat = Y.view(Y.size(0), -1)
+
+            # Computing the mean similarity between all pairs of samples
+            similarity = torch.mean(torch.mm(X_flat, Y_flat.t()))
+            return similarity / (norm_X * norm_Y + 1e-8)
+        else:
+            # Regular case when dimensions match
+            cka = torch.trace(torch.mm(gram_X, gram_Y)) / (norm_X * norm_Y + 1e-8)
+            return cka
+
+    def update(self, minibatches, unlabeled=None):
+        """Perform one training iteration with optimized feature extraction."""
+        device = minibatches[0][0].device
+
+        # Extract all features at once to avoid redundant computation
+        all_x = torch.cat([x for x, y in minibatches])
+        all_y = torch.cat([y for x, y in minibatches])
+        all_features = self.featurizer(all_x)
+
+        # Track domain boundaries for later indexing
+        domain_indices = [0]
+        for x, _ in minibatches:
+            domain_indices.append(domain_indices[-1] + x.shape[0])
+
+        # Classification loss
+        logits = self.classifier(all_features)
+        loss_cls = torch.nn.functional.cross_entropy(logits, all_y)
+
+        # Get unique labels
+        unique_labels = torch.unique(all_y)
+        similarities = []
+
+        # Create feature mapping by label and domain for efficient access
+        for label in unique_labels:
+            # Get feature indices for this label across all domains
+            domain_features = []
+
+            for d_idx in range(len(minibatches)):
+                # Find samples with this label in the current domain
+                start_idx = domain_indices[d_idx]
+                end_idx = domain_indices[d_idx + 1]
+                domain_mask = (all_y[start_idx:end_idx] == label).nonzero(as_tuple=True)[0] + start_idx
+
+                if len(domain_mask) > 0:  # If this label exists in the domain
+                    domain_features.append(all_features[domain_mask])
+
+            # Compute similarities between domains that have this label
+            if len(domain_features) >= 2:
+                for i in range(len(domain_features)):
+                    for j in range(i + 1, len(domain_features)):
+                        sim = self.cka_similarity(domain_features[i], domain_features[j])
+                        similarities.append(sim)
+
+        # Compute average similarity across all label-domain pairs
+        if similarities:
+            avg_similarity = torch.stack(similarities).mean()
+            loss_sim = 1 - avg_similarity  # Penalize low similarity
+        else:
+            loss_sim = torch.tensor(0.0, device=device)  # Ensure tensor type for gradient calculation
+
+        # Total loss
+        total_loss = loss_cls + self.lambda_sim * loss_sim
+
+        # Optimization step
+        self.optimizer.zero_grad()
+        total_loss.backward()
+        self.optimizer.step()
+
+        return {
+            "loss_cls": loss_cls.item(),
+            "loss_sim": loss_sim.item() if isinstance(loss_sim, torch.Tensor) else loss_sim,
+            "total_loss": total_loss.item(),
+            "avg_similarity": avg_similarity.item() if isinstance(avg_similarity, torch.Tensor) else avg_similarity,
+        }
+
+    def predict(self, x):
+        """Inference method."""
+        return self.network(x)
+
+
 class CHIN(Algorithm):
     """
     Causal Hierarchical Invariant Network (CHIN) for Domain Generalization
@@ -2645,3 +2783,150 @@ class ADRMX(Algorithm):
 
     def predict(self, x):
         return self.network(x)
+
+
+class DAS_MI(Algorithm):
+    """
+    Domain Alignment via Mutual Information (DAS-MI)
+
+    This algorithm aligns domains by maximizing the mutual information between
+    feature representations from different domains with the same class labels.
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams):
+        super(DAS_MI, self).__init__(input_shape, num_classes, num_domains, hparams)
+
+        # Featurizer + Classifier
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = networks.Classifier(
+            self.featurizer.n_outputs, num_classes, self.hparams["nonlinear_classifier"]
+        )
+
+        # Hyperparameters
+        self.lambda_mi = hparams.get("lambda_mi", 1.0)  # MI loss weight
+        self.sigma = hparams.get("kde_sigma", 0.5)  # Gaussian kernel width
+
+        # Optimizer
+        self.optimizer = torch.optim.Adam(
+            list(self.featurizer.parameters()) + list(self.classifier.parameters()),
+            lr=hparams["lr"],
+            weight_decay=hparams["weight_decay"],
+        )
+
+    def gaussian_kernel(self, x, y):
+        """Compute Gaussian kernel matrix between x and y"""
+        x_size = x.size(0)
+        y_size = y.size(0)
+        dim = x.size(1)
+
+        x = x.unsqueeze(1)  # (x_size, 1, dim)
+        y = y.unsqueeze(0)  # (1, y_size, dim)
+
+        # Compute squared distance
+        dist = torch.sum((x - y) ** 2, dim=2)
+        return torch.exp(-dist / (2 * self.sigma**2))
+
+    def compute_mi_torch(self, x, y):
+        """
+        Compute mutual information using Gaussian kernel density estimation
+        x, y: torch.Tensor of shape (batch_size, feature_dim)
+        """
+        # Joint entropy estimation (negative log likelihood)
+        x_y = torch.cat([x, y], dim=1)
+
+        # Compute self gram matrix
+        gram_xx = self.gaussian_kernel(x, x)
+        gram_yy = self.gaussian_kernel(y, y)
+        gram_xy = self.gaussian_kernel(x, y)
+
+        # Diagonal indices
+        n = x.size(0)
+        mask = ~torch.eye(n, dtype=torch.bool, device=x.device)
+
+        # Estimate entropy by excluding the diagonal for unbiased estimation
+        h_x = -torch.log(torch.sum(gram_xx[mask]) / (n * (n - 1)) + 1e-8)
+        h_y = -torch.log(torch.sum(gram_yy[mask]) / (n * (n - 1)) + 1e-8)
+
+        # Mutual information: I(X;Y) = H(X) + H(Y) - H(X,Y)
+        mi = h_x + h_y + torch.log(torch.sum(gram_xy) / (n * n) + 1e-8)
+
+        return mi
+
+    def update(self, minibatches, unlabeled=None):
+        # Extract all data and features
+        all_x = torch.cat([x for x, y in minibatches])
+        all_y = torch.cat([y for x, y in minibatches])
+
+        # Calculate features
+        all_features = self.featurizer(all_x)
+        logits = self.classifier(all_features)
+
+        # Classification loss
+        loss_cls = F.cross_entropy(logits, all_y)
+
+        # MI loss (between domains for each class)
+        loss_mi = 0.0
+        mi_count = 0
+
+        # Get domain indices to slice the feature tensor
+        domain_indices = [0]
+        for x, _ in minibatches:
+            domain_indices.append(domain_indices[-1] + x.shape[0])
+
+        # Calculate MI between domains for each class
+        unique_labels = torch.unique(all_y)
+        for label in unique_labels:
+            # Find features with this label across all domains
+            domain_features = []
+
+            for d_idx in range(len(minibatches)):
+                # Get indices for this label in this domain
+                start_idx = domain_indices[d_idx]
+                end_idx = domain_indices[d_idx + 1]
+                domain_mask = (all_y[start_idx:end_idx] == label).nonzero(as_tuple=True)[0] + start_idx
+
+                if len(domain_mask) > 0:  # If this label exists in the domain
+                    domain_features.append(all_features[domain_mask])
+
+            # Compute MI between domains
+            for i in range(len(domain_features)):
+                for j in range(i + 1, len(domain_features)):
+                    # Sample equal number of features from both domains if they differ in size
+                    min_size = min(domain_features[i].size(0), domain_features[j].size(0))
+                    if min_size > 1:  # Need at least 2 samples for valid MI estimation
+                        # Randomly sample if too many features
+                        if domain_features[i].size(0) > min_size:
+                            idx = torch.randperm(domain_features[i].size(0))[:min_size]
+                            feat_i = domain_features[i][idx]
+                        else:
+                            feat_i = domain_features[i]
+
+                        if domain_features[j].size(0) > min_size:
+                            idx = torch.randperm(domain_features[j].size(0))[:min_size]
+                            feat_j = domain_features[j][idx]
+                        else:
+                            feat_j = domain_features[j]
+
+                        # Compute MI
+                        mi = self.compute_mi_torch(feat_i, feat_j)
+                        loss_mi -= mi  # Maximize MI = Minimize -MI
+                        mi_count += 1
+
+        # Average MI loss if we have valid pairs
+        if mi_count > 0:
+            loss_mi = loss_mi / mi_count
+        else:
+            loss_mi = torch.tensor(0.0, device=all_x.device)
+
+        # Total loss
+        total_loss = loss_cls + self.lambda_mi * loss_mi
+
+        # Optimization step
+        self.optimizer.zero_grad()
+        total_loss.backward()
+        self.optimizer.step()
+
+        return {"loss": total_loss.item(), "loss_cls": loss_cls.item(), "loss_mi": loss_mi.item(), "mi_pairs": mi_count}
+
+    def predict(self, x):
+        return self.classifier(self.featurizer(x))
