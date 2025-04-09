@@ -2803,8 +2803,9 @@ class DAS_MI(Algorithm):
         )
 
         # Hyperparameters
-        self.lambda_mi = hparams.get("lambda_mi", 1.0)  # MI loss weight
-        self.sigma = hparams.get("kde_sigma", 0.5)  # Gaussian kernel width
+        self.lambda_mi = float(hparams.get("lambda_mi", 1.0))  # Convert to float to avoid tensor issues
+        # Support both parameter names: bandwidth (for sweep) and kde_sigma (original)
+        self.sigma = hparams.get("bandwidth", hparams.get("kde_sigma", 0.5))  # Gaussian kernel width
 
         # Optimizer
         self.optimizer = torch.optim.Adam(
@@ -2824,7 +2825,9 @@ class DAS_MI(Algorithm):
 
         # Compute squared distance
         dist = torch.sum((x - y) ** 2, dim=2)
-        return torch.exp(-dist / (2 * self.sigma**2))
+        # Fix: Convert self.sigma to a scalar if it's a list
+        sigma = self.sigma[0] if isinstance(self.sigma, list) else self.sigma
+        return torch.exp(-dist / (2 * sigma**2))
 
     def compute_mi_torch(self, x, y):
         """
@@ -2918,7 +2921,7 @@ class DAS_MI(Algorithm):
         else:
             loss_mi = torch.tensor(0.0, device=all_x.device)
 
-        # Total loss
+        # Total loss - ensure lambda_mi is a float, not a tensor
         total_loss = loss_cls + self.lambda_mi * loss_mi
 
         # Optimization step

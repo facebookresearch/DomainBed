@@ -53,13 +53,12 @@ python -m domainbed.scripts.sweep launch\
        --hparams '{"lambda_mi":0.5, "bandwidth":0.3}'\
        --n_hparams 1\
        --n_trials 3\
-       --single_test_envs
 
-       python -m domainbed.scripts.collect_results\
+python -m domainbed.scripts.collect_results\
        --input_dir=./sweep/chin
 
 python -m domainbed.scripts.train \
-    --data_dir /mnt/x/DomainGeneralizationDatasets \
+    --data_dir $SLURM_TMPDIR/DomainGeneralizationDatasets \
     --algorithm DAS_MI \
     --dataset OfficeHome \
     --test_env 0 \

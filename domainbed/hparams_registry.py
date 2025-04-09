@@ -59,24 +59,24 @@ def _hparams(algorithm, dataset, random_seed):
     elif algorithm == 'Fish':
         _hparam('meta_lr', 0.5, lambda r:r.choice([0.05, 0.1, 0.5]))
 
-    elif algorithm == "RDM": 
-        if dataset in ['DomainNet']: 
+    elif algorithm == "RDM":
+        if dataset in ['DomainNet']:
             _hparam('rdm_lambda', 0.5, lambda r: r.uniform(0.1, 1.0))
         elif dataset in ['PACS', 'TerraIncognita']:
             _hparam('rdm_lambda', 5.0, lambda r: r.uniform(1.0, 10.0))
         else:
             _hparam('rdm_lambda', 5.0, lambda r: r.uniform(0.1, 10.0))
-            
+
         if dataset == 'DomainNet':
             _hparam('rdm_penalty_anneal_iters', 2400, lambda r: int(r.uniform(1500, 3000)))
         else:
             _hparam('rdm_penalty_anneal_iters', 1500, lambda r: int(r.uniform(800, 2700)))
-            
+
         if dataset in ['TerraIncognita', 'OfficeHome', 'DomainNet']:
             _hparam('variance_weight', 0.0, lambda r: r.choice([0.0]))
         else:
             _hparam('variance_weight', 0.004, lambda r: r.uniform(0.001, 0.007))
-            
+
         _hparam('rdm_lr', 1.5e-5, lambda r: r.uniform(8e-6, 2e-5))
 
     elif algorithm == "RSC":
@@ -174,18 +174,20 @@ def _hparams(algorithm, dataset, random_seed):
 
     elif algorithm == 'URM':
         _hparam('urm', 'adversarial', lambda r: str(r.choice(['adversarial']))) # 'adversarial'
-        
+
         _hparam('urm_adv_lambda', 0.1, lambda r: float(r.uniform(0,0.2)))
         _hparam('urm_discriminator_label_smoothing', 0, lambda r: float(r.uniform(0, 0)))
         _hparam('urm_discriminator_optimizer', 'adam', lambda r: str(r.choice(['adam'])))
         _hparam('urm_discriminator_hidden_layers', 1, lambda r: int(r.choice([1,2,3])))
         _hparam('urm_generator_output', 'tanh', lambda r: str(r.choice(['tanh', 'relu'])))
-                
+
         if dataset in SMALL_IMAGES:
             _hparam('urm_discriminator_lr', 1e-3, lambda r: 10**r.uniform(-5.5, -3.5))
         else:
             _hparam('urm_discriminator_lr', 5e-5, lambda r: 10**r.uniform(-6, -4.5))
-
+    elif algorithm == "DAS_MI":
+        _hparam('lambda_mi', 1.0, lambda r: 10**r.uniform(-1, 1))
+        _hparam('bandwidth', 0.5, lambda r: r.uniform(0.1, 1.0))
 
     if algorithm == "ADRMX":
         _hparam('cnt_lambda', 1.0, lambda r: r.choice([1.0]))
